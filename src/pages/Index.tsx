@@ -15,7 +15,6 @@ const departments = [
     title: "Advertising",
     description: "AI-powered advertising campaigns and media planning tools",
     icon: Megaphone,
-    iconColor: "hsl(280, 76%, 53%)",
     agentCount: 0,
   },
   {
@@ -23,7 +22,6 @@ const departments = [
     title: "Marketing",
     description: "Marketing automation and content generation agents",
     icon: TrendingUp,
-    iconColor: "hsl(0, 84%, 60%)",
     agentCount: 0,
   },
   {
@@ -31,7 +29,6 @@ const departments = [
     title: "Sales",
     description: "Sales enablement and customer engagement tools",
     icon: Users,
-    iconColor: "hsl(210, 95%, 53%)",
     agentCount: 0,
   },
   {
@@ -39,7 +36,6 @@ const departments = [
     title: "Strategy",
     description: "Strategic planning and business intelligence agents",
     icon: Target,
-    iconColor: "hsl(158, 64%, 52%)",
     agentCount: 0,
   },
   {
@@ -47,7 +43,6 @@ const departments = [
     title: "Operations",
     description: "Operational efficiency and workflow automation tools",
     icon: Settings,
-    iconColor: "hsl(38, 92%, 50%)",
     agentCount: 0,
   },
   {
@@ -55,7 +50,6 @@ const departments = [
     title: "Financials",
     description: "Financial analysis and reporting automation agents",
     icon: DollarSign,
-    iconColor: "hsl(183, 77%, 47%)",
     agentCount: 0,
   },
 ];
@@ -87,7 +81,6 @@ const Index = () => {
                 title={dept.title}
                 description={dept.description}
                 icon={dept.icon}
-                iconColor={dept.iconColor}
                 agentCount={dept.agentCount}
               />
             ))}

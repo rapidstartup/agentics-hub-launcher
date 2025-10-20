@@ -77,14 +77,6 @@
     --spacing: 20px;                       /* Standard spacing unit (20px padding) */
     --card-bg: 0 0% 8%;                    /* Department card background */
     --card-border: 0 0% 66%;               /* Card border color */
-    
-    /* DEPARTMENT ICON COLORS - Vibrant colors for visual distinction */
-    --icon-bg-1: 280 76% 53%;              /* Purple - Advertising */
-    --icon-bg-2: 0 84% 60%;                /* Red - Marketing */
-    --icon-bg-3: 210 95% 53%;              /* Blue - Sales */
-    --icon-bg-4: 158 64% 52%;              /* Green - Strategy */
-    --icon-bg-5: 38 92% 50%;               /* Orange - Operations */
-    --icon-bg-6: 183 77% 47%;              /* Cyan - Financials */
   }
 }
 
