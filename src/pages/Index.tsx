@@ -1,56 +1,99 @@
 import { ChatSidebar } from "@/components/ChatSidebar";
-import { DepartmentCard } from "@/components/DepartmentCard";
+import { StatsCard } from "@/components/StatsCard";
+import { DepartmentDetailCard } from "@/components/DepartmentDetailCard";
+import { Button } from "@/components/ui/button";
 import { 
   Megaphone, 
   TrendingUp, 
   Users, 
-  Target, 
-  Settings, 
-  DollarSign 
+  Target,
+  Bot,
+  Building2,
+  TrendingUp as TrendingUpIcon,
+  Trophy,
+  Plus,
+  Bell,
+  Settings
 } from "lucide-react";
 
-const departments = [
+const stats = [
+  {
+    label: "Total",
+    value: "24",
+    subtitle: "+3 new this month",
+    superscript: "Agents",
+    icon: Bot,
+  },
+  {
+    label: "Active",
+    value: "7",
+    subtitle: "All operational",
+    superscript: "Departments",
+    icon: Building2,
+  },
+  {
+    label: "Monthly",
+    value: "89%",
+    subtitle: "+12% from last month",
+    superscript: "",
+    icon: TrendingUpIcon,
+  },
+  {
+    label: "Efficiency",
+    value: "94%",
+    subtitle: "Excellent performance",
+    superscript: "",
+    icon: Trophy,
+  },
+];
+
+const departmentsData = [
+  {
+    id: "strategy",
+    title: "Strategy",
+    description: "Strategic planning & analysis",
+    icon: Target,
+    agentCount: 4,
+    agents: [
+      { name: "Market Positioning Plan", status: "Active" as const },
+      { name: "Knowledge Bases (FAQ, Offers)", status: "Active" as const },
+      { name: "Company Brain (RAG)", status: "Active" as const },
+    ],
+  },
   {
     id: "advertising",
     title: "Advertising",
-    description: "AI-powered advertising campaigns and media planning tools",
+    description: "Campaign management & optimization",
     icon: Megaphone,
-    agentCount: 0,
+    agentCount: 7,
+    agents: [
+      { name: "Deep Research Market Assessment", status: "Active" as const },
+      { name: "Facebook Ads Library Scraper", status: "Active" as const },
+      { name: "Ad Creative Strategist", status: "Active" as const },
+    ],
   },
   {
     id: "marketing",
     title: "Marketing",
-    description: "Marketing automation and content generation agents",
+    description: "Content & campaign creation",
     icon: TrendingUp,
-    agentCount: 0,
+    agentCount: 5,
+    agents: [
+      { name: "VSL Generator", status: "Active" as const },
+      { name: "Perfect Webinar Script", status: "Active" as const },
+      { name: "Perfect Webinar Creator", status: "Active" as const },
+    ],
   },
   {
     id: "sales",
     title: "Sales",
-    description: "Sales enablement and customer engagement tools",
+    description: "Performance tracking & optimization",
     icon: Users,
-    agentCount: 0,
-  },
-  {
-    id: "strategy",
-    title: "Strategy",
-    description: "Strategic planning and business intelligence agents",
-    icon: Target,
-    agentCount: 0,
-  },
-  {
-    id: "operations",
-    title: "Operations",
-    description: "Operational efficiency and workflow automation tools",
-    icon: Settings,
-    agentCount: 0,
-  },
-  {
-    id: "financials",
-    title: "Financials",
-    description: "Financial analysis and reporting automation agents",
-    icon: DollarSign,
-    agentCount: 0,
+    agentCount: 5,
+    agents: [
+      { name: "Setter Performance Closer", status: "Active" as const },
+      { name: "Sales/Finance Data Entry", status: "Active" as const },
+    ],
   },
 ];
 
@@ -62,38 +105,82 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-7xl p-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="mb-2 text-3xl font-bold text-foreground">
-              Select a Department
-            </h1>
-            <p className="text-muted-foreground">
-              Choose a department to explore its AI agents and capabilities
-            </p>
+        {/* Top Header Bar */}
+        <div className="border-b border-border bg-background">
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Business Intelligence Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Comprehensive AI-powered business management platform
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                <Plus className="h-4 w-4" />
+                New Project
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+        </div>
 
-          {/* Department Grid */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {departments.map((dept) => (
-              <DepartmentCard
-                key={dept.id}
-                title={dept.title}
-                description={dept.description}
-                icon={dept.icon}
-                agentCount={dept.agentCount}
+        {/* Content Area */}
+        <div className="p-8">
+          {/* Stats Grid */}
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                label={stat.label}
+                value={stat.value}
+                subtitle={stat.subtitle}
+                icon={stat.icon}
               />
             ))}
           </div>
 
-          {/* Footer Note */}
-          <div className="mt-12 rounded-lg border border-border bg-card p-6">
-            <h3 className="mb-2 text-sm font-semibold text-foreground">
-              Connected to n8n Backend
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              All agents are powered by n8n workflows. Add new agents to any department to expand your capabilities.
-            </p>
+          {/* Department Overview */}
+          <div className="mb-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                Department Overview
+              </h2>
+              <Button variant="ghost" className="text-primary hover:text-primary/80">
+                View All
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {departmentsData.map((dept) => (
+                <DepartmentDetailCard
+                  key={dept.id}
+                  title={dept.title}
+                  description={dept.description}
+                  icon={dept.icon}
+                  agentCount={dept.agentCount}
+                  agents={dept.agents}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">
+                Recent Activity
+              </h2>
+              <Button variant="ghost" className="text-primary hover:text-primary/80">
+                View All
+              </Button>
+            </div>
           </div>
         </div>
       </main>
