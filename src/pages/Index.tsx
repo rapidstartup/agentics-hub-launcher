@@ -108,13 +108,14 @@ const Index = () => {
         {/* Top Header Bar */}
         <div className="border-b border-border bg-background">
           <div className="flex items-center justify-between p-6">
-            <div>
+            <div className="flex items-baseline gap-2">
               <h1 className="text-2xl font-bold text-foreground">
-                Business Intelligence Dashboard
+                Dashboard
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Comprehensive AI-powered business management platform
-              </p>
+              <span className="text-2xl font-bold text-foreground">|</span>
+              <h2 className="text-2xl font-bold text-foreground">
+                Business Intelligence
+              </h2>
             </div>
             <div className="flex items-center gap-3">
               <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">

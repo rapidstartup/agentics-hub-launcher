@@ -1,5 +1,6 @@
 import { 
-  LayoutDashboard, 
+  Hexagon,
+  LayoutDashboard,
   Target, 
   Megaphone, 
   TrendingUp, 
@@ -7,7 +8,7 @@ import {
   Settings, 
   DollarSign, 
   Shield,
-  Bot,
+  FolderKanban,
   BookOpen,
   BarChart3,
   ChevronDown
@@ -28,8 +29,9 @@ const navigationItems = [
 ];
 
 const quickAccessItems = [
-  { id: "agents", title: "All Agents", icon: Bot, path: "/agents" },
-  { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: "/knowledge" },
+  { id: "settings", title: "Settings", icon: Settings, path: "/settings" },
+  { id: "projects", title: "Projects", icon: FolderKanban, path: "/projects" },
+  { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: "/knowledge", nested: true },
   { id: "analytics", title: "Analytics", icon: BarChart3, path: "/analytics" },
 ];
 
@@ -39,12 +41,11 @@ export const ChatSidebar = () => {
       {/* Brand Header */}
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
+            <Hexagon className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Business AI</h2>
-            <p className="text-xs text-muted-foreground">Hub</p>
+            <h2 className="text-base font-bold text-foreground">Agentics Hub</h2>
           </div>
         </div>
       </div>
@@ -57,10 +58,10 @@ export const ChatSidebar = () => {
               key={item.id}
               to={item.path}
               className={({ isActive }) =>
-                `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                   isActive
                     ? "bg-primary text-primary-foreground"
-                    : "text-foreground hover:bg-sidebar-accent"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
                 }`
               }
             >
@@ -80,7 +81,9 @@ export const ChatSidebar = () => {
               <NavLink
                 key={item.id}
                 to={item.path}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-sidebar-accent"
+                className={`flex w-full items-center gap-3 rounded-lg py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground ${
+                  item.nested ? 'pl-10 pr-3' : 'px-3'
+                }`}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>
