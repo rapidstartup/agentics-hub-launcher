@@ -11,7 +11,8 @@ import {
   FolderKanban,
   BookOpen,
   BarChart3,
-  ChevronDown
+  ChevronDown,
+  Gauge
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,6 +34,10 @@ const quickAccessItems = [
   { id: "projects", title: "Projects", icon: FolderKanban, path: "/projects" },
   { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: "/knowledge", nested: true },
   { id: "analytics", title: "Analytics", icon: BarChart3, path: "/analytics" },
+];
+
+const adminItems = [
+  { id: "admin", title: "Admin Panel", icon: Gauge, path: "/admin" },
 ];
 
 export const ChatSidebar = () => {
@@ -84,6 +89,31 @@ export const ChatSidebar = () => {
                 className={`flex w-full items-center gap-3 rounded-lg py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground ${
                   item.nested ? 'pl-10 pr-3' : 'px-3'
                 }`}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+
+        {/* Admin Section */}
+        <div className="mt-6">
+          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Super Admin
+          </p>
+          <nav className="space-y-1">
+            {adminItems.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  }`
+                }
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>
