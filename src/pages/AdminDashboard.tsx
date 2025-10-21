@@ -2,6 +2,7 @@ import { Search, Plus, TrendingUp, Users, Briefcase, DollarSign } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChatSidebar } from "@/components/ChatSidebar";
 import { StatsCardLarge } from "@/components/admin/StatsCardLarge";
 import { RevenueMetricCard } from "@/components/admin/RevenueMetricCard";
 import { RevenueTimelineCard } from "@/components/admin/RevenueTimelineCard";
@@ -30,6 +31,7 @@ const departmentPerformance = [
 const AdminDashboard = () => {
   return (
     <div className="flex min-h-screen bg-background">
+      <ChatSidebar />
       <main className="flex-1 overflow-y-auto">
         {/* Top Header */}
         <div className="border-b border-border bg-background">
