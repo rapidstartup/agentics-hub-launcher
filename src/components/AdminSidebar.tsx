@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { 
   Hexagon,
   Gauge,
@@ -12,10 +13,18 @@ import {
   Settings,
   Bell,
   ArrowLeftRight,
-  ChevronDown
+  ChevronDown,
+  Building2
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavLink } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const navigationItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
@@ -32,9 +41,22 @@ const quickAccessItems = [
   { id: "calendar", title: "Calendar", icon: Calendar, path: "/admin/calendar" },
   { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },
   { id: "notifications", title: "Notifications", icon: Bell, path: "/admin/notifications" },
+  { id: "client-view", title: "Switch to Client View", icon: ArrowLeftRight, path: "/" },
+];
+
+const clients = [
+  { id: "all", name: "All Clients", type: "Overview" },
+  { id: "techstart", name: "TechStart Solutions", type: "B2B SaaS" },
+  { id: "healthhub", name: "HealthHub Medical", type: "Healthcare" },
+  { id: "global", name: "Global All-In-Consulting", type: "Consulting" },
+  { id: "imaginespace", name: "ImagineSpace Ltd", type: "Creative" },
+  { id: "smartax", name: "SMARTAX Corp", type: "Finance" },
+  { id: "onward", name: "Onward Marketing Inc", type: "Marketing" },
 ];
 
 export const AdminSidebar = () => {
+  const [selectedClient, setSelectedClient] = useState("all");
+
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
       {/* Brand Header */}
@@ -47,6 +69,28 @@ export const AdminSidebar = () => {
             <h2 className="text-base font-bold text-foreground">Agentics Hub</h2>
           </div>
         </div>
+      </div>
+
+      {/* Client Switcher */}
+      <div className="px-3 py-4 border-b border-border">
+        <Select value={selectedClient} onValueChange={setSelectedClient}>
+          <SelectTrigger className="w-full bg-sidebar border-border text-sm h-10">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <SelectValue placeholder="Select client" />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-popover border-border">
+            {clients.map((client) => (
+              <SelectItem key={client.id} value={client.id}>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{client.name}</span>
+                  <span className="text-xs text-muted-foreground">{client.type}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Navigation */}
@@ -81,6 +125,7 @@ export const AdminSidebar = () => {
               <NavLink
                 key={item.id}
                 to={item.path}
+                end={item.path === "/"}
                 className={({ isActive }) =>
                   `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                     isActive
@@ -93,22 +138,6 @@ export const AdminSidebar = () => {
                 <span>{item.title}</span>
               </NavLink>
             ))}
-          </nav>
-        </div>
-
-        {/* View Switcher Section */}
-        <div className="mt-6">
-          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            View Switcher
-          </p>
-          <nav className="space-y-1">
-            <NavLink
-              to="/"
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-            >
-              <ArrowLeftRight className="h-4 w-4" />
-              <span>Switch to Client View</span>
-            </NavLink>
           </nav>
         </div>
       </ScrollArea>
