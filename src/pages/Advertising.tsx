@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChatSidebar } from "@/components/ChatSidebar";
+import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { MetricCard } from "@/components/advertising/MetricCard";
 import { ProjectCard } from "@/components/advertising/ProjectCard";
 import { PerformanceChart } from "@/components/advertising/PerformanceChart";
@@ -118,7 +118,7 @@ const Advertising = () => {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <ChatSidebar />
+      <AdvertisingSidebar />
       
       <main className="flex-1 p-6 lg:p-8">
         {/* Header */}

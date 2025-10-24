@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,8 +60,11 @@ export const DepartmentDetailCard = ({
         <Button
           variant="outline"
           className="w-full border-primary/20 text-primary hover:bg-primary/10"
+          asChild
         >
-          Access {title} Tools
+          <Link to={title === "Advertising" ? "/advertising" : "#"}>
+            Access {title} Tools
+          </Link>
         </Button>
       </div>
     </Card>
