@@ -13,7 +13,8 @@ import {
   Trophy,
   Plus,
   Bell,
-  Settings
+  Settings,
+  DollarSign
 } from "lucide-react";
 
 const stats = [
@@ -95,6 +96,30 @@ const departmentsData = [
       { name: "Sales/Finance Data Entry", status: "Active" as const },
     ],
   },
+  {
+    id: "operations",
+    title: "Operations",
+    description: "Workflow automation & efficiency",
+    icon: Settings,
+    agentCount: 6,
+    agents: [
+      { name: "Process Automation Agent", status: "Active" as const },
+      { name: "Resource Optimization Agent", status: "Active" as const },
+      { name: "Quality Control Monitor", status: "Active" as const },
+    ],
+  },
+  {
+    id: "financials",
+    title: "Financials",
+    description: "Financial planning & analysis",
+    icon: DollarSign,
+    agentCount: 4,
+    agents: [
+      { name: "Budget Forecasting Agent", status: "Active" as const },
+      { name: "Expense Tracker", status: "Active" as const },
+      { name: "Revenue Analytics Agent", status: "Active" as const },
+    ],
+  },
 ];
 
 const Index = () => {
@@ -158,7 +183,7 @@ const Index = () => {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
               {departmentsData.map((dept) => (
                 <DepartmentDetailCard
                   key={dept.id}
