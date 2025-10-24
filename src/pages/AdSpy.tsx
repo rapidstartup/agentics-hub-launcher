@@ -7,20 +7,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Settings } from "lucide-react";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import AdSpyCreativeBoard from "@/components/advertising/AdSpyCreativeBoard";
+import GoogleSheetsConnectForm from "@/components/advertising/GoogleSheetsConnectForm";
 
 const AdSpy = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState<"url" | "creator">("url");
   const [isSearching, setIsSearching] = useState(false);
   const [searches, setSearches] = useState<any[]>([]);
+  const [sheetsConnected, setSheetsConnected] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSearches();
+    checkConnection();
   }, []);
+
+  const checkConnection = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('google_sheets_connections')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    setSheetsConnected(!!data && !error);
+  };
 
   const fetchSearches = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -105,6 +122,10 @@ const AdSpy = () => {
               <TabsTrigger value="search">Search Ads</TabsTrigger>
               <TabsTrigger value="board">Creative Board</TabsTrigger>
               <TabsTrigger value="history">Search History</TabsTrigger>
+              <TabsTrigger value="settings">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="search" className="space-y-6">
@@ -201,6 +222,34 @@ const AdSpy = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+              <Card className="p-6 bg-card border-border">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Google Sheets Connection
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Connect your Google Sheet to export scraped ad data automatically. Ad Spy will export all discovered ads including their analysis to your connected sheet.
+                    </p>
+                    
+                    <GoogleSheetsConnectForm 
+                      isConnected={sheetsConnected}
+                      onConnect={() => checkConnection()}
+                    />
+                  </div>
+
+                  {!sheetsConnected && (
+                    <div className="bg-muted/50 border border-border rounded-lg p-4">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Note:</strong> Google Sheets connection is required for the "Export to Google Sheet" feature. Connect your sheet above to enable this functionality.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
