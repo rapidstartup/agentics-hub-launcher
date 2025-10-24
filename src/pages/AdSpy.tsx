@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AdvertisingSidebar from "@/components/AdvertisingSidebar";
+import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import AdSpyDashboard from "@/components/advertising/AdSpyDashboard";
 import AdSpyRunCard from "@/components/advertising/AdSpyRunCard";
 import FacebookConnectButton from "@/components/advertising/FacebookConnectButton";

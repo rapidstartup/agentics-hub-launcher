@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import AdvertisingSidebar from "@/components/AdvertisingSidebar";
+import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import TopPerformerCard from "@/components/advertising/TopPerformerCard";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
