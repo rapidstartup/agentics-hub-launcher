@@ -8,7 +8,7 @@ interface AdSpyRunCardProps {
   onClick: () => void;
 }
 
-const AdSpyRunCard = ({ run, onClick }: AdSpyRunCardProps) => {
+const SentimentAnalysisRunCard = ({ run, onClick }: AdSpyRunCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -71,4 +71,4 @@ const AdSpyRunCard = ({ run, onClick }: AdSpyRunCardProps) => {
   );
 };
 
-export default AdSpyRunCard;
+export default SentimentAnalysisRunCard;

@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 
-const AdSpyRunDetails = () => {
+const SentimentAnalysisRunDetails = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
   const [run, setRun] = useState<any>(null);
@@ -104,16 +104,16 @@ const AdSpyRunDetails = () => {
           <div>
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/advertising/ad-spy')}
+              onClick={() => navigate('/advertising/sentiment-analyzer')}
               className="mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Ad Spy
+              Back to Sentiment Analyzer
             </Button>
 
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <h1 className="text-4xl font-bold text-foreground">Analysis Run Details</h1>
+                <h1 className="text-4xl font-bold text-foreground">Sentiment Analysis Details</h1>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
@@ -165,4 +165,4 @@ const AdSpyRunDetails = () => {
   );
 };
 
-export default AdSpyRunDetails;
+export default SentimentAnalysisRunDetails;

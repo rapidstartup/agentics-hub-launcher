@@ -3,7 +3,7 @@ project_id = "pooeaxqkysmngpnpnswn"
 [functions.market-research]
 verify_jwt = true
 
-[functions.ad-spy-run]
+[functions.sentiment-analysis-run]
 verify_jwt = true
 
 [functions.facebook-connect]

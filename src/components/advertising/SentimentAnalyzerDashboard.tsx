@@ -5,7 +5,7 @@ interface AdSpyDashboardProps {
   runs: any[];
 }
 
-const AdSpyDashboard = ({ runs }: AdSpyDashboardProps) => {
+const SentimentAnalyzerDashboard = ({ runs }: AdSpyDashboardProps) => {
   const totalRuns = runs.length;
   const completedRuns = runs.filter(r => r.status === 'completed').length;
   const failedRuns = runs.filter(r => r.status === 'failed').length;
@@ -89,4 +89,4 @@ const AdSpyDashboard = ({ runs }: AdSpyDashboardProps) => {
   );
 };
 
-export default AdSpyDashboard;
+export default SentimentAnalyzerDashboard;

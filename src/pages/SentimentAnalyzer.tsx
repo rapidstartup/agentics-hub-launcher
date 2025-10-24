@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
-import AdSpyDashboard from "@/components/advertising/AdSpyDashboard";
-import AdSpyRunCard from "@/components/advertising/AdSpyRunCard";
+import SentimentAnalyzerDashboard from "@/components/advertising/SentimentAnalyzerDashboard";
+import SentimentAnalysisRunCard from "@/components/advertising/SentimentAnalysisRunCard";
 import FacebookConnectButton from "@/components/advertising/FacebookConnectButton";
 import GoogleSheetsConnectForm from "@/components/advertising/GoogleSheetsConnectForm";
 import ScheduleSettings from "@/components/advertising/ScheduleSettings";
@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Play, Settings } from "lucide-react";
 
-const AdSpy = () => {
+const SentimentAnalyzer = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isRunning, setIsRunning] = useState(false);
@@ -96,7 +96,7 @@ const AdSpy = () => {
     setIsRunning(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ad-spy-run', {
+      const { data, error } = await supabase.functions.invoke('sentiment-analysis-run', {
         body: {
           timeWindowDays: 7,
           triggerType: 'manual'
@@ -133,9 +133,9 @@ const AdSpy = () => {
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-foreground">Ad Spy Tool</h1>
+              <h1 className="text-4xl font-bold text-foreground">Sentiment Analyzer</h1>
               <p className="text-muted-foreground mt-2">
-                Analyze your best performing ads and generate AI-powered iterations
+                Analyze your best performing ads and generate AI-powered script iterations based on audience sentiment
               </p>
             </div>
             
@@ -145,7 +145,7 @@ const AdSpy = () => {
               disabled={!canRunAnalysis || isRunning}
             >
               <Play className="mr-2 h-5 w-5" />
-              {isRunning ? 'Running...' : 'Run Analysis'}
+              {isRunning ? 'Analyzing Sentiment...' : 'Run Sentiment Analysis'}
             </Button>
           </div>
 
@@ -160,7 +160,7 @@ const AdSpy = () => {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <AdSpyDashboard runs={runs} />
+              <SentimentAnalyzerDashboard runs={runs} />
               
               {!canRunAnalysis && (
                 <div className="bg-card border border-border rounded-lg p-6 space-y-4">
@@ -194,10 +194,10 @@ const AdSpy = () => {
               ) : (
                 <div className="grid gap-4">
                   {runs.map((run) => (
-                    <AdSpyRunCard 
-                      key={run.id} 
-                      run={run}
-                      onClick={() => navigate(`/advertising/ad-spy/run/${run.id}`)}
+                      <SentimentAnalysisRunCard
+                        key={run.id}
+                        run={run}
+                        onClick={() => navigate(`/advertising/sentiment-analyzer/run/${run.id}`)}
                     />
                   ))}
                 </div>
@@ -233,4 +233,4 @@ const AdSpy = () => {
   );
 };
 
-export default AdSpy;
+export default SentimentAnalyzer;

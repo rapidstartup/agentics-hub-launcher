@@ -35,9 +35,8 @@ const navigationSections = [
     ],
   },
   {
-    label: "AD SPY",
+    label: "TOOLS",
     items: [
-      { title: "Ad Spy", path: "/advertising/ad-spy", icon: Eye },
       { title: "Sentiment Analyzer", path: "/advertising/sentiment-analyzer", icon: Heart },
       { title: "Market Research", path: "/advertising/market-research", icon: TrendingUp },
     ],
