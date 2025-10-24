@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
 import MarketResearch from "./pages/MarketResearch";
+import AdSpy from "./pages/AdSpy";
+import AdSpyRunDetails from "./pages/AdSpyRunDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/advertising" element={<Advertising />} />
           <Route path="/advertising/market-research" element={<MarketResearch />} />
+          <Route path="/advertising/ad-spy" element={<AdSpy />} />
+          <Route path="/advertising/ad-spy/run/:runId" element={<AdSpyRunDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

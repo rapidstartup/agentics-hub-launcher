@@ -2,3 +2,12 @@ project_id = "pooeaxqkysmngpnpnswn"
 
 [functions.market-research]
 verify_jwt = true
+
+[functions.ad-spy-run]
+verify_jwt = true
+
+[functions.facebook-connect]
+verify_jwt = true
+
+[functions.google-sheets-connect]
+verify_jwt = true

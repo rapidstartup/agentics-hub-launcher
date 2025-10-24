@@ -14,6 +14,244 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_spy_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          started_at: string | null
+          status: string
+          time_window_days: number
+          trigger_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          time_window_days?: number
+          trigger_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          time_window_days?: number
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ad_spy_schedules: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          is_active: boolean
+          time_of_day: string
+          time_window_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_active?: boolean
+          time_of_day: string
+          time_window_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_active?: boolean
+          time_of_day?: string
+          time_window_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ad_spy_script_iterations: {
+        Row: {
+          created_at: string
+          id: string
+          iteration_rationale: string
+          new_cta: string
+          new_hooks: Json
+          new_script: string
+          original_cta: string
+          original_hooks: Json
+          original_script: string
+          top_performer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          iteration_rationale: string
+          new_cta: string
+          new_hooks: Json
+          new_script: string
+          original_cta: string
+          original_hooks: Json
+          original_script: string
+          top_performer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          iteration_rationale?: string
+          new_cta?: string
+          new_hooks?: Json
+          new_script?: string
+          original_cta?: string
+          original_hooks?: Json
+          original_script?: string
+          top_performer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_spy_script_iterations_top_performer_id_fkey"
+            columns: ["top_performer_id"]
+            isOneToOne: false
+            referencedRelation: "ad_spy_top_performers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_spy_top_performers: {
+        Row: {
+          ad_account_id: string
+          ad_id: string
+          ad_name: string
+          created_at: string
+          id: string
+          performance_metrics: Json
+          rank: number
+          run_id: string
+          thumbnail_url: string | null
+          video_url: string | null
+        }
+        Insert: {
+          ad_account_id: string
+          ad_id: string
+          ad_name: string
+          created_at?: string
+          id?: string
+          performance_metrics: Json
+          rank: number
+          run_id: string
+          thumbnail_url?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          ad_account_id?: string
+          ad_id?: string
+          ad_name?: string
+          created_at?: string
+          id?: string
+          performance_metrics?: Json
+          rank?: number
+          run_id?: string
+          thumbnail_url?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_spy_top_performers_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ad_spy_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facebook_ad_accounts: {
+        Row: {
+          access_token_encrypted: string
+          account_id: string
+          account_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          account_id: string
+          account_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          account_id?: string
+          account_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      google_sheets_connections: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_accessed_at: string | null
+          service_account_email: string
+          spreadsheet_id: string
+          spreadsheet_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_accessed_at?: string | null
+          service_account_email: string
+          spreadsheet_id: string
+          spreadsheet_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_accessed_at?: string | null
+          service_account_email?: string
+          spreadsheet_id?: string
+          spreadsheet_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       market_research_reports: {
         Row: {
           client_avatar_description: string
