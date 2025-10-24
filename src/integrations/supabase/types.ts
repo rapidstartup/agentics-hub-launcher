@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      market_research_reports: {
+        Row: {
+          client_avatar_description: string
+          company_name: string
+          company_website: string
+          competitor_links: Json
+          created_at: string
+          error_message: string | null
+          id: string
+          processing_completed_at: string | null
+          processing_started_at: string | null
+          product_description: string
+          report_content: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_avatar_description: string
+          company_name: string
+          company_website: string
+          competitor_links: Json
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          processing_completed_at?: string | null
+          processing_started_at?: string | null
+          product_description: string
+          report_content?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_avatar_description?: string
+          company_name?: string
+          company_website?: string
+          competitor_links?: Json
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          processing_completed_at?: string | null
+          processing_started_at?: string | null
+          product_description?: string
+          report_content?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
