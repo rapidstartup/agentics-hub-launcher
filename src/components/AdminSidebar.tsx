@@ -17,7 +17,7 @@ import {
   Building2
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -56,6 +56,27 @@ const clients = [
 
 export const AdminSidebar = () => {
   const [selectedClient, setSelectedClient] = useState("all");
+  const navigate = useNavigate();
+
+  const handleClientChange = (clientId: string) => {
+    setSelectedClient(clientId);
+    
+    if (clientId === "all") {
+      navigate("/admin");
+    } else {
+      const clientSlugMap: Record<string, string> = {
+        "techstart": "techstart-solutions",
+        "healthhub": "healthhub-medical",
+        "global": "global-consulting",
+        "imaginespace": "imaginespace-ltd",
+        "smartax": "smartax-corp",
+        "onward": "onward-marketing"
+      };
+      
+      const slug = clientSlugMap[clientId] || clientId;
+      navigate(`/client/${slug}`);
+    }
+  };
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
@@ -73,7 +94,7 @@ export const AdminSidebar = () => {
 
       {/* Client Switcher */}
       <div className="px-3 py-4 border-b border-border">
-        <Select value={selectedClient} onValueChange={setSelectedClient}>
+        <Select value={selectedClient} onValueChange={handleClientChange}>
           <SelectTrigger className="w-full bg-sidebar border-border text-sm h-10">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
