@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Rocket,
@@ -16,20 +15,7 @@ import {
   BookOpen,
   Image,
   Palette,
-  ChevronDown,
 } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const navigationSections = [
   {
@@ -74,9 +60,6 @@ const navigationSections = [
 ];
 
 export const AdvertisingSidebar = () => {
-  const [selectedProject, setSelectedProject] = useState("ecommerce");
-  const [selectedAccount, setSelectedAccount] = useState("main");
-
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-background">
       {/* Header with Logo */}
@@ -91,14 +74,13 @@ export const AdvertisingSidebar = () => {
 
       {/* Navigation Menu */}
       <nav className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="space-y-2">
-          {navigationSections.map((section, index) => (
-            <Collapsible key={section.label} defaultOpen={index === 0}>
-              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-accent transition-colors">
+        <div className="space-y-4">
+          {navigationSections.map((section) => (
+            <div key={section.label} className="space-y-1">
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
                 {section.label}
-                <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 space-y-1">
+              </div>
+              <div className="space-y-1">
                 {section.items.map((item) => (
                   <NavLink
                     key={item.path}
@@ -116,8 +98,8 @@ export const AdvertisingSidebar = () => {
                     <span>{item.title}</span>
                   </NavLink>
                 ))}
-              </CollapsibleContent>
-            </Collapsible>
+              </div>
+            </div>
           ))}
         </div>
       </nav>
