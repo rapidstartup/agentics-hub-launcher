@@ -1,1 +1,4 @@
 project_id = "pooeaxqkysmngpnpnswn"
+
+[functions.market-research]
+verify_jwt = true
