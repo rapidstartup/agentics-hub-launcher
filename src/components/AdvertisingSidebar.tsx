@@ -90,37 +90,39 @@ export const AdvertisingSidebar = () => {
       </div>
 
       {/* Project and Ad Account Selectors */}
-      <div className="space-y-3 border-b border-border p-6">
-        <div>
-          <label className="mb-2 block text-xs font-medium text-muted-foreground">
-            PROJECT
-          </label>
-          <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ecommerce">E-commerce Store</SelectItem>
-              <SelectItem value="saas">SaaS Platform</SelectItem>
-              <SelectItem value="fitness">Fitness App</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="border-b border-border p-6">
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label className="mb-2 block text-xs font-medium text-muted-foreground">
+              PROJECT
+            </label>
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ecommerce">E-commerce Store</SelectItem>
+                <SelectItem value="saas">SaaS Platform</SelectItem>
+                <SelectItem value="fitness">Fitness App</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div>
-          <label className="mb-2 block text-xs font-medium text-muted-foreground">
-            AD ACCOUNT
-          </label>
-          <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="main">Main Store Account</SelectItem>
-              <SelectItem value="secondary">Secondary Account</SelectItem>
-              <SelectItem value="testing">Testing Account</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex-1">
+            <label className="mb-2 block text-xs font-medium text-muted-foreground">
+              AD ACCOUNT
+            </label>
+            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="main">Main Store Account</SelectItem>
+                <SelectItem value="secondary">Secondary Account</SelectItem>
+                <SelectItem value="testing">Testing Account</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
