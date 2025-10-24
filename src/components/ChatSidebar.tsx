@@ -26,14 +26,14 @@ const navigationItems = [
   { id: "sales", title: "Sales", icon: Users, path: "/sales" },
   { id: "operations", title: "Operations", icon: Settings, path: "/operations" },
   { id: "financials", title: "Financials", icon: DollarSign, path: "/financials" },
-  { id: "system", title: "System Control", icon: Shield, path: "/system" },
 ];
 
 const quickAccessItems = [
   { id: "settings", title: "Settings", icon: Settings, path: "/settings" },
   { id: "projects", title: "Projects", icon: FolderKanban, path: "/projects" },
-  { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: "/knowledge", nested: true },
+  { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: "/knowledge" },
   { id: "analytics", title: "Analytics", icon: BarChart3, path: "/analytics" },
+  { id: "system", title: "System Control", icon: Shield, path: "/system" },
 ];
 
 const adminItems = [
@@ -86,9 +86,7 @@ export const ChatSidebar = () => {
               <NavLink
                 key={item.id}
                 to={item.path}
-                className={`flex w-full items-center gap-3 rounded-lg py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground ${
-                  item.nested ? 'pl-10 pr-3' : 'px-3'
-                }`}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>
