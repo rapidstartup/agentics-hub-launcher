@@ -179,6 +179,8 @@ export type Database = {
           day_of_week: number
           id: string
           is_active: boolean
+          last_executed_at: string | null
+          next_execution_at: string | null
           time_of_day: string
           time_window_days: number
           updated_at: string
@@ -189,6 +191,8 @@ export type Database = {
           day_of_week: number
           id?: string
           is_active?: boolean
+          last_executed_at?: string | null
+          next_execution_at?: string | null
           time_of_day: string
           time_window_days?: number
           updated_at?: string
@@ -199,6 +203,8 @@ export type Database = {
           day_of_week?: number
           id?: string
           is_active?: boolean
+          last_executed_at?: string | null
+          next_execution_at?: string | null
           time_of_day?: string
           time_window_days?: number
           updated_at?: string
@@ -452,7 +458,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_and_trigger_scheduled_runs: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

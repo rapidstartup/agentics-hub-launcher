@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { Clock, Calendar } from "lucide-react";
 
 const ScheduleSettings = () => {
   const { toast } = useToast();
@@ -111,6 +113,27 @@ const ScheduleSettings = () => {
 
       {isActive && (
         <div className="space-y-4 pt-4 border-t border-border">
+          {schedule?.last_executed_at && (
+            <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Last Run:</span>
+                <span className="text-foreground font-medium">
+                  {format(new Date(schedule.last_executed_at), "PPp")}
+                </span>
+              </div>
+              {schedule?.next_execution_at && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Next Run:</span>
+                  <span className="text-foreground font-medium">
+                    {format(new Date(schedule.next_execution_at), "PPp")}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label className="text-foreground">Day of Week</Label>
             <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
