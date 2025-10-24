@@ -73,7 +73,7 @@ export const AdvertisingSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6">
+      <nav className="flex-1 overflow-hidden px-4 py-6">
         <div className="space-y-4">
           {navigationSections.map((section) => (
             <div key={section.label} className="space-y-1">
