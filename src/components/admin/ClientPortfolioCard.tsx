@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -11,6 +12,8 @@ interface ClientPortfolioCardProps {
 }
 
 export const ClientPortfolioCard = ({ name, type, projects, revenue, tasks }: ClientPortfolioCardProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-card border border-border rounded-lg p-6">
       <div className="flex items-start gap-3 mb-4">
@@ -46,8 +49,13 @@ export const ClientPortfolioCard = ({ name, type, projects, revenue, tasks }: Cl
         </div>
       </div>
       
-      <Button variant="outline" size="sm" className="w-full gap-2 border-border text-foreground hover:bg-sidebar-accent">
-        View Tasks
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => navigate("/")}
+        className="w-full gap-2 border-border text-foreground hover:bg-sidebar-accent"
+      >
+        View Client Dashboard
         <ArrowRight className="h-3 w-3" />
       </Button>
     </div>

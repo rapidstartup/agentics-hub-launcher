@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   Rocket,
   LayoutDashboard,
@@ -15,6 +16,7 @@ import {
   Image,
   Palette,
   BarChart3,
+  ArrowLeft,
 } from "lucide-react";
 
 const navigationSections = [
@@ -60,6 +62,8 @@ const navigationSections = [
 ];
 
 export const AdvertisingSidebar = () => {
+  const navigate = useNavigate();
+
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-background">
       {/* Header with Logo */}
@@ -70,6 +74,18 @@ export const AdvertisingSidebar = () => {
           </div>
           <h1 className="text-xl font-bold text-foreground">AdLaunch Pro</h1>
         </div>
+      </div>
+
+      {/* Back to Client Dashboard */}
+      <div className="px-4 pt-4">
+        <Button
+          variant="outline"
+          onClick={() => navigate("/")}
+          className="w-full justify-start gap-2 border-border text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Client Dashboard
+        </Button>
       </div>
 
       {/* Navigation Menu */}

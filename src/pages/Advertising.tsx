@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { MetricCard } from "@/components/advertising/MetricCard";
 import { ProjectCard } from "@/components/advertising/ProjectCard";
@@ -28,9 +29,11 @@ import {
   Image,
   Video,
   Layout,
+  ArrowLeft,
 } from "lucide-react";
 
 const Advertising = () => {
+  const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState("7d");
   const [compareRange, setCompareRange] = useState("previous");
 
@@ -121,6 +124,16 @@ const Advertising = () => {
       <AdvertisingSidebar />
       
       <main className="flex-1 p-6 lg:p-8">
+        {/* Back Button */}
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/")}
+          className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Client Dashboard
+        </Button>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
