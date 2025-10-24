@@ -66,7 +66,7 @@ export const AdminSidebar = () => {
             <Hexagon className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-foreground">Agentics Hub</h2>
+            <h2 className="text-base font-bold text-foreground">Agentix</h2>
           </div>
         </div>
       </div>
