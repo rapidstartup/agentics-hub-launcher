@@ -7,8 +7,9 @@ import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
 import MarketResearch from "./pages/MarketResearch";
-import SentimentAnalyzer from "./pages/SentimentAnalyzer";
-import SentimentAnalysisRunDetails from "./pages/SentimentAnalysisRunDetails";
+import AdOptimizer from "./pages/AdOptimizer";
+import AdOptimizerRunDetails from "./pages/AdOptimizerRunDetails";
+import AdSpy from "./pages/AdSpy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,8 +25,9 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/advertising" element={<Advertising />} />
           <Route path="/advertising/market-research" element={<MarketResearch />} />
-          <Route path="/advertising/sentiment-analyzer" element={<SentimentAnalyzer />} />
-          <Route path="/advertising/sentiment-analyzer/run/:runId" element={<SentimentAnalysisRunDetails />} />
+          <Route path="/advertising/ad-optimizer" element={<AdOptimizer />} />
+          <Route path="/advertising/ad-optimizer/run/:runId" element={<AdOptimizerRunDetails />} />
+          <Route path="/advertising/ad-spy" element={<AdSpy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

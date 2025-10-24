@@ -8,13 +8,13 @@ import {
   Brain,
   Target,
   Eye,
-  Heart,
   TrendingUp,
   Award,
   FileText,
   BookOpen,
   Image,
   Palette,
+  BarChart3,
 } from "lucide-react";
 
 const navigationSections = [
@@ -35,9 +35,15 @@ const navigationSections = [
     ],
   },
   {
+    label: "AD RESEARCH",
+    items: [
+      { title: "Ad Spy", path: "/advertising/ad-spy", icon: Eye },
+      { title: "Ad Optimizer", path: "/advertising/ad-optimizer", icon: BarChart3 },
+    ],
+  },
+  {
     label: "TOOLS",
     items: [
-      { title: "Sentiment Analyzer", path: "/advertising/sentiment-analyzer", icon: Heart },
       { title: "Market Research", path: "/advertising/market-research", icon: TrendingUp },
     ],
   },

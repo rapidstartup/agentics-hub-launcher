@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_spy_ads: {
+        Row: {
+          ad_copy: string | null
+          ad_library_url: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          platform: string
+          search_id: string
+          video_url: string | null
+        }
+        Insert: {
+          ad_copy?: string | null
+          ad_library_url?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          platform?: string
+          search_id: string
+          video_url?: string | null
+        }
+        Update: {
+          ad_copy?: string | null
+          ad_library_url?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          platform?: string
+          search_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_spy_ads_search_id_fkey"
+            columns: ["search_id"]
+            isOneToOne: false
+            referencedRelation: "ad_spy_searches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_spy_analysis: {
+        Row: {
+          ad_id: string
+          angle: string | null
+          created_at: string
+          cta: string | null
+          emotion: string | null
+          hook: string | null
+          id: string
+          script_summary: string | null
+          why_it_works: string | null
+        }
+        Insert: {
+          ad_id: string
+          angle?: string | null
+          created_at?: string
+          cta?: string | null
+          emotion?: string | null
+          hook?: string | null
+          id?: string
+          script_summary?: string | null
+          why_it_works?: string | null
+        }
+        Update: {
+          ad_id?: string
+          angle?: string | null
+          created_at?: string
+          cta?: string | null
+          emotion?: string | null
+          hook?: string | null
+          id?: string
+          script_summary?: string | null
+          why_it_works?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_spy_analysis_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ad_spy_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_spy_recreations: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          recreated_script: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          recreated_script?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          recreated_script?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_spy_recreations_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ad_spy_ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_spy_runs: {
         Row: {
           completed_at: string | null
@@ -132,6 +252,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ad_spy_searches: {
+        Row: {
+          created_at: string
+          id: string
+          search_query: string
+          search_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          search_query: string
+          search_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          search_query?: string
+          search_type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       ad_spy_top_performers: {
         Row: {

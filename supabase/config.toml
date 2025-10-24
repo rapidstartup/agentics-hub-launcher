@@ -11,3 +11,9 @@ verify_jwt = true
 
 [functions.google-sheets-connect]
 verify_jwt = true
+
+[functions.ad-spy-scrape]
+verify_jwt = true
+
+[functions.ad-spy-recreate]
+verify_jwt = true

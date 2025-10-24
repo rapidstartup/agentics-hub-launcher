@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 
-const SentimentAnalysisRunDetails = () => {
+const AdOptimizerRunDetails = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
   const [run, setRun] = useState<any>(null);
@@ -104,16 +104,16 @@ const SentimentAnalysisRunDetails = () => {
           <div>
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/advertising/sentiment-analyzer')}
+              onClick={() => navigate('/advertising/ad-optimizer')}
               className="mb-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Sentiment Analyzer
+              Back to Ad Optimizer
             </Button>
 
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <h1 className="text-4xl font-bold text-foreground">Sentiment Analysis Details</h1>
+                <h1 className="text-4xl font-bold text-foreground">Ad Optimization Details</h1>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
@@ -165,4 +165,4 @@ const SentimentAnalysisRunDetails = () => {
   );
 };
 
-export default SentimentAnalysisRunDetails;
+export default AdOptimizerRunDetails;

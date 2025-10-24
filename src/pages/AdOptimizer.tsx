@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
-import SentimentAnalyzerDashboard from "@/components/advertising/SentimentAnalyzerDashboard";
-import SentimentAnalysisRunCard from "@/components/advertising/SentimentAnalysisRunCard";
+import AdOptimizerDashboard from "@/components/advertising/AdOptimizerDashboard";
+import AdOptimizerRunCard from "@/components/advertising/AdOptimizerRunCard";
 import FacebookConnectButton from "@/components/advertising/FacebookConnectButton";
 import GoogleSheetsConnectForm from "@/components/advertising/GoogleSheetsConnectForm";
 import ScheduleSettings from "@/components/advertising/ScheduleSettings";
@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Play, Settings } from "lucide-react";
 
-const SentimentAnalyzer = () => {
+const AdOptimizer = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isRunning, setIsRunning] = useState(false);
@@ -133,9 +133,9 @@ const SentimentAnalyzer = () => {
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-foreground">Sentiment Analyzer</h1>
+              <h1 className="text-4xl font-bold text-foreground">Ad Optimizer</h1>
               <p className="text-muted-foreground mt-2">
-                Analyze your best performing ads and generate AI-powered script iterations based on audience sentiment
+                Automatically find your top-performing creatives and generate new variations that outperform them
               </p>
             </div>
             
@@ -145,7 +145,7 @@ const SentimentAnalyzer = () => {
               disabled={!canRunAnalysis || isRunning}
             >
               <Play className="mr-2 h-5 w-5" />
-              {isRunning ? 'Analyzing Sentiment...' : 'Run Sentiment Analysis'}
+              {isRunning ? 'Optimizing...' : 'Run Ad Optimization'}
             </Button>
           </div>
 
@@ -160,7 +160,7 @@ const SentimentAnalyzer = () => {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <SentimentAnalyzerDashboard runs={runs} />
+              <AdOptimizerDashboard runs={runs} />
               
               {!canRunAnalysis && (
                 <div className="bg-card border border-border rounded-lg p-6 space-y-4">
@@ -194,10 +194,10 @@ const SentimentAnalyzer = () => {
               ) : (
                 <div className="grid gap-4">
                   {runs.map((run) => (
-                      <SentimentAnalysisRunCard
+                      <AdOptimizerRunCard
                         key={run.id}
                         run={run}
-                        onClick={() => navigate(`/advertising/sentiment-analyzer/run/${run.id}`)}
+                        onClick={() => navigate(`/advertising/ad-optimizer/run/${run.id}`)}
                     />
                   ))}
                 </div>
@@ -233,4 +233,4 @@ const SentimentAnalyzer = () => {
   );
 };
 
-export default SentimentAnalyzer;
+export default AdOptimizer;

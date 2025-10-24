@@ -1,11 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, Play, CheckCircle2, AlertCircle } from "lucide-react";
 
-interface AdSpyDashboardProps {
+interface AdOptimizerDashboardProps {
   runs: any[];
 }
 
-const SentimentAnalyzerDashboard = ({ runs }: AdSpyDashboardProps) => {
+const AdOptimizerDashboard = ({ runs }: AdOptimizerDashboardProps) => {
   const totalRuns = runs.length;
   const completedRuns = runs.filter(r => r.status === 'completed').length;
   const failedRuns = runs.filter(r => r.status === 'failed').length;
@@ -89,4 +89,4 @@ const SentimentAnalyzerDashboard = ({ runs }: AdSpyDashboardProps) => {
   );
 };
 
-export default SentimentAnalyzerDashboard;
+export default AdOptimizerDashboard;

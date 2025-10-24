@@ -3,12 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
-interface AdSpyRunCardProps {
+interface AdOptimizerRunCardProps {
   run: any;
   onClick: () => void;
 }
 
-const SentimentAnalysisRunCard = ({ run, onClick }: AdSpyRunCardProps) => {
+const AdOptimizerRunCard = ({ run, onClick }: AdOptimizerRunCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -71,4 +71,4 @@ const SentimentAnalysisRunCard = ({ run, onClick }: AdSpyRunCardProps) => {
   );
 };
 
-export default SentimentAnalysisRunCard;
+export default AdOptimizerRunCard;
