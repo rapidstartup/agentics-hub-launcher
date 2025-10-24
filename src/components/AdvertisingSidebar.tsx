@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Rocket,
@@ -19,50 +19,51 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-const navigationSections = [
-  {
-    label: "MAIN DASHBOARD",
-    items: [
-      { title: "Overview", path: "/advertising", icon: LayoutDashboard },
-      { title: "Analytics", path: "/advertising/analytics", icon: LineChart },
-      { title: "Projects", path: "/advertising/projects", icon: FolderKanban },
-    ],
-  },
-  {
-    label: "AD LAUNCHER",
-    items: [
-      { title: "Ad Creator", path: "/advertising/ad-creator", icon: Wand2 },
-      { title: "AI CMO", path: "/advertising/ai-cmo", icon: Brain },
-      { title: "Campaign Manager", path: "/advertising/campaign-manager", icon: Target },
-    ],
-  },
-  {
-    label: "AD RESEARCH",
-    items: [
-      { title: "Ad Spy", path: "/advertising/ad-spy", icon: Eye },
-      { title: "Ad Optimizer", path: "/advertising/ad-optimizer", icon: BarChart3 },
-      { title: "Market Research", path: "/advertising/market-research", icon: TrendingUp },
-    ],
-  },
-  {
-    label: "CENTRAL BRAIN",
-    items: [
-      { title: "Proven Assets", path: "/advertising/proven-assets", icon: Award },
-      { title: "Offer Details", path: "/advertising/offer-details", icon: FileText },
-      { title: "Knowledge Base", path: "/advertising/knowledge-base", icon: BookOpen },
-      { title: "Creative Library", path: "/advertising/creative-library", icon: Image },
-    ],
-  },
-  {
-    label: "PROJECT SETTINGS",
-    items: [
-      { title: "Brand Details", path: "/advertising/brand-details", icon: Palette },
-    ],
-  },
-];
-
 export const AdvertisingSidebar = () => {
   const navigate = useNavigate();
+  const { clientId } = useParams();
+
+  const navigationSections = [
+    {
+      label: "MAIN DASHBOARD",
+      items: [
+        { title: "Overview", path: `/client/${clientId}/advertising`, icon: LayoutDashboard },
+        { title: "Analytics", path: `/client/${clientId}/advertising/analytics`, icon: LineChart },
+        { title: "Projects", path: `/client/${clientId}/advertising/projects`, icon: FolderKanban },
+      ],
+    },
+    {
+      label: "AD LAUNCHER",
+      items: [
+        { title: "Ad Creator", path: `/client/${clientId}/advertising/ad-creator`, icon: Wand2 },
+        { title: "AI CMO", path: `/client/${clientId}/advertising/ai-cmo`, icon: Brain },
+        { title: "Campaign Manager", path: `/client/${clientId}/advertising/campaign-manager`, icon: Target },
+      ],
+    },
+    {
+      label: "AD RESEARCH",
+      items: [
+        { title: "Ad Spy", path: `/client/${clientId}/advertising/ad-spy`, icon: Eye },
+        { title: "Ad Optimizer", path: `/client/${clientId}/advertising/ad-optimizer`, icon: BarChart3 },
+        { title: "Market Research", path: `/client/${clientId}/advertising/market-research`, icon: TrendingUp },
+      ],
+    },
+    {
+      label: "CENTRAL BRAIN",
+      items: [
+        { title: "Proven Assets", path: `/client/${clientId}/advertising/proven-assets`, icon: Award },
+        { title: "Offer Details", path: `/client/${clientId}/advertising/offer-details`, icon: FileText },
+        { title: "Knowledge Base", path: `/client/${clientId}/advertising/knowledge-base`, icon: BookOpen },
+        { title: "Creative Library", path: `/client/${clientId}/advertising/creative-library`, icon: Image },
+      ],
+    },
+    {
+      label: "PROJECT SETTINGS",
+      items: [
+        { title: "Brand Details", path: `/client/${clientId}/advertising/brand-details`, icon: Palette },
+      ],
+    },
+  ];
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-background">
@@ -80,7 +81,7 @@ export const AdvertisingSidebar = () => {
       <div className="px-4 pt-4">
         <Button
           variant="outline"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(`/client/${clientId}`)}
           className="w-full justify-start gap-2 border-border text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -101,7 +102,7 @@ export const AdvertisingSidebar = () => {
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    end={item.path === "/advertising"}
+                    end={item.path === `/client/${clientId}/advertising`}
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                         isActive

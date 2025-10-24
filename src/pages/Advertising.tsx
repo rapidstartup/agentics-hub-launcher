@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { MetricCard } from "@/components/advertising/MetricCard";
 import { ProjectCard } from "@/components/advertising/ProjectCard";
@@ -34,6 +34,7 @@ import {
 
 const Advertising = () => {
   const navigate = useNavigate();
+  const { clientId } = useParams();
   const [timeRange, setTimeRange] = useState("7d");
   const [compareRange, setCompareRange] = useState("previous");
 
@@ -127,7 +128,7 @@ const Advertising = () => {
         {/* Back Button */}
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/")}
+          onClick={() => navigate(`/client/${clientId}`)}
           className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface ClientPortfolioCardProps {
+  clientId: string;
   name: string;
   type: string;
   projects: number;
@@ -11,7 +12,7 @@ interface ClientPortfolioCardProps {
   tasks: number;
 }
 
-export const ClientPortfolioCard = ({ name, type, projects, revenue, tasks }: ClientPortfolioCardProps) => {
+export const ClientPortfolioCard = ({ clientId, name, type, projects, revenue, tasks }: ClientPortfolioCardProps) => {
   const navigate = useNavigate();
 
   return (
@@ -52,7 +53,7 @@ export const ClientPortfolioCard = ({ name, type, projects, revenue, tasks }: Cl
       <Button 
         variant="outline" 
         size="sm" 
-        onClick={() => navigate("/")}
+        onClick={() => navigate(`/client/${clientId}`)}
         className="w-full gap-2 border-border text-foreground hover:bg-sidebar-accent"
       >
         View Client Dashboard

@@ -1,3 +1,4 @@
+import { useParams } from "react-router-dom";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { StatsCard } from "@/components/StatsCard";
 import { DepartmentDetailCard } from "@/components/DepartmentDetailCard";
@@ -123,6 +124,17 @@ const departmentsData = [
 ];
 
 const Index = () => {
+  const { clientId } = useParams();
+  
+  // Map client IDs to display names
+  const clientNames: Record<string, string> = {
+    "techstart-solutions": "TechStart Solutions",
+    "healthhub-medical": "HealthHub Medical",
+    "global-consulting": "Global All-In-Consulting",
+  };
+  
+  const clientName = clientNames[clientId || ""] || "Client";
+  
   return (
     <div className="flex h-screen w-full bg-background">
       {/* Left Sidebar */}
@@ -135,7 +147,7 @@ const Index = () => {
           <div className="flex items-center justify-between p-6">
             <div className="flex items-baseline gap-2">
               <h1 className="text-2xl font-bold text-foreground">
-                Dashboard
+                {clientName}
               </h1>
               <span className="text-2xl font-bold text-foreground">|</span>
               <h2 className="text-2xl font-bold text-foreground">

@@ -247,6 +247,7 @@ const AdminDashboard = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <ClientPortfolioCard
+                clientId="techstart-solutions"
                 name="TechStart Solutions"
                 type="B2B SaaS"
                 projects={12}
@@ -254,6 +255,7 @@ const AdminDashboard = () => {
                 tasks={23}
               />
               <ClientPortfolioCard
+                clientId="healthhub-medical"
                 name="HealthHub Medical"
                 type="Healthcare"
                 projects={8}
@@ -261,6 +263,7 @@ const AdminDashboard = () => {
                 tasks={17}
               />
               <ClientPortfolioCard
+                clientId="global-consulting"
                 name="Global All-In-Consulting"
                 type="Consulting"
                 projects={15}

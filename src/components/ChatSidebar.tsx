@@ -16,31 +16,33 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { NavLink } from "react-router-dom";
-
-const navigationItems = [
-  { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { id: "strategy", title: "Strategy", icon: Target, path: "/strategy" },
-  { id: "advertising", title: "Advertising", icon: Megaphone, path: "/advertising" },
-  { id: "marketing", title: "Marketing", icon: TrendingUp, path: "/marketing" },
-  { id: "sales", title: "Sales", icon: Users, path: "/sales" },
-  { id: "operations", title: "Operations", icon: Settings, path: "/operations" },
-  { id: "financials", title: "Financials", icon: DollarSign, path: "/financials" },
-];
-
-const quickAccessItems = [
-  { id: "settings", title: "Settings", icon: Settings, path: "/settings" },
-  { id: "projects", title: "Projects", icon: FolderKanban, path: "/projects" },
-  { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: "/knowledge" },
-  { id: "analytics", title: "Analytics", icon: BarChart3, path: "/analytics" },
-  { id: "system", title: "System Control", icon: Shield, path: "/system" },
-];
-
-const adminItems = [
-  { id: "admin", title: "Admin Panel", icon: Gauge, path: "/admin" },
-];
+import { NavLink, useParams } from "react-router-dom";
 
 export const ChatSidebar = () => {
+  const { clientId } = useParams();
+  
+  const navigationItems = [
+    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: `/client/${clientId}` },
+    { id: "strategy", title: "Strategy", icon: Target, path: `/client/${clientId}/strategy` },
+    { id: "advertising", title: "Advertising", icon: Megaphone, path: `/client/${clientId}/advertising` },
+    { id: "marketing", title: "Marketing", icon: TrendingUp, path: `/client/${clientId}/marketing` },
+    { id: "sales", title: "Sales", icon: Users, path: `/client/${clientId}/sales` },
+    { id: "operations", title: "Operations", icon: Settings, path: `/client/${clientId}/operations` },
+    { id: "financials", title: "Financials", icon: DollarSign, path: `/client/${clientId}/financials` },
+  ];
+
+  const quickAccessItems = [
+    { id: "settings", title: "Settings", icon: Settings, path: `/client/${clientId}/settings` },
+    { id: "projects", title: "Projects", icon: FolderKanban, path: `/client/${clientId}/projects` },
+    { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: `/client/${clientId}/knowledge` },
+    { id: "analytics", title: "Analytics", icon: BarChart3, path: `/client/${clientId}/analytics` },
+    { id: "system", title: "System Control", icon: Shield, path: `/client/${clientId}/system` },
+  ];
+
+  const adminItems = [
+    { id: "admin", title: "Admin Panel", icon: Gauge, path: "/admin" },
+  ];
+
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
       {/* Brand Header */}
