@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Search, Loader2, Settings } from "lucide-react";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import AdSpyCreativeBoard from "@/components/advertising/AdSpyCreativeBoard";
+import AdSpyCreativeCard from "@/components/advertising/AdSpyCreativeCard";
 import GoogleSheetsConnectForm from "@/components/advertising/GoogleSheetsConnectForm";
 
 const AdSpy = () => {
@@ -18,12 +19,76 @@ const AdSpy = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searches, setSearches] = useState<any[]>([]);
   const [sheetsConnected, setSheetsConnected] = useState(false);
+  const [currentSearchId, setCurrentSearchId] = useState<string | null>(null);
+  const [currentSearchResults, setCurrentSearchResults] = useState<any[]>([]);
+  const [isLoadingResults, setIsLoadingResults] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSearches();
     checkConnection();
   }, []);
+
+  useEffect(() => {
+    if (!currentSearchId) return;
+
+    setIsLoadingResults(true);
+    
+    // Fetch initial results
+    const fetchResults = async () => {
+      const { data, error } = await supabase
+        .from('ad_spy_ads')
+        .select(`
+          *,
+          ad_spy_analysis (*)
+        `)
+        .eq('search_id', currentSearchId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setCurrentSearchResults(data);
+        if (data.length > 0) {
+          setIsLoadingResults(false);
+        }
+      }
+    };
+
+    fetchResults();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel(`ads-${currentSearchId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ad_spy_ads',
+          filter: `search_id=eq.${currentSearchId}`
+        },
+        async (payload) => {
+          // Fetch the analysis for this ad
+          const { data: analysisData } = await supabase
+            .from('ad_spy_analysis')
+            .select('*')
+            .eq('ad_id', payload.new.id)
+            .maybeSingle();
+
+          const adWithAnalysis = {
+            ...payload.new,
+            ad_spy_analysis: analysisData ? [analysisData] : []
+          };
+
+          setCurrentSearchResults(prev => [adWithAnalysis, ...prev]);
+          setIsLoadingResults(false);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentSearchId]);
 
   const checkConnection = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -83,9 +148,14 @@ const AdSpy = () => {
 
       if (error) throw error;
 
+      // Store the search ID to track results
+      setCurrentSearchId(data.searchId);
+      setCurrentSearchResults([]);
+      setIsLoadingResults(true);
+
       toast({
-        title: "Search completed",
-        description: `Found ${data.adsCount || 0} ads. Analyzing now...`,
+        title: "Search initiated",
+        description: "Scraping ads and analyzing them...",
       });
 
       // Refresh searches
@@ -195,6 +265,40 @@ const AdSpy = () => {
                   </div>
                 </div>
               </Card>
+
+              {/* Search Results Section */}
+              {currentSearchId && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Search Results
+                    </h3>
+                    {isLoadingResults && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Finding and analyzing ads...</span>
+                      </div>
+                    )}
+                    {!isLoadingResults && currentSearchResults.length > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {currentSearchResults.length} {currentSearchResults.length === 1 ? 'ad' : 'ads'} found
+                      </span>
+                    )}
+                  </div>
+
+                  {currentSearchResults.length === 0 && !isLoadingResults ? (
+                    <Card className="p-8 text-center bg-card border-border">
+                      <p className="text-muted-foreground">No ads found for this search.</p>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {currentSearchResults.map((ad) => (
+                        <AdSpyCreativeCard key={ad.id} ad={ad} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="board">
