@@ -98,7 +98,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
 
     try {
       const { data, error } = await supabase.functions.invoke('scrape-website-details', {
-        body: { url: formData.companyWebsite }
+        body: { url: formData.companyWebsite.trim() }
       });
 
       clearInterval(progressInterval);
@@ -184,7 +184,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
     try {
       const { data, error } = await supabase.functions.invoke('scrape-competitor-avatar', {
         body: { 
-          url: competitorUrl,
+          url: competitorUrl.trim(),
           existingAvatarDescription: formData.clientAvatarDescription,
           productDescription: formData.productDescription,
           companyName: formData.companyName

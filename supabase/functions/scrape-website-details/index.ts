@@ -12,8 +12,9 @@ serve(async (req) => {
 
   try {
     const { url } = await req.json();
+    const cleanUrl = url.trim();
     
-    console.log('Analyzing website:', url);
+    console.log('Analyzing website:', cleanUrl);
 
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
@@ -31,7 +32,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        url: url,
+        url: cleanUrl,
         formats: ['extract'],
         extract: {
           prompt: `Analyze this business website and provide a comprehensive description of their product or service. Include: what they do, what problems they solve, their unique value proposition, target market, and key differentiators. Be detailed and specific (minimum 100 characters).`,
@@ -69,7 +70,7 @@ serve(async (req) => {
     console.log('Step 2: Finding competitors with Gemini search...');
     const geminiPrompt = `Research and identify 3 REAL direct competitor companies based on this business information:
 
-**Website:** ${url}
+**Website:** ${cleanUrl}
 **What They Do:** ${productDescription}
 
 Find companies that:
