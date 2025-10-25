@@ -57,9 +57,9 @@ const departmentsData = [
     icon: Target,
     agentCount: 4,
     agents: [
-      { name: "Market Positioning Plan", status: "Active" as const },
-      { name: "Knowledge Bases (FAQ, Offers)", status: "Active" as const },
-      { name: "Company Brain (RAG)", status: "Active" as const },
+      { name: "Market Positioning Plan", status: "Active" as const, schedule: "weekly" as const, canRunNow: true },
+      { name: "Knowledge Bases (FAQ, Offers)", status: "Active" as const, canRunNow: true },
+      { name: "Company Brain (RAG)", status: "Active" as const, canRunNow: true },
     ],
   },
   {
@@ -69,9 +69,9 @@ const departmentsData = [
     icon: Megaphone,
     agentCount: 7,
     agents: [
-      { name: "Deep Research Market Assessment", status: "Active" as const },
-      { name: "Facebook Ads Library Scraper", status: "Active" as const },
-      { name: "Ad Creative Strategist", status: "Active" as const },
+      { name: "Deep Research Market Assessment", status: "Active" as const, canRunNow: true },
+      { name: "Facebook Ads Library Scraper", status: "Active" as const, schedule: "daily" as const, canRunNow: true },
+      { name: "Ad Creative Strategist", status: "Active" as const, canRunNow: true },
     ],
   },
   {
@@ -81,9 +81,9 @@ const departmentsData = [
     icon: TrendingUp,
     agentCount: 5,
     agents: [
-      { name: "VSL Generator", status: "Active" as const },
-      { name: "Perfect Webinar Script", status: "Active" as const },
-      { name: "Perfect Webinar Creator", status: "Active" as const },
+      { name: "VSL Generator", status: "Active" as const, canRunNow: true },
+      { name: "Perfect Webinar Script", status: "Active" as const, canRunNow: true },
+      { name: "Perfect Webinar Creator", status: "Active" as const, canRunNow: true },
     ],
   },
   {
@@ -93,8 +93,8 @@ const departmentsData = [
     icon: Users,
     agentCount: 5,
     agents: [
-      { name: "Setter Performance Closer", status: "Active" as const },
-      { name: "Sales/Finance Data Entry", status: "Active" as const },
+      { name: "Setter Performance Closer", status: "Active" as const, schedule: "daily" as const },
+      { name: "Sales/Finance Data Entry", status: "Active" as const, schedule: "daily" as const, canRunNow: true },
     ],
   },
   {
@@ -104,9 +104,9 @@ const departmentsData = [
     icon: Settings,
     agentCount: 6,
     agents: [
-      { name: "Process Automation Agent", status: "Active" as const },
-      { name: "Resource Optimization Agent", status: "Active" as const },
-      { name: "Quality Control Monitor", status: "Active" as const },
+      { name: "Process Automation Agent", status: "Active" as const, schedule: "daily" as const },
+      { name: "Resource Optimization Agent", status: "Active" as const, schedule: "weekly" as const },
+      { name: "Quality Control Monitor", status: "Active" as const, schedule: "daily" as const },
     ],
   },
   {
@@ -116,9 +116,9 @@ const departmentsData = [
     icon: DollarSign,
     agentCount: 4,
     agents: [
-      { name: "Budget Forecasting Agent", status: "Active" as const },
-      { name: "Expense Tracker", status: "Active" as const },
-      { name: "Revenue Analytics Agent", status: "Active" as const },
+      { name: "Budget Forecasting Agent", status: "Active" as const, schedule: "monthly" as const, canRunNow: true },
+      { name: "Expense Tracker", status: "Active" as const, schedule: "daily" as const },
+      { name: "Revenue Analytics Agent", status: "Active" as const, schedule: "weekly" as const, canRunNow: true },
     ],
   },
 ];
