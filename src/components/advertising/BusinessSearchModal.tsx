@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MapPin, Phone, Mail, ExternalLink } from "lucide-react";
 
 interface BusinessSearchModalProps {
@@ -17,65 +18,12 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
   const [location, setLocation] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [businesses, setBusinesses] = useState<any[]>([]);
-  const [selectedPlace, setSelectedPlace] = useState<any>(null);
-  const [autocompleteContainer, setAutocompleteContainer] = useState<HTMLDivElement | null>(null);
-
-  const initAutocomplete = async (containerElement: HTMLDivElement) => {
-    if (typeof google !== 'undefined' && google.maps?.places?.PlaceAutocompleteElement) {
-      setupAutocomplete(containerElement);
-      return;
-    }
-
-    const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (!GOOGLE_MAPS_API_KEY) {
-      toast({
-        title: "Configuration Error",
-        description: "Google Maps API key not configured",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      setupAutocomplete(containerElement);
-    };
-
-    document.head.appendChild(script);
-  };
-
-  const setupAutocomplete = (containerElement: HTMLDivElement) => {
-    const PlaceAutocompleteElement = (window as any).google.maps.places.PlaceAutocompleteElement;
-    const autocompleteElement = new PlaceAutocompleteElement();
-    autocompleteElement.id = 'place-autocomplete';
-    
-    containerElement.innerHTML = '';
-    containerElement.appendChild(autocompleteElement);
-
-    autocompleteElement.addEventListener('gmp-placeselect', async (event: any) => {
-      const place = event.place;
-      await place.fetchFields({ fields: ['geometry', 'formattedAddress'] });
-      
-      if (place.geometry?.location) {
-        setSelectedPlace({
-          lat: place.geometry.location.lat(),
-          lng: place.geometry.location.lng(),
-          address: place.formattedAddress
-        });
-        setLocation(place.formattedAddress);
-      }
-    });
-  };
 
   const handleSearch = async () => {
-    if (!selectedPlace) {
+    if (!location.trim()) {
       toast({
         title: "Location required",
-        description: "Please select a location from the dropdown",
+        description: "Please enter a location",
         variant: "destructive"
       });
       return;
@@ -83,12 +31,11 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
 
     setIsSearching(true);
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
+      // Simple geocoding - just pass the location string
       const { data, error } = await supabase.functions.invoke('search-business', {
         body: {
           query: companyName,
-          lat: selectedPlace.lat,
-          lng: selectedPlace.lng
+          location: location
         }
       });
 
@@ -120,7 +67,6 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
     onClose();
     setBusinesses([]);
     setLocation("");
-    setSelectedPlace(null);
   };
 
   return (
@@ -136,14 +82,10 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
               <label className="text-sm font-medium mb-2 block">
                 Enter your business location
               </label>
-              <div 
-                ref={(el) => {
-                  if (el && !autocompleteContainer) {
-                    setAutocompleteContainer(el);
-                    initAutocomplete(el);
-                  }
-                }}
-                className="w-full"
+              <Input
+                placeholder="e.g., San Francisco, CA"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
               />
             </div>
             <Button 

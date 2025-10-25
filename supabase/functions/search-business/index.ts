@@ -11,20 +11,18 @@ serve(async (req) => {
   }
 
   try {
-    const { query, lat, lng } = await req.json();
+    const { query, location } = await req.json();
     
-    console.log('Searching for business:', { query, lat, lng });
+    console.log('Searching for business:', { query, location });
 
     const RAPIDAPI_KEY = Deno.env.get('RAPIDAPI_KEY');
     if (!RAPIDAPI_KEY) {
       throw new Error('RAPIDAPI_KEY not configured');
     }
 
-    // Build the API URL with query parameters
+    // Build the API URL with query parameters - combine query and location
     const url = new URL('https://local-business-data.p.rapidapi.com/search');
-    url.searchParams.append('query', query);
-    url.searchParams.append('lat', lat.toString());
-    url.searchParams.append('lng', lng.toString());
+    url.searchParams.append('query', `${query} ${location}`);
     url.searchParams.append('limit', '3');
     url.searchParams.append('language', 'en');
     url.searchParams.append('region', 'us');
