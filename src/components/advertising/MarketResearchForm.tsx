@@ -30,6 +30,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMiningWebsite, setIsMiningWebsite] = useState(false);
   const [miningCompetitors, setMiningCompetitors] = useState<{ [key: number]: boolean }>({});
+  const [analyzedCompetitors, setAnalyzedCompetitors] = useState<{ [key: number]: boolean }>({});
   const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
   const [formData, setFormData] = useState<FormData>({
     companyName: "",
@@ -142,82 +143,106 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
   };
 
   const handleAnalyzeCompetitor = async (competitorIndex: number) => {
-    const competitorUrl = formData[`competitor${competitorIndex}` as keyof FormData];
+    // Get all unanalyzed competitors starting from this one
+    const competitorsToAnalyze: number[] = [];
     
-    if (!competitorUrl || !validateUrl(competitorUrl)) {
+    for (let i = 1; i <= 3; i++) {
+      const competitorUrl = formData[`competitor${i}` as keyof FormData];
+      if (competitorUrl && validateUrl(competitorUrl) && !analyzedCompetitors[i]) {
+        competitorsToAnalyze.push(i);
+      }
+    }
+
+    if (competitorsToAnalyze.length === 0) {
       toast({
-        title: "Invalid URL",
-        description: "Please enter a valid competitor URL first",
-        variant: "destructive"
+        title: "No Competitors to Analyze",
+        description: "All competitors have been analyzed or no valid URLs found",
       });
       return;
     }
 
-    setMiningCompetitors({ ...miningCompetitors, [competitorIndex]: true });
-    
-    // Progress messages shown every 5 seconds
-    const progressMessages = [
-      "Analyzing competitor website...",
-      "Extracting market insights...",
-      "Understanding their positioning...",
-      "Synthesizing client profile data...",
-      "Creating ideal client avatar...",
-      "Almost done, finalizing insights..."
-    ];
-    
-    let progressIndex = 0;
     toast({
-      title: "Analyzing Competitor",
-      description: progressMessages[0],
+      title: "Analyzing Competitors",
+      description: `Starting analysis of ${competitorsToAnalyze.length} competitor${competitorsToAnalyze.length > 1 ? 's' : ''}...`,
     });
-    
-    const progressInterval = setInterval(() => {
-      progressIndex++;
-      if (progressIndex < progressMessages.length) {
-        toast({
-          title: "Analyzing Competitor",
-          description: progressMessages[progressIndex],
-        });
-      }
-    }, 5000); // Show progress every 5 seconds
 
-    try {
-      const { data, error } = await supabase.functions.invoke('scrape-competitor-avatar', {
-        body: { 
-          url: competitorUrl.trim(),
-          existingAvatarDescription: formData.clientAvatarDescription,
-          productDescription: formData.productDescription,
-          companyName: formData.companyName
-        }
-      });
-
-      clearInterval(progressInterval);
-
-      if (error) throw error;
-
-      if (data?.ideal_client_avatar) {
-        // Replace the entire description with the synthesized version
-        setFormData({
-          ...formData,
-          clientAvatarDescription: data.ideal_client_avatar
-        });
-        
-        toast({
-          title: "Competitor Analyzed",
-          description: "Ideal client avatar has been updated with new insights"
-        });
-      }
-    } catch (error) {
-      clearInterval(progressInterval);
-      console.error('Error analyzing competitor:', error);
+    // Analyze each competitor sequentially
+    for (const num of competitorsToAnalyze) {
+      const competitorUrl = formData[`competitor${num}` as keyof FormData];
+      
+      setMiningCompetitors(prev => ({ ...prev, [num]: true }));
+      
+      // Progress messages shown every 5 seconds
+      const progressMessages = [
+        `Analyzing competitor ${num}...`,
+        "Extracting market insights...",
+        "Understanding their positioning...",
+        "Synthesizing client profile data...",
+        "Creating ideal client avatar...",
+        "Almost done, finalizing insights..."
+      ];
+      
+      let progressIndex = 0;
       toast({
-        title: "Analysis Failed",
-        description: "Failed to analyze competitor. Please try again.",
-        variant: "destructive"
+        title: `Analyzing Competitor ${num}`,
+        description: progressMessages[0],
       });
-    } finally {
-      setMiningCompetitors({ ...miningCompetitors, [competitorIndex]: false });
+      
+      const progressInterval = setInterval(() => {
+        progressIndex++;
+        if (progressIndex < progressMessages.length) {
+          toast({
+            title: `Analyzing Competitor ${num}`,
+            description: progressMessages[progressIndex],
+          });
+        }
+      }, 5000);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('scrape-competitor-avatar', {
+          body: { 
+            url: competitorUrl.trim(),
+            existingAvatarDescription: formData.clientAvatarDescription,
+            productDescription: formData.productDescription,
+            companyName: formData.companyName
+          }
+        });
+
+        clearInterval(progressInterval);
+
+        if (error) throw error;
+
+        if (data?.ideal_client_avatar) {
+          // Replace the entire description with the synthesized version
+          setFormData(prev => ({
+            ...prev,
+            clientAvatarDescription: data.ideal_client_avatar
+          }));
+          
+          setAnalyzedCompetitors(prev => ({ ...prev, [num]: true }));
+          
+          toast({
+            title: `Competitor ${num} Analyzed`,
+            description: "Ideal client avatar has been updated with new insights"
+          });
+        }
+      } catch (error) {
+        clearInterval(progressInterval);
+        console.error(`Error analyzing competitor ${num}:`, error);
+        toast({
+          title: `Analysis Failed for Competitor ${num}`,
+          description: "Failed to analyze competitor. Continuing with others...",
+          variant: "destructive"
+        });
+      } finally {
+        setMiningCompetitors(prev => ({ ...prev, [num]: false }));
+      }
     }
+
+    toast({
+      title: "Analysis Complete",
+      description: `Analyzed ${competitorsToAnalyze.length} competitor${competitorsToAnalyze.length > 1 ? 's' : ''} successfully`,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -342,6 +367,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
         clientAvatarDescription: "",
       });
       setSelectedBusiness(null);
+      setAnalyzedCompetitors({});
 
     } catch (error) {
       console.error("Error creating market research report:", error);
@@ -449,6 +475,13 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                   >
                     {miningCompetitors[num] ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : analyzedCompetitors[num] ? (
+                      <Star
+                        className="h-5 w-5 text-green-500 fill-green-500"
+                        style={{ 
+                          filter: 'drop-shadow(0 0 6px rgb(34 197 94 / 0.6))'
+                        }}
+                      />
                     ) : (
                       <Star
                         className="h-5 w-5 text-yellow-400 fill-yellow-400"
