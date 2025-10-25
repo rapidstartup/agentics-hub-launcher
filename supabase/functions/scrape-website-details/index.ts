@@ -28,20 +28,25 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         url: url,
-        formats: ['extract'],
+        formats: ['markdown', 'extract'],
         extract: {
-          prompt: "From this website, identify and list the top 3 competitors by their website URLs. Also, provide a detailed product or service description of at least 50 characters, explaining what problems it solves and what makes it unique.",
+          prompt: `Analyze this business website and extract:
+1. COMPETITORS: Find 3 EXTERNAL competitor companies (NOT internal pages, privacy policies, or social media links). Look for companies mentioned as alternatives, comparisons, or in the same industry. Return ONLY their main website URLs (e.g., https://competitor.com). If no competitors are explicitly mentioned, research the industry/service and provide 3 major competitors in this space.
+2. PRODUCT/SERVICE: Write a detailed 100+ character description of what this company does, what problems they solve, their unique value proposition, and target market.`,
           schema: {
             type: "object",
             properties: {
               competitors: {
                 type: "array",
                 items: { type: "string" },
-                description: "List of competitor website URLs"
+                description: "Array of 3 competitor website URLs (external domains only, no internal links)",
+                minItems: 3,
+                maxItems: 3
               },
               product_service_description: {
                 type: "string",
-                description: "Detailed product or service description"
+                description: "Comprehensive product/service description with problem solved, value proposition, and target market",
+                minLength: 100
               }
             },
             required: ["competitors", "product_service_description"]
