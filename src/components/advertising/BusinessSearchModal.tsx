@@ -6,6 +6,32 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MapPin, Phone, Mail, ExternalLink } from "lucide-react";
 
+// Add global styles for Google Maps autocomplete to appear above modal
+const AUTOCOMPLETE_STYLES = `
+  .pac-container {
+    z-index: 10000 !important;
+    background-color: hsl(var(--background)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  }
+  .pac-item {
+    padding: 0.5rem 1rem !important;
+    color: hsl(var(--foreground)) !important;
+    border-top: 1px solid hsl(var(--border)) !important;
+    cursor: pointer !important;
+  }
+  .pac-item:hover {
+    background-color: hsl(var(--accent)) !important;
+  }
+  .pac-item-query {
+    color: hsl(var(--foreground)) !important;
+  }
+  .pac-matched {
+    font-weight: 600 !important;
+  }
+`;
+
 interface BusinessSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +49,15 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
 
   useEffect(() => {
     if (!isOpen || !inputRef.current) return;
+
+    // Add styles for autocomplete dropdown
+    const styleId = 'google-maps-autocomplete-styles';
+    if (!document.getElementById(styleId)) {
+      const styleSheet = document.createElement('style');
+      styleSheet.id = styleId;
+      styleSheet.textContent = AUTOCOMPLETE_STYLES;
+      document.head.appendChild(styleSheet);
+    }
 
     const loadGoogleMaps = () => {
       if (window.google?.maps?.places) {
@@ -42,6 +77,13 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
     };
 
     loadGoogleMaps();
+
+    return () => {
+      // Cleanup autocomplete listener
+      if (autocompleteRef.current) {
+        window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
   }, [isOpen]);
 
   const initAutocomplete = () => {
