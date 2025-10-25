@@ -223,7 +223,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
+    // Validation - only company website, product description, and client avatar are required
     if (!formData.companyName.trim()) {
       toast({
         title: "Validation Error",
@@ -237,15 +237,6 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
       toast({
         title: "Validation Error",
         description: "Please enter a valid company website URL",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!validateUrl(formData.competitor1) || !validateUrl(formData.competitor2) || !validateUrl(formData.competitor3)) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter valid URLs for all three competitors",
         variant: "destructive",
       });
       return;
@@ -275,8 +266,21 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        throw new Error("You must be logged in to create a market research report");
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to create market research reports. Contact your administrator for access.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
       }
+
+      // Build competitors array - only include valid URLs
+      const competitors = [
+        formData.competitor1,
+        formData.competitor2,
+        formData.competitor3
+      ].filter(url => url && validateUrl(url));
 
       // Create the report record
       const { data: report, error: insertError } = await supabase
@@ -285,7 +289,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
           user_id: user.id,
           company_name: formData.companyName,
           company_website: formData.companyWebsite,
-          competitor_links: [formData.competitor1, formData.competitor2, formData.competitor3],
+          competitor_links: competitors,
           product_description: formData.productDescription,
           client_avatar_description: formData.clientAvatarDescription,
           status: "pending",
@@ -421,14 +425,13 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
           {selectedBusiness && <BusinessDetailsDisplay business={selectedBusiness} />}
 
           <div className="space-y-4">
-            <Label>Top 3 Competitor Websites *</Label>
+            <Label>Top 3 Competitor Websites (optional)</Label>
             {[1, 2, 3].map((num) => (
               <div key={num} className="relative">
                 <Input
                   value={formData[`competitor${num}` as keyof FormData]}
                   onChange={(e) => setFormData({ ...formData, [`competitor${num}`]: e.target.value })}
                   placeholder={`Competitor ${num}: https://competitor${num}.com`}
-                  required
                 />
                 {formData[`competitor${num}` as keyof FormData] && 
                  validateUrl(formData[`competitor${num}` as keyof FormData]) && (
@@ -443,7 +446,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                     {miningCompetitors[num] ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Star 
+                      <Star
                         className="h-5 w-5 text-yellow-400 fill-yellow-400"
                         style={{ 
                           animation: 'scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), pulse 1.5s cubic-bezier(0.4,0,0.6,1) 4',
@@ -488,7 +491,17 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
             </p>
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button 
+            type="submit" 
+            disabled={
+              isSubmitting || 
+              !formData.companyWebsite || 
+              !validateUrl(formData.companyWebsite) ||
+              formData.productDescription.trim().length < 50 ||
+              formData.clientAvatarDescription.trim().length < 50
+            } 
+            className="w-full"
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
