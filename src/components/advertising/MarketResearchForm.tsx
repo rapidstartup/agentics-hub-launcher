@@ -70,23 +70,40 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
 
     setIsMiningWebsite(true);
     
-    // Progress feedback
+    // Progress messages shown every 5 seconds
+    const progressMessages = [
+      "Starting website analysis...",
+      "Collecting URLs and searching pages...",
+      "Extracting competitor information...",
+      "Analyzing product details...",
+      "Processing market data...",
+      "Almost done, finalizing results..."
+    ];
+    
+    let progressIndex = 0;
     toast({
-      title: "Analyzing Website",
-      description: "Collecting URLs and searching pages...",
+      title: "Mining Website",
+      description: progressMessages[0],
     });
+    
+    const progressInterval = setInterval(() => {
+      progressIndex++;
+      if (progressIndex < progressMessages.length) {
+        toast({
+          title: "Mining Website",
+          description: progressMessages[progressIndex],
+        });
+      }
+    }, 5000); // Show progress every 5 seconds
 
     try {
       const { data, error } = await supabase.functions.invoke('scrape-website-details', {
         body: { url: formData.companyWebsite }
       });
 
-      if (error) throw error;
+      clearInterval(progressInterval);
 
-      toast({
-        title: "Processing Data",
-        description: "Gathering insights and producing summary...",
-      });
+      if (error) throw error;
 
       if (data?.data) {
         const extracted = data.data;
@@ -112,10 +129,11 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
         });
       }
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Error mining website:', error);
       toast({
         title: "Mining Failed",
-        description: "Failed to extract data from website. Please try again.",
+        description: "Failed to extract data. The operation may have timed out - please try again.",
         variant: "destructive"
       });
     } finally {

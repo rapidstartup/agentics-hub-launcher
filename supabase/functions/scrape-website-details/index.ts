@@ -20,31 +20,33 @@ serve(async (req) => {
       throw new Error('FIRECRAWL_API_KEY not configured');
     }
 
-    const response = await fetch('https://api.firecrawl.dev/v1/extract', {
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        urls: [`${url}/*`],
-        prompt: "From all pages, identify and list the top 3 competitors by their website URLs. Also, provide a detailed product or service description of at least 50 characters, explaining what problems it solves and what makes it unique.",
-        schema: {
-          type: "object",
-          properties: {
-            competitors: {
-              type: "array",
-              items: { type: "string" },
-              description: "List of competitor website URLs"
+        url: url,
+        formats: ['extract'],
+        extract: {
+          prompt: "From this website, identify and list the top 3 competitors by their website URLs. Also, provide a detailed product or service description of at least 50 characters, explaining what problems it solves and what makes it unique.",
+          schema: {
+            type: "object",
+            properties: {
+              competitors: {
+                type: "array",
+                items: { type: "string" },
+                description: "List of competitor website URLs"
+              },
+              product_service_description: {
+                type: "string",
+                description: "Detailed product or service description"
+              }
             },
-            product_service_description: {
-              type: "string",
-              description: "Detailed product or service description"
-            }
-          },
-          required: ["competitors", "product_service_description"]
-        },
-        enableWebSearch: true
+            required: ["competitors", "product_service_description"]
+          }
+        }
       }),
     });
 
