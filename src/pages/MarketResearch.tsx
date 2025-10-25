@@ -92,6 +92,7 @@ const MarketResearch = () => {
             <ResearchReportViewer 
               content={reportContent} 
               companyName={companyName}
+              reportId={viewingReportId}
             />
           )}
 

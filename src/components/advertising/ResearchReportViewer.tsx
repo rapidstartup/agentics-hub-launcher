@@ -1,22 +1,82 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Copy, Check, FileText } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Download, Copy, Check, FileText, Save, Database, Eye, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ResearchReportViewerProps {
   content: string;
   companyName: string;
+  reportId: string;
 }
 
-export const ResearchReportViewer = ({ content, companyName }: ResearchReportViewerProps) => {
+export const ResearchReportViewer = ({ content, companyName, reportId }: ResearchReportViewerProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(content);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSendingToKB, setIsSendingToKB] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("market_research_reports")
+        .update({ report_content: editedContent })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Report Saved",
+        description: "Your changes have been saved successfully",
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving report:", error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSendToKnowledgeBase = async () => {
+    setIsSendingToKB(true);
+    try {
+      // TODO: Implement knowledge base integration
+      toast({
+        title: "Knowledge Base Integration",
+        description: "This feature will be available soon. The report will be saved to the client's knowledge base.",
+      });
+      
+      // Placeholder for future implementation
+      // await supabase.functions.invoke('send-to-knowledge-base', {
+      //   body: { reportId, content: editedContent, companyName }
+      // });
+      
+    } catch (error) {
+      console.error("Error sending to knowledge base:", error);
+      toast({
+        title: "Failed to Send",
+        description: "Could not send to knowledge base. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingToKB(false);
+    }
+  };
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(content);
+      await navigator.clipboard.writeText(editedContent);
       setCopied(true);
       toast({
         title: "Copied to clipboard",
@@ -33,7 +93,7 @@ export const ResearchReportViewer = ({ content, companyName }: ResearchReportVie
   };
 
   const handleDownloadMarkdown = () => {
-    const blob = new Blob([content], { type: "text/markdown" });
+    const blob = new Blob([editedContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -98,29 +158,63 @@ export const ResearchReportViewer = ({ content, companyName }: ResearchReportVie
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Market Research Report</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-              Copy
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadMarkdown}>
-              <FileText className="h-4 w-4 mr-2" />
-              .md
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
-              <Download className="h-4 w-4 mr-2" />
-              PDF
-            </Button>
+          <div className="flex gap-2 flex-wrap">
+            {isEditing ? (
+              <>
+                <Button variant="outline" size="sm" onClick={() => {
+                  setEditedContent(content);
+                  setIsEditing(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                  Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadMarkdown}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  .md
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
+                <Button size="sm" onClick={handleSendToKnowledgeBase} disabled={isSendingToKB}>
+                  <Database className="h-4 w-4 mr-2" />
+                  {isSendingToKB ? "Sending..." : "Send to Knowledge Base"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
-        <ScrollArea className="h-[600px] rounded-md border p-6">
-          <div
-            id="report-content"
-            className="prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: formatContent(content) }}
+        {isEditing ? (
+          <Textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            className="min-h-[600px] font-mono text-sm"
+            placeholder="Edit your report content here..."
           />
-        </ScrollArea>
+        ) : (
+          <ScrollArea className="h-[600px] rounded-md border p-6">
+            <div
+              id="report-content"
+              className="prose prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: formatContent(editedContent) }}
+            />
+          </ScrollArea>
+        )}
       </div>
     </Card>
   );
