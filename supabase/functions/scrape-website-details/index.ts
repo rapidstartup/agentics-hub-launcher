@@ -119,17 +119,26 @@ Return ONLY a valid JSON object with this structure:
     const geminiData = await geminiResponse.json();
     console.log('Gemini response:', JSON.stringify(geminiData, null, 2));
 
-    const textContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!textContent) {
+    // Combine all text parts from Gemini response
+    const parts = geminiData.candidates?.[0]?.content?.parts || [];
+    const fullText = parts.map((part: any) => part.text || '').join('\n');
+    
+    if (!fullText) {
       throw new Error('No content in Gemini response');
     }
 
-    const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+    // Extract JSON from markdown code blocks or plain text
+    let jsonMatch = fullText.match(/```json\s*\n([\s\S]*?)\n```/);
+    if (!jsonMatch) {
+      jsonMatch = fullText.match(/\{[\s\S]*\}/);
+    }
+    
     if (!jsonMatch) {
       throw new Error('Could not extract JSON from Gemini response');
     }
 
-    const competitorData = JSON.parse(jsonMatch[0]);
+    const jsonString = jsonMatch[1] || jsonMatch[0];
+    const competitorData = JSON.parse(jsonString);
     
     // Combine results
     const finalResult = {
