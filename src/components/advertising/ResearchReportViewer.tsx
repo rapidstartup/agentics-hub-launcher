@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Copy, Check } from "lucide-react";
+import { Download, Copy, Check, FileText } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,7 +32,7 @@ export const ResearchReportViewer = ({ content, companyName }: ResearchReportVie
     }
   };
 
-  const handleDownload = () => {
+  const handleDownloadMarkdown = () => {
     const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -44,9 +44,67 @@ export const ResearchReportViewer = ({ content, companyName }: ResearchReportVie
     URL.revokeObjectURL(url);
     
     toast({
-      title: "Download started",
-      description: "Your report is being downloaded",
+      title: "Markdown Downloaded",
+      description: "Your report has been downloaded as .md file",
     });
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const { default: jsPDF } = await import('jspdf');
+      const html2canvas = (await import('html2canvas')).default;
+      
+      toast({
+        title: "Generating PDF",
+        description: "Please wait while we create your PDF...",
+      });
+
+      const reportElement = document.getElementById('report-content');
+      if (!reportElement) return;
+
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`market-research-${companyName.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: "Your report has been downloaded as PDF",
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "Failed to generate PDF. Please try downloading as Markdown instead.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Simple markdown to HTML converter for basic formatting
@@ -92,16 +150,23 @@ export const ResearchReportViewer = ({ content, companyName }: ResearchReportVie
           <h2 className="text-2xl font-bold">Market Research Report</h2>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+              Copy
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownload}>
-              <Download className="h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={handleDownloadMarkdown}>
+              <FileText className="h-4 w-4 mr-2" />
+              .md
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF}>
+              <Download className="h-4 w-4 mr-2" />
+              PDF
             </Button>
           </div>
         </div>
 
         <ScrollArea className="h-[600px] rounded-md border p-6">
           <div
+            id="report-content"
             className="prose prose-invert max-w-none"
             dangerouslySetInnerHTML={{ __html: formatContent(content) }}
           />

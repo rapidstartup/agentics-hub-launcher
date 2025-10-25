@@ -18,41 +18,55 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
   const [isSearching, setIsSearching] = useState(false);
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
+  const [autocompleteContainer, setAutocompleteContainer] = useState<HTMLDivElement | null>(null);
 
-  const initAutocomplete = async (inputElement: HTMLInputElement) => {
-    if (typeof google !== 'undefined' && google.maps?.places) {
-      setupAutocomplete(inputElement);
+  const initAutocomplete = async (containerElement: HTMLDivElement) => {
+    if (typeof google !== 'undefined' && google.maps?.places?.PlaceAutocompleteElement) {
+      setupAutocomplete(containerElement);
       return;
     }
 
-    const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyBCVnDPfqNvXJdLSDpEkWpYl8YKjW1Hnfs';
+    const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!GOOGLE_MAPS_API_KEY) {
+      toast({
+        title: "Configuration Error",
+        description: "Google Maps API key not configured",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`;
     script.async = true;
     script.defer = true;
 
-    (window as any).initMap = () => {
-      setupAutocomplete(inputElement);
+    script.onload = () => {
+      setupAutocomplete(containerElement);
     };
 
     document.head.appendChild(script);
   };
 
-  const setupAutocomplete = (inputElement: HTMLInputElement) => {
-    const autocomplete = new (window as any).google.maps.places.Autocomplete(inputElement, {
-      types: ['(cities)'],
-      fields: ['geometry', 'formatted_address']
-    });
+  const setupAutocomplete = (containerElement: HTMLDivElement) => {
+    const PlaceAutocompleteElement = (window as any).google.maps.places.PlaceAutocompleteElement;
+    const autocompleteElement = new PlaceAutocompleteElement();
+    autocompleteElement.id = 'place-autocomplete';
+    
+    containerElement.innerHTML = '';
+    containerElement.appendChild(autocompleteElement);
 
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
+    autocompleteElement.addEventListener('gmp-placeselect', async (event: any) => {
+      const place = event.place;
+      await place.fetchFields({ fields: ['geometry', 'formattedAddress'] });
+      
       if (place.geometry?.location) {
         setSelectedPlace({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
-          address: place.formatted_address
+          address: place.formattedAddress
         });
+        setLocation(place.formattedAddress);
       }
     });
   };
@@ -122,11 +136,14 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
               <label className="text-sm font-medium mb-2 block">
                 Enter your business location
               </label>
-              <Input
-                placeholder="e.g., San Francisco, CA"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                onFocus={(e) => initAutocomplete(e.target)}
+              <div 
+                ref={(el) => {
+                  if (el && !autocompleteContainer) {
+                    setAutocompleteContainer(el);
+                    initAutocomplete(el);
+                  }
+                }}
+                className="w-full"
               />
             </div>
             <Button 

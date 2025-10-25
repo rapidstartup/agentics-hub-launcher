@@ -69,6 +69,13 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
     }
 
     setIsMiningWebsite(true);
+    
+    // Progress feedback
+    toast({
+      title: "Analyzing Website",
+      description: "Collecting URLs and searching pages...",
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('scrape-website-details', {
         body: { url: formData.companyWebsite }
@@ -76,19 +83,32 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
 
       if (error) throw error;
 
+      toast({
+        title: "Processing Data",
+        description: "Gathering insights and producing summary...",
+      });
+
       if (data?.data) {
         const extracted = data.data;
+        const competitors = extracted.competitors || [];
+        
         setFormData({
           ...formData,
-          competitor1: extracted.competitors?.[0] || formData.competitor1,
-          competitor2: extracted.competitors?.[1] || formData.competitor2,
-          competitor3: extracted.competitors?.[2] || formData.competitor3,
+          competitor1: competitors[0] || formData.competitor1,
+          competitor2: competitors[1] || formData.competitor2,
+          competitor3: competitors[2] || formData.competitor3,
           productDescription: extracted.product_service_description || formData.productDescription
         });
         
         toast({
           title: "Website Mined Successfully",
-          description: "Competitors and product description have been extracted"
+          description: `Extracted ${competitors.length} competitors and product description`
+        });
+      } else {
+        toast({
+          title: "Partial Success",
+          description: "Data extracted but results may be incomplete",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -116,12 +136,23 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
     }
 
     setMiningCompetitors({ ...miningCompetitors, [competitorIndex]: true });
+    
+    toast({
+      title: "Analyzing Competitor",
+      description: "Scraping competitor website for insights...",
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('scrape-competitor-avatar', {
         body: { url: competitorUrl }
       });
 
       if (error) throw error;
+
+      toast({
+        title: "Extracting Insights",
+        description: "Processing ideal client avatar data...",
+      });
 
       if (data?.data?.ideal_client_avatar) {
         const separator = formData.clientAvatarDescription.trim() ? '\n\n---\n\n' : '';
