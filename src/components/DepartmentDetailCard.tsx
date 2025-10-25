@@ -8,11 +8,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RotateCw } from "lucide-react";
 import { ScheduleManagementModal } from "./ScheduleManagementModal";
 import { RunNowModal } from "./RunNowModal";
+import { StatusChangeModal } from "./StatusChangeModal";
 import { useParams } from "react-router-dom";
 
 interface Agent {
   name: string;
-  status: "Active" | "Inactive";
+  status: "Active" | "Inactive" | "Paused";
   schedule?: "daily" | "weekly" | "monthly";
   canRunNow?: boolean;
 }
@@ -35,6 +36,7 @@ export const DepartmentDetailCard = ({
   const { clientId } = useParams();
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [runNowModalOpen, setRunNowModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
   const clientNames: Record<string, string> = {
@@ -55,9 +57,30 @@ export const DepartmentDetailCard = ({
     setRunNowModalOpen(true);
   };
 
+  const handleStatusClick = (agent: Agent) => {
+    setSelectedAgent(agent);
+    setStatusModalOpen(true);
+  };
+
   const handleSaveSchedule = (newSchedule: "daily" | "weekly" | "monthly") => {
     console.log(`Updated ${selectedAgent?.name} schedule to ${newSchedule}`);
     // Here you would update the backend
+  };
+
+  const handleSaveStatus = (newStatus: "Active" | "Inactive" | "Paused") => {
+    console.log(`Updated ${selectedAgent?.name} status to ${newStatus}`);
+    // Here you would update the backend
+  };
+
+  const getStatusColor = (status: Agent["status"]) => {
+    switch (status) {
+      case "Active":
+        return "text-green-500";
+      case "Paused":
+        return "text-yellow-500";
+      case "Inactive":
+        return "text-muted-foreground";
+    }
   };
 
   const agentListContent = agents.map((agent, index) => (
@@ -66,7 +89,7 @@ export const DepartmentDetailCard = ({
       className="flex items-center justify-between gap-3 py-2 text-sm group hover:bg-muted/50 px-2 rounded-md transition-colors"
     >
       <span className="text-foreground flex-1">{agent.name}</span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         {agent.schedule && (
           <Badge
             variant="outline"
@@ -87,7 +110,13 @@ export const DepartmentDetailCard = ({
             <RotateCw className="h-3.5 w-3.5" />
           </Button>
         )}
-        <span className="text-xs text-muted-foreground w-14 text-right">{agent.status}</span>
+        <Badge
+          variant="outline"
+          className={`cursor-pointer hover:bg-muted text-xs w-16 justify-center ${getStatusColor(agent.status)}`}
+          onClick={() => handleStatusClick(agent)}
+        >
+          {agent.status}
+        </Badge>
       </div>
     </div>
   ));
@@ -155,6 +184,16 @@ export const DepartmentDetailCard = ({
           onOpenChange={setRunNowModalOpen}
           agentName={selectedAgent.name}
           clientName={clientName}
+        />
+      )}
+
+      {selectedAgent && (
+        <StatusChangeModal
+          open={statusModalOpen}
+          onOpenChange={setStatusModalOpen}
+          agentName={selectedAgent.name}
+          currentStatus={selectedAgent.status}
+          onSave={handleSaveStatus}
         />
       )}
     </>
