@@ -72,14 +72,14 @@ export const DepartmentDetailCard = ({
     // Here you would update the backend
   };
 
-  const getStatusColor = (status: Agent["status"]) => {
+  const getStatusDotColor = (status: Agent["status"]) => {
     switch (status) {
       case "Active":
-        return "text-green-500";
+        return "bg-green-500";
       case "Paused":
-        return "text-yellow-500";
+        return "bg-yellow-500";
       case "Inactive":
-        return "text-muted-foreground";
+        return "bg-gray-400";
     }
   };
 
@@ -110,13 +110,13 @@ export const DepartmentDetailCard = ({
             <RotateCw className="h-3.5 w-3.5" />
           </Button>
         )}
-        <Badge
-          variant="outline"
-          className={`cursor-pointer hover:bg-muted text-xs w-16 justify-center ${getStatusColor(agent.status)}`}
+        <button
           onClick={() => handleStatusClick(agent)}
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          title={`Status: ${agent.status}`}
         >
-          {agent.status}
-        </Badge>
+          <div className={`h-2 w-2 rounded-full ${getStatusDotColor(agent.status)}`} />
+        </button>
       </div>
     </div>
   ));
