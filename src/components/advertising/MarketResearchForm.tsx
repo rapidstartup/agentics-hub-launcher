@@ -324,12 +324,14 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 animate-scale-in"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-accent hover:scale-110 transition-all duration-200"
                   onClick={() => setIsSearchModalOpen(true)}
                 >
-                  <Search className="h-4 w-4 text-primary animate-pulse" 
+                  <Search 
+                    className="h-5 w-5 text-accent-foreground" 
                     style={{ 
-                      animation: 'scale-in 0.4s ease-out, pulse 2s cubic-bezier(0.4,0,0.6,1) 3' 
+                      animation: 'scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), pulse 1.5s cubic-bezier(0.4,0,0.6,1) 4',
+                      transformOrigin: 'center'
                     }} 
                   />
                 </Button>
@@ -353,16 +355,19 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 animate-scale-in"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-accent hover:scale-110 transition-all duration-200"
                   onClick={handleMineWebsite}
                   disabled={isMiningWebsite}
                 >
                   {isMiningWebsite ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Sparkles className="h-4 w-4 text-primary"
+                    <Sparkles 
+                      className="h-5 w-5 text-yellow-500"
                       style={{ 
-                        animation: 'scale-in 0.4s ease-out, pulse 2s cubic-bezier(0.4,0,0.6,1) 3' 
+                        animation: 'scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), pulse 1.5s cubic-bezier(0.4,0,0.6,1) 4',
+                        transformOrigin: 'center',
+                        filter: 'drop-shadow(0 0 4px rgb(234 179 8 / 0.5))'
                       }}
                     />
                   )}
@@ -389,16 +394,19 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                     type="button"
                     size="icon"
                     variant="ghost"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 animate-scale-in"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-accent hover:scale-110 transition-all duration-200"
                     onClick={() => handleAnalyzeCompetitor(num)}
                     disabled={miningCompetitors[num]}
                   >
                     {miningCompetitors[num] ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Star className="h-4 w-4 text-primary fill-primary"
+                      <Star 
+                        className="h-5 w-5 text-yellow-400 fill-yellow-400"
                         style={{ 
-                          animation: 'scale-in 0.4s ease-out, pulse 2s cubic-bezier(0.4,0,0.6,1) 3' 
+                          animation: 'scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), pulse 1.5s cubic-bezier(0.4,0,0.6,1) 4',
+                          transformOrigin: 'center',
+                          filter: 'drop-shadow(0 0 6px rgb(250 204 21 / 0.6))'
                         }}
                       />
                     )}
