@@ -4,19 +4,15 @@ import { StatsCard } from "@/components/StatsCard";
 import { DepartmentDetailCard } from "@/components/DepartmentDetailCard";
 import { Button } from "@/components/ui/button";
 import { 
-  Megaphone, 
-  TrendingUp, 
-  Users, 
-  Target,
   Bot,
   Building2,
   TrendingUp as TrendingUpIcon,
   Trophy,
   Plus,
   Bell,
-  Settings,
-  DollarSign
+  Settings
 } from "lucide-react";
+import { departmentsData } from "@/data/departments";
 
 const stats = [
   {
@@ -46,80 +42,6 @@ const stats = [
     subtitle: "Excellent performance",
     superscript: "",
     icon: Trophy,
-  },
-];
-
-const departmentsData = [
-  {
-    id: "strategy",
-    title: "Strategy",
-    description: "Strategic planning & analysis",
-    icon: Target,
-    agentCount: 4,
-    agents: [
-      { name: "Market Positioning Plan", status: "Active" as const, schedule: "weekly" as const, canRunNow: true },
-      { name: "Knowledge Bases (FAQ, Offers)", status: "Paused" as const, canRunNow: true },
-      { name: "Company Brain (RAG)", status: "Active" as const, canRunNow: true },
-    ],
-  },
-  {
-    id: "advertising",
-    title: "Advertising",
-    description: "Campaign management & optimization",
-    icon: Megaphone,
-    agentCount: 7,
-    agents: [
-      { name: "Deep Research Market Assessment", status: "Active" as const, canRunNow: true },
-      { name: "Facebook Ads Library Scraper", status: "Active" as const, schedule: "daily" as const, canRunNow: true },
-      { name: "Ad Creative Strategist", status: "Inactive" as const, canRunNow: true },
-    ],
-  },
-  {
-    id: "marketing",
-    title: "Marketing",
-    description: "Content & campaign creation",
-    icon: TrendingUp,
-    agentCount: 5,
-    agents: [
-      { name: "VSL Generator", status: "Active" as const, canRunNow: true },
-      { name: "Perfect Webinar Script", status: "Active" as const, canRunNow: true },
-      { name: "Perfect Webinar Creator", status: "Paused" as const, canRunNow: true },
-    ],
-  },
-  {
-    id: "sales",
-    title: "Sales",
-    description: "Performance tracking & optimization",
-    icon: Users,
-    agentCount: 5,
-    agents: [
-      { name: "Setter Performance Closer", status: "Active" as const, schedule: "daily" as const },
-      { name: "Sales/Finance Data Entry", status: "Active" as const, schedule: "daily" as const, canRunNow: true },
-    ],
-  },
-  {
-    id: "operations",
-    title: "Operations",
-    description: "Workflow automation & efficiency",
-    icon: Settings,
-    agentCount: 6,
-    agents: [
-      { name: "Process Automation Agent", status: "Active" as const, schedule: "daily" as const },
-      { name: "Resource Optimization Agent", status: "Paused" as const, schedule: "weekly" as const },
-      { name: "Quality Control Monitor", status: "Active" as const, schedule: "daily" as const },
-    ],
-  },
-  {
-    id: "financials",
-    title: "Financials",
-    description: "Financial planning & analysis",
-    icon: DollarSign,
-    agentCount: 4,
-    agents: [
-      { name: "Budget Forecasting Agent", status: "Active" as const, schedule: "monthly" as const, canRunNow: true },
-      { name: "Expense Tracker", status: "Inactive" as const, schedule: "daily" as const },
-      { name: "Revenue Analytics Agent", status: "Active" as const, schedule: "weekly" as const, canRunNow: true },
-    ],
   },
 ];
 

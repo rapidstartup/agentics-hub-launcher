@@ -1,34 +1,36 @@
 import { 
   Hexagon,
   LayoutDashboard,
-  Target, 
-  Megaphone, 
-  TrendingUp, 
-  Users, 
-  Settings, 
-  DollarSign, 
   Shield,
   FolderKanban,
   BookOpen,
   BarChart3,
   ChevronDown,
-  Gauge
+  Gauge,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { NavLink, useParams } from "react-router-dom";
+import { departmentsData } from "@/data/departments";
 
 export const ChatSidebar = () => {
   const { clientId } = useParams();
   
   const navigationItems = [
-    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: `/client/${clientId}` },
-    { id: "strategy", title: "Strategy", icon: Target, path: `/client/${clientId}/strategy` },
-    { id: "advertising", title: "Advertising", icon: Megaphone, path: `/client/${clientId}/advertising` },
-    { id: "marketing", title: "Marketing", icon: TrendingUp, path: `/client/${clientId}/marketing` },
-    { id: "sales", title: "Sales", icon: Users, path: `/client/${clientId}/sales` },
-    { id: "operations", title: "Operations", icon: Settings, path: `/client/${clientId}/operations` },
-    { id: "financials", title: "Financials", icon: DollarSign, path: `/client/${clientId}/financials` },
+    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: `/client/${clientId}`, agents: [] },
+    ...departmentsData.map(dept => ({
+      id: dept.id,
+      title: dept.title,
+      icon: dept.icon,
+      path: `/client/${clientId}/${dept.id}`,
+      agents: dept.agents,
+    })),
   ];
 
   const quickAccessItems = [
@@ -60,22 +62,48 @@ export const ChatSidebar = () => {
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
-          {navigationItems.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
+          {navigationItems.map((item) => {
+            const hasDepartmentAgents = item.agents && item.agents.length > 0;
+            
+            const navLinkContent = (isActive: boolean) => (
+              <div
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                }`
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.title}</span>
-            </NavLink>
-          ))}
+                }`}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </div>
+            );
+
+            return hasDepartmentAgents ? (
+              <HoverCard key={item.id} openDelay={2000}>
+                <HoverCardTrigger asChild>
+                  <NavLink to={item.path}>
+                    {({ isActive }) => navLinkContent(isActive)}
+                  </NavLink>
+                </HoverCardTrigger>
+                <HoverCardContent side="right" className="w-64">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-foreground">{item.title} Agents</h4>
+                    <div className="space-y-1">
+                      {item.agents.map((agent, idx) => (
+                        <div key={idx} className="text-xs text-muted-foreground">
+                          • {agent.name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            ) : (
+              <NavLink key={item.id} to={item.path}>
+                {({ isActive }) => navLinkContent(isActive)}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* Quick Access Section */}

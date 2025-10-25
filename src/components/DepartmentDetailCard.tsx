@@ -10,13 +10,7 @@ import { ScheduleManagementModal } from "./ScheduleManagementModal";
 import { RunNowModal } from "./RunNowModal";
 import { StatusChangeModal } from "./StatusChangeModal";
 import { useParams } from "react-router-dom";
-
-interface Agent {
-  name: string;
-  status: "Active" | "Inactive" | "Paused";
-  schedule?: "daily" | "weekly" | "monthly";
-  canRunNow?: boolean;
-}
+import { Agent } from "@/data/departments";
 
 interface DepartmentDetailCardProps {
   title: string;
