@@ -78,7 +78,7 @@ export const AdvertisingSidebar = () => {
       </div>
 
       {/* Back to Client Dashboard */}
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-4 relative z-0">
         <Button
           variant="outline"
           onClick={() => navigate(`/client/${clientId}`)}
@@ -90,7 +90,7 @@ export const AdvertisingSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide">
+      <nav className="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide relative z-10">
         <div className="space-y-4">
           {navigationSections.map((section) => (
             <div key={section.label} className="space-y-1">
