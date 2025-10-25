@@ -29,6 +29,8 @@ const MarketResearch = () => {
       description: "Your market research report has been generated successfully!",
     });
     setRefreshTrigger(prev => prev + 1);
+    // Auto-hide the status card after completion
+    setTimeout(() => setCurrentReportId(null), 2000);
   };
 
   const handleViewReport = async (reportId: string) => {
@@ -76,7 +78,7 @@ const MarketResearch = () => {
             </p>
           </div>
 
-          {!viewingReportId && (
+          {!viewingReportId && !reportContent && (
             <>
               <MarketResearchForm onSubmitSuccess={handleSubmitSuccess} />
               
