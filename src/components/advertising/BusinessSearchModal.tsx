@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,47 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
   const [location, setLocation] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [businesses, setBusinesses] = useState<any[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!isOpen || !inputRef.current) return;
+
+    const loadGoogleMaps = () => {
+      if (window.google?.maps?.places) {
+        initAutocomplete();
+        return;
+      }
+
+      const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!GOOGLE_MAPS_API_KEY) return;
+
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => initAutocomplete();
+      document.head.appendChild(script);
+    };
+
+    loadGoogleMaps();
+  }, [isOpen]);
+
+  const initAutocomplete = () => {
+    if (!inputRef.current || !window.google?.maps?.places) return;
+
+    autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+      types: ['(cities)'],
+      fields: ['formatted_address']
+    });
+
+    autocompleteRef.current.addListener('place_changed', () => {
+      const place = autocompleteRef.current.getPlace();
+      if (place.formatted_address) {
+        setLocation(place.formatted_address);
+      }
+    });
+  };
 
   const handleSearch = async () => {
     if (!location.trim()) {
@@ -83,6 +124,7 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
                 Enter your business location
               </label>
               <Input
+                ref={inputRef}
                 placeholder="e.g., San Francisco, CA"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
