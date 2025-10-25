@@ -155,36 +155,60 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
 
     setMiningCompetitors({ ...miningCompetitors, [competitorIndex]: true });
     
+    // Progress messages shown every 5 seconds
+    const progressMessages = [
+      "Analyzing competitor website...",
+      "Extracting market insights...",
+      "Understanding their positioning...",
+      "Synthesizing client profile data...",
+      "Creating ideal client avatar...",
+      "Almost done, finalizing insights..."
+    ];
+    
+    let progressIndex = 0;
     toast({
       title: "Analyzing Competitor",
-      description: "Scraping competitor website for insights...",
+      description: progressMessages[0],
     });
+    
+    const progressInterval = setInterval(() => {
+      progressIndex++;
+      if (progressIndex < progressMessages.length) {
+        toast({
+          title: "Analyzing Competitor",
+          description: progressMessages[progressIndex],
+        });
+      }
+    }, 5000); // Show progress every 5 seconds
 
     try {
       const { data, error } = await supabase.functions.invoke('scrape-competitor-avatar', {
-        body: { url: competitorUrl }
+        body: { 
+          url: competitorUrl,
+          existingAvatarDescription: formData.clientAvatarDescription,
+          productDescription: formData.productDescription,
+          companyName: formData.companyName
+        }
       });
+
+      clearInterval(progressInterval);
 
       if (error) throw error;
 
-      toast({
-        title: "Extracting Insights",
-        description: "Processing ideal client avatar data...",
-      });
-
-      if (data?.data?.ideal_client_avatar) {
-        const separator = formData.clientAvatarDescription.trim() ? '\n\n---\n\n' : '';
+      if (data?.ideal_client_avatar) {
+        // Replace the entire description with the synthesized version
         setFormData({
           ...formData,
-          clientAvatarDescription: formData.clientAvatarDescription + separator + data.data.ideal_client_avatar
+          clientAvatarDescription: data.ideal_client_avatar
         });
         
         toast({
           title: "Competitor Analyzed",
-          description: "Ideal client avatar insights have been added"
+          description: "Ideal client avatar has been updated with new insights"
         });
       }
     } catch (error) {
+      clearInterval(progressInterval);
       console.error('Error analyzing competitor:', error);
       toast({
         title: "Analysis Failed",
