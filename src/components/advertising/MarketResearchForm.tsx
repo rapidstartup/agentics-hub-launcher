@@ -215,16 +215,10 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
         if (error) throw error;
 
         if (data?.ideal_client_avatar) {
-          // Ensure the value is always a string - handle both string and object responses
-          let avatarDescription = '';
-          if (typeof data.ideal_client_avatar === 'string') {
-            avatarDescription = data.ideal_client_avatar;
-          } else if (typeof data.ideal_client_avatar === 'object') {
-            // If it's an object, stringify it nicely
-            avatarDescription = JSON.stringify(data.ideal_client_avatar, null, 2);
-          } else {
-            avatarDescription = String(data.ideal_client_avatar || '');
-          }
+          // Ensure the value is always a string
+          const avatarDescription = typeof data.ideal_client_avatar === 'string' 
+            ? data.ideal_client_avatar 
+            : String(data.ideal_client_avatar || '');
           
           // Replace the entire description with the synthesized version
           setFormData(prev => ({
@@ -261,6 +255,17 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check authentication first
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to generate market research reports.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validation - only company website, product description, and client avatar are required
     if (!formData.companyName.trim()) {
       toast({

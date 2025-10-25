@@ -35,7 +35,7 @@ ${existingAvatarDescription || 'Not yet defined'}
 3. Based on our product/service description, refine and update the ideal client avatar for OUR COMPANY (not the competitor)
 4. If there's existing avatar data, integrate the new insights with it to create a more comprehensive profile
 
-**Return a detailed ideal client avatar description (200+ characters) that includes:**
+**Return a detailed ideal client avatar description as a flowing paragraph (300-500 words) that includes:**
 - Demographics (age, location, role, industry)
 - Psychographics (values, goals, challenges)
 - Pain points they experience
@@ -45,10 +45,9 @@ ${existingAvatarDescription || 'Not yet defined'}
 
 Focus on creating the ideal client profile for OUR COMPANY based on competitive intelligence.
 
-Return ONLY a valid JSON object:
-{
-  "ideal_client_avatar": "comprehensive description here"
-}`;
+Write a comprehensive, flowing paragraph that describes the ideal client avatar. Do NOT return JSON. Return plain text in paragraph form that can be directly used in a marketing document.
+
+Return ONLY the paragraph description, nothing else.`;
 
     // Use Gemini with search grounding
     const response = await fetch(
@@ -89,27 +88,15 @@ Return ONLY a valid JSON object:
 
     // Combine all text parts from Gemini response
     const parts = geminiData.candidates?.[0]?.content?.parts || [];
-    const fullText = parts.map((part: any) => part.text || '').join('\n');
+    const fullText = parts.map((part: any) => part.text || '').join('\n').trim();
     
     if (!fullText) {
       throw new Error('No content in Gemini response');
     }
 
-    // Extract JSON from markdown code blocks or plain text
-    let jsonMatch = fullText.match(/```json\s*\n([\s\S]*?)\n```/);
-    if (!jsonMatch) {
-      jsonMatch = fullText.match(/\{[\s\S]*\}/);
-    }
-    
-    if (!jsonMatch) {
-      throw new Error('Could not extract JSON from Gemini response');
-    }
+    console.log('Extracted avatar description:', fullText);
 
-    const jsonString = jsonMatch[1] || jsonMatch[0];
-    const extractedData = JSON.parse(jsonString);
-    console.log('Extracted avatar data:', extractedData);
-
-    return new Response(JSON.stringify(extractedData), {
+    return new Response(JSON.stringify({ ideal_client_avatar: fullText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
