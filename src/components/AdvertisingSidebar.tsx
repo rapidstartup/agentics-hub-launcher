@@ -66,14 +66,14 @@ export const AdvertisingSidebar = () => {
   ];
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-border bg-background">
+    <aside className="flex h-screen min-w-64 w-64 flex-col border-r border-border bg-background shrink-0">
       {/* Header with Logo */}
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 shrink-0">
             <Rocket className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">AdLaunch Pro</h1>
+          <h1 className="text-xl font-bold text-foreground whitespace-nowrap">AdLaunch Pro</h1>
         </div>
       </div>
 
@@ -84,8 +84,8 @@ export const AdvertisingSidebar = () => {
           onClick={() => navigate(`/client/${clientId}`)}
           className="w-full justify-start gap-2 border-border text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Client Dashboard
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          <span className="truncate">Client Dashboard</span>
         </Button>
       </div>
 
@@ -111,8 +111,8 @@ export const AdvertisingSidebar = () => {
                       }`
                     }
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.title}</span>
                   </NavLink>
                 ))}
               </div>
