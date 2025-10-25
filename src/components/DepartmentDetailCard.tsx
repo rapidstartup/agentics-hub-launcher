@@ -103,7 +103,7 @@ export const DepartmentDetailCard = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-7 w-7 opacity-30 group-hover:opacity-100 transition-opacity"
             onClick={() => handleRunNowClick(agent)}
             title="Run now"
           >
