@@ -115,7 +115,9 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
           competitor1: competitors[0] || formData.competitor1,
           competitor2: competitors[1] || formData.competitor2,
           competitor3: competitors[2] || formData.competitor3,
-          productDescription: extracted.product_service_description || formData.productDescription
+          productDescription: typeof extracted.product_service_description === 'string' 
+            ? extracted.product_service_description 
+            : String(extracted.product_service_description || formData.productDescription)
         });
         
         toast({
@@ -213,10 +215,15 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
         if (error) throw error;
 
         if (data?.ideal_client_avatar) {
+          // Ensure the value is always a string
+          const avatarDescription = typeof data.ideal_client_avatar === 'string' 
+            ? data.ideal_client_avatar 
+            : String(data.ideal_client_avatar || '');
+          
           // Replace the entire description with the synthesized version
           setFormData(prev => ({
             ...prev,
-            clientAvatarDescription: data.ideal_client_avatar
+            clientAvatarDescription: avatarDescription
           }));
           
           setAnalyzedCompetitors(prev => ({ ...prev, [num]: true }));
@@ -267,7 +274,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
       return;
     }
 
-    if (formData.productDescription.trim().length < 50) {
+    if ((formData.productDescription || '').trim().length < 50) {
       toast({
         title: "Validation Error",
         description: "Product description must be at least 50 characters",
@@ -276,7 +283,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
       return;
     }
 
-    if (formData.clientAvatarDescription.trim().length < 50) {
+    if ((formData.clientAvatarDescription || '').trim().length < 50) {
       toast({
         title: "Validation Error",
         description: "Client avatar description must be at least 50 characters",
@@ -509,7 +516,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
               required
             />
             <p className="text-sm text-muted-foreground">
-              {formData.productDescription.length} / 50 minimum characters
+              {(formData.productDescription || '').length} / 50 minimum characters
             </p>
           </div>
 
@@ -524,7 +531,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
               required
             />
             <p className="text-sm text-muted-foreground">
-              {formData.clientAvatarDescription.length} / 50 minimum characters
+              {(formData.clientAvatarDescription || '').length} / 50 minimum characters
             </p>
           </div>
 
