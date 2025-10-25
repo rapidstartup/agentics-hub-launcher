@@ -13,49 +13,87 @@ serve(async (req) => {
   try {
     const { url } = await req.json();
     
-    console.log('Scraping website details for:', url);
+    console.log('Analyzing website with Gemini search:', url);
 
-    const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!FIRECRAWL_API_KEY) {
-      throw new Error('FIRECRAWL_API_KEY not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: url,
-        formats: ['extract'],
-        extract: {
-          prompt: `Analyze this business website and provide a comprehensive description of their product or service. Include: what they do, what problems they solve, their unique value proposition, target market, and key differentiators. Be detailed and specific (minimum 100 characters).`,
-          schema: {
-            type: "object",
-            properties: {
-              product_service_description: {
-                type: "string",
-                description: "Comprehensive product/service description with problem solved, value proposition, target market, and differentiators",
-                minLength: 100
-              }
-            },
-            required: ["product_service_description"]
+    // Use Gemini with search grounding to find competitors and analyze the business
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Analyze the business at ${url}. 
+
+1. Research and identify 3 REAL competitor companies in the same industry/market. Return their primary website URLs (format: https://competitor.com). These must be:
+   - External competitor businesses (NOT internal pages, privacy policies, or social media links)
+   - Direct competitors offering similar products/services
+   - Well-established companies in the same space
+
+2. Provide a comprehensive description (100+ characters) of what this company does, including:
+   - What problems they solve
+   - Their unique value proposition
+   - Target market
+   - Key differentiators
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "competitors": ["https://competitor1.com", "https://competitor2.com", "https://competitor3.com"],
+  "product_service_description": "detailed description here"
+}`
+            }]
+          }],
+          tools: [{
+            googleSearch: {}
+          }],
+          generationConfig: {
+            temperature: 0.3,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 2048,
           }
-        }
-      }),
-    });
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Firecrawl error:', response.status, errorText);
-      throw new Error(`Firecrawl error: ${response.status}`);
+      console.error('Gemini API error:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('Firecrawl response:', data);
+    const geminiData = await response.json();
+    console.log('Gemini response:', JSON.stringify(geminiData, null, 2));
 
-    return new Response(JSON.stringify(data), {
+    // Extract the text content from Gemini's response
+    const textContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!textContent) {
+      throw new Error('No content in Gemini response');
+    }
+
+    // Parse the JSON from the response
+    const jsonMatch = textContent.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Could not extract JSON from Gemini response');
+    }
+
+    const extractedData = JSON.parse(jsonMatch[0]);
+    console.log('Extracted data:', extractedData);
+
+    // Return in the same format as before for frontend compatibility
+    return new Response(JSON.stringify({
+      success: true,
+      data: extractedData
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
