@@ -10,6 +10,7 @@ import MarketResearch from "./pages/MarketResearch";
 import AdOptimizer from "./pages/AdOptimizer";
 import AdOptimizerRunDetails from "./pages/AdOptimizerRunDetails";
 import AdSpy from "./pages/AdSpy";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/client/techstart-solutions" replace />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/client/:clientId" element={<Index />} />
           <Route path="/client/:clientId/advertising" element={<Advertising />} />
           <Route path="/client/:clientId/advertising/market-research" element={<MarketResearch />} />
