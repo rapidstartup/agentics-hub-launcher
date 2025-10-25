@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search, Sparkles, Star } from "lucide-react";
+import { BusinessSearchModal } from "./BusinessSearchModal";
+import { BusinessDetailsDisplay } from "./BusinessDetailsDisplay";
 
 interface FormData {
   companyName: string;
@@ -25,6 +27,10 @@ interface MarketResearchFormProps {
 export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isMiningWebsite, setIsMiningWebsite] = useState(false);
+  const [miningCompetitors, setMiningCompetitors] = useState<{ [key: number]: boolean }>({});
+  const [selectedBusiness, setSelectedBusiness] = useState<any>(null);
   const [formData, setFormData] = useState<FormData>({
     companyName: "",
     companyWebsite: "",
@@ -41,6 +47,103 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
       return true;
     } catch {
       return false;
+    }
+  };
+
+  const handleBusinessSelected = (business: any) => {
+    setSelectedBusiness(business);
+    setFormData({
+      ...formData,
+      companyWebsite: business.website || ""
+    });
+  };
+
+  const handleMineWebsite = async () => {
+    if (!formData.companyWebsite || !validateUrl(formData.companyWebsite)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid website URL first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsMiningWebsite(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-website-details', {
+        body: { url: formData.companyWebsite }
+      });
+
+      if (error) throw error;
+
+      if (data?.data) {
+        const extracted = data.data;
+        setFormData({
+          ...formData,
+          competitor1: extracted.competitors?.[0] || formData.competitor1,
+          competitor2: extracted.competitors?.[1] || formData.competitor2,
+          competitor3: extracted.competitors?.[2] || formData.competitor3,
+          productDescription: extracted.product_service_description || formData.productDescription
+        });
+        
+        toast({
+          title: "Website Mined Successfully",
+          description: "Competitors and product description have been extracted"
+        });
+      }
+    } catch (error) {
+      console.error('Error mining website:', error);
+      toast({
+        title: "Mining Failed",
+        description: "Failed to extract data from website. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsMiningWebsite(false);
+    }
+  };
+
+  const handleAnalyzeCompetitor = async (competitorIndex: number) => {
+    const competitorUrl = formData[`competitor${competitorIndex}` as keyof FormData];
+    
+    if (!competitorUrl || !validateUrl(competitorUrl)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid competitor URL first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setMiningCompetitors({ ...miningCompetitors, [competitorIndex]: true });
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-competitor-avatar', {
+        body: { url: competitorUrl }
+      });
+
+      if (error) throw error;
+
+      if (data?.data?.ideal_client_avatar) {
+        const separator = formData.clientAvatarDescription.trim() ? '\n\n---\n\n' : '';
+        setFormData({
+          ...formData,
+          clientAvatarDescription: formData.clientAvatarDescription + separator + data.data.ideal_client_avatar
+        });
+        
+        toast({
+          title: "Competitor Analyzed",
+          description: "Ideal client avatar insights have been added"
+        });
+      }
+    } catch (error) {
+      console.error('Error analyzing competitor:', error);
+      toast({
+        title: "Analysis Failed",
+        description: "Failed to analyze competitor. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setMiningCompetitors({ ...miningCompetitors, [competitorIndex]: false });
     }
   };
 
@@ -141,7 +244,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
       } else {
         toast({
           title: "Research Started",
-          description: "Your market research report is being generated. This will take 5-10 minutes.",
+          description: "Your market research report is being generated. This will take a few minutes.",
         });
       }
 
@@ -157,6 +260,7 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
         productDescription: "",
         clientAvatarDescription: "",
       });
+      setSelectedBusiness(null);
 
     } catch (error) {
       console.error("Error creating market research report:", error);
@@ -171,94 +275,145 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
   };
 
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="companyName">Company Name *</Label>
-          <Input
-            id="companyName"
-            value={formData.companyName}
-            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            placeholder="e.g., Acme Corporation"
-            required
-          />
-        </div>
+    <>
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="companyName">Company Name *</Label>
+            <div className="relative">
+              <Input
+                id="companyName"
+                value={formData.companyName}
+                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                placeholder="e.g., Acme Corporation"
+                required
+              />
+              {formData.companyName.length >= 3 && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={() => setIsSearchModalOpen(true)}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="companyWebsite">Company Website *</Label>
-          <Input
-            id="companyWebsite"
-            type="url"
-            value={formData.companyWebsite}
-            onChange={(e) => setFormData({ ...formData, companyWebsite: e.target.value })}
-            placeholder="https://example.com"
-            required
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="companyWebsite">Company Website *</Label>
+            <div className="relative">
+              <Input
+                id="companyWebsite"
+                type="url"
+                value={formData.companyWebsite}
+                onChange={(e) => setFormData({ ...formData, companyWebsite: e.target.value })}
+                placeholder="https://example.com"
+                required
+              />
+              {formData.companyWebsite && validateUrl(formData.companyWebsite) && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  onClick={handleMineWebsite}
+                  disabled={isMiningWebsite}
+                >
+                  {isMiningWebsite ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
 
-        <div className="space-y-4">
-          <Label>Top 3 Competitor Websites *</Label>
-          <Input
-            value={formData.competitor1}
-            onChange={(e) => setFormData({ ...formData, competitor1: e.target.value })}
-            placeholder="Competitor 1: https://competitor1.com"
-            required
-          />
-          <Input
-            value={formData.competitor2}
-            onChange={(e) => setFormData({ ...formData, competitor2: e.target.value })}
-            placeholder="Competitor 2: https://competitor2.com"
-            required
-          />
-          <Input
-            value={formData.competitor3}
-            onChange={(e) => setFormData({ ...formData, competitor3: e.target.value })}
-            placeholder="Competitor 3: https://competitor3.com"
-            required
-          />
-        </div>
+          {selectedBusiness && <BusinessDetailsDisplay business={selectedBusiness} />}
 
-        <div className="space-y-2">
-          <Label htmlFor="productDescription">Product/Service Description * (min 50 characters)</Label>
-          <Textarea
-            id="productDescription"
-            value={formData.productDescription}
-            onChange={(e) => setFormData({ ...formData, productDescription: e.target.value })}
-            placeholder="Describe your product or service in detail. What problems does it solve? What makes it unique?"
-            rows={4}
-            required
-          />
-          <p className="text-sm text-muted-foreground">
-            {formData.productDescription.length} / 50 minimum characters
-          </p>
-        </div>
+          <div className="space-y-4">
+            <Label>Top 3 Competitor Websites *</Label>
+            {[1, 2, 3].map((num) => (
+              <div key={num} className="relative">
+                <Input
+                  value={formData[`competitor${num}` as keyof FormData]}
+                  onChange={(e) => setFormData({ ...formData, [`competitor${num}`]: e.target.value })}
+                  placeholder={`Competitor ${num}: https://competitor${num}.com`}
+                  required
+                />
+                {formData[`competitor${num}` as keyof FormData] && 
+                 validateUrl(formData[`competitor${num}` as keyof FormData]) && (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    onClick={() => handleAnalyzeCompetitor(num)}
+                    disabled={miningCompetitors[num]}
+                  >
+                    {miningCompetitors[num] ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Star className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="clientAvatarDescription">Ideal Client Avatar Description * (min 50 characters)</Label>
-          <Textarea
-            id="clientAvatarDescription"
-            value={formData.clientAvatarDescription}
-            onChange={(e) => setFormData({ ...formData, clientAvatarDescription: e.target.value })}
-            placeholder="Describe your ideal customer in detail. Who are they? What do they care about? What are their pain points?"
-            rows={4}
-            required
-          />
-          <p className="text-sm text-muted-foreground">
-            {formData.clientAvatarDescription.length} / 50 minimum characters
-          </p>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="productDescription">Product/Service Description * (min 50 characters)</Label>
+            <Textarea
+              id="productDescription"
+              value={formData.productDescription}
+              onChange={(e) => setFormData({ ...formData, productDescription: e.target.value })}
+              placeholder="Describe your product or service in detail. What problems does it solve? What makes it unique?"
+              rows={4}
+              required
+            />
+            <p className="text-sm text-muted-foreground">
+              {formData.productDescription.length} / 50 minimum characters
+            </p>
+          </div>
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Research Report...
-            </>
-          ) : (
-            "Generate Market Research Report"
-          )}
-        </Button>
-      </form>
-    </Card>
+          <div className="space-y-2">
+            <Label htmlFor="clientAvatarDescription">Ideal Client Avatar Description * (min 50 characters)</Label>
+            <Textarea
+              id="clientAvatarDescription"
+              value={formData.clientAvatarDescription}
+              onChange={(e) => setFormData({ ...formData, clientAvatarDescription: e.target.value })}
+              placeholder="Describe your ideal customer in detail. Who are they? What do they care about? What are their pain points?"
+              rows={4}
+              required
+            />
+            <p className="text-sm text-muted-foreground">
+              {formData.clientAvatarDescription.length} / 50 minimum characters
+            </p>
+          </div>
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Research Report...
+              </>
+            ) : (
+              "Generate Market Research Report"
+            )}
+          </Button>
+        </form>
+      </Card>
+
+      <BusinessSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        companyName={formData.companyName}
+        onBusinessSelected={handleBusinessSelected}
+      />
+    </>
   );
 };

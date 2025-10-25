@@ -3,6 +3,15 @@ project_id = "pooeaxqkysmngpnpnswn"
 [functions.market-research]
 verify_jwt = true
 
+[functions.search-business]
+verify_jwt = true
+
+[functions.scrape-website-details]
+verify_jwt = true
+
+[functions.scrape-competitor-avatar]
+verify_jwt = true
+
 [functions.sentiment-analysis-run]
 verify_jwt = true
 
