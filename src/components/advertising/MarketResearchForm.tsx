@@ -107,19 +107,15 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
 
       if (data?.data) {
         const extracted = data.data;
-        const competitors = extracted.competitors || [];
         
         setFormData({
           ...formData,
-          competitor1: competitors[0] || formData.competitor1,
-          competitor2: competitors[1] || formData.competitor2,
-          competitor3: competitors[2] || formData.competitor3,
           productDescription: extracted.product_service_description || formData.productDescription
         });
         
         toast({
-          title: "Website Mined Successfully",
-          description: `Extracted ${competitors.length} competitors and product description`
+          title: "Website Analyzed",
+          description: "Product description extracted successfully. Please add competitor websites manually."
         });
       } else {
         toast({

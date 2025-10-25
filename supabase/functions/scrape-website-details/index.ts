@@ -28,28 +28,19 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         url: url,
-        formats: ['markdown', 'extract'],
+        formats: ['extract'],
         extract: {
-          prompt: `Analyze this business website and extract:
-1. COMPETITORS: Find 3 EXTERNAL competitor companies (NOT internal pages, privacy policies, or social media links). Look for companies mentioned as alternatives, comparisons, or in the same industry. Return ONLY their main website URLs (e.g., https://competitor.com). If no competitors are explicitly mentioned, research the industry/service and provide 3 major competitors in this space.
-2. PRODUCT/SERVICE: Write a detailed 100+ character description of what this company does, what problems they solve, their unique value proposition, and target market.`,
+          prompt: `Analyze this business website and provide a comprehensive description of their product or service. Include: what they do, what problems they solve, their unique value proposition, target market, and key differentiators. Be detailed and specific (minimum 100 characters).`,
           schema: {
             type: "object",
             properties: {
-              competitors: {
-                type: "array",
-                items: { type: "string" },
-                description: "Array of 3 competitor website URLs (external domains only, no internal links)",
-                minItems: 3,
-                maxItems: 3
-              },
               product_service_description: {
                 type: "string",
-                description: "Comprehensive product/service description with problem solved, value proposition, and target market",
+                description: "Comprehensive product/service description with problem solved, value proposition, target market, and differentiators",
                 minLength: 100
               }
             },
-            required: ["competitors", "product_service_description"]
+            required: ["product_service_description"]
           }
         }
       }),
