@@ -47,7 +47,7 @@ serve(async (req) => {
 
     console.log('Generating market research report for:', companyName);
 
-    // Update status to processing
+    // Update status to processing with progress updates
     await supabase
       .from('market_research_reports')
       .update({ 
@@ -61,8 +61,9 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY not configured');
     }
 
-    console.log('Generating market research report...');
+    console.log('Step 1/3: Gathering market data and analyzing competitors...');
 
+    console.log('Step 2/3: Generating comprehensive market analysis...');
     const finalReport = await generateMarketResearchReport(
       apiKey,
       companyName,
@@ -71,6 +72,8 @@ serve(async (req) => {
       competitorLinks,
       clientAvatarDescription
     );
+
+    console.log('Step 3/3: Finalizing report and formatting...');
 
     // Save completed report
     const { error: updateError } = await supabase

@@ -215,10 +215,16 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
         if (error) throw error;
 
         if (data?.ideal_client_avatar) {
-          // Ensure the value is always a string
-          const avatarDescription = typeof data.ideal_client_avatar === 'string' 
-            ? data.ideal_client_avatar 
-            : String(data.ideal_client_avatar || '');
+          // Ensure the value is always a string - handle both string and object responses
+          let avatarDescription = '';
+          if (typeof data.ideal_client_avatar === 'string') {
+            avatarDescription = data.ideal_client_avatar;
+          } else if (typeof data.ideal_client_avatar === 'object') {
+            // If it's an object, stringify it nicely
+            avatarDescription = JSON.stringify(data.ideal_client_avatar, null, 2);
+          } else {
+            avatarDescription = String(data.ideal_client_avatar || '');
+          }
           
           // Replace the entire description with the synthesized version
           setFormData(prev => ({
@@ -429,7 +435,14 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                 id="companyWebsite"
                 type="url"
                 value={formData.companyWebsite}
-                onChange={(e) => setFormData({ ...formData, companyWebsite: e.target.value })}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  // Auto-prepend https:// if user types a domain without protocol
+                  if (value && !value.startsWith('http://') && !value.startsWith('https://')) {
+                    value = 'https://' + value;
+                  }
+                  setFormData({ ...formData, companyWebsite: value });
+                }}
                 placeholder="https://example.com"
                 required
               />

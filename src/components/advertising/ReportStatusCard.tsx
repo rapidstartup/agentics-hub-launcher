@@ -13,6 +13,7 @@ interface ReportStatusCardProps {
 export const ReportStatusCard = ({ reportId, onComplete }: ReportStatusCardProps) => {
   const [status, setStatus] = useState<string>("pending");
   const [progress, setProgress] = useState(0);
+  const [hasCalledComplete, setHasCalledComplete] = useState(false);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -27,7 +28,10 @@ export const ReportStatusCard = ({ reportId, onComplete }: ReportStatusCardProps
         
         if (data.status === "completed") {
           setProgress(100);
-          onComplete?.();
+          if (!hasCalledComplete) {
+            setHasCalledComplete(true);
+            onComplete?.();
+          }
         } else if (data.status === "processing") {
           setProgress(50);
         } else if (data.status === "failed") {
@@ -55,7 +59,10 @@ export const ReportStatusCard = ({ reportId, onComplete }: ReportStatusCardProps
           
           if (newStatus === "completed") {
             setProgress(100);
-            onComplete?.();
+            if (!hasCalledComplete) {
+              setHasCalledComplete(true);
+              onComplete?.();
+            }
           } else if (newStatus === "processing") {
             setProgress(50);
           } else if (newStatus === "failed") {
@@ -68,7 +75,7 @@ export const ReportStatusCard = ({ reportId, onComplete }: ReportStatusCardProps
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [reportId, onComplete]);
+  }, [reportId]);
 
   const getStatusIcon = () => {
     switch (status) {

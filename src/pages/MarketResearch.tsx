@@ -4,6 +4,7 @@ import { MarketResearchForm } from "@/components/advertising/MarketResearchForm"
 import { ReportStatusCard } from "@/components/advertising/ReportStatusCard";
 import { ResearchReportViewer } from "@/components/advertising/ResearchReportViewer";
 import { ReportsList } from "@/components/advertising/ReportsList";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -89,11 +90,23 @@ const MarketResearch = () => {
           )}
 
           {viewingReportId && reportContent && (
-            <ResearchReportViewer 
-              content={reportContent} 
-              companyName={companyName}
-              reportId={viewingReportId}
-            />
+            <>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setViewingReportId(null);
+                  setReportContent(null);
+                }}
+                className="mb-4"
+              >
+                ← Back to Reports
+              </Button>
+              <ResearchReportViewer 
+                content={reportContent} 
+                companyName={companyName}
+                reportId={viewingReportId}
+              />
+            </>
           )}
 
           <ReportsList 
