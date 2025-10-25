@@ -155,9 +155,13 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
       } else {
         toast({
           title: "No businesses found",
-          description: "Please try a different name or location.",
-          variant: "destructive"
+          description: "We couldn't find any businesses matching that name and location. Please try different search terms.",
         });
+        // Close modal after short delay
+        setTimeout(() => {
+          onClose();
+          setLocation("");
+        }, 2000);
       }
     } catch (error) {
       console.error('Error searching business:', error);
@@ -166,6 +170,11 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
         description: "Failed to search for business. Please try again.",
         variant: "destructive"
       });
+      // Close modal on error too
+      setTimeout(() => {
+        onClose();
+        setLocation("");
+      }, 2000);
     } finally {
       setIsSearching(false);
     }
