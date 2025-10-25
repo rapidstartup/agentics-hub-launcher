@@ -73,10 +73,10 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
     // Progress messages shown every 5 seconds
     const progressMessages = [
       "Starting website analysis...",
-      "Collecting URLs and searching pages...",
-      "Extracting competitor information...",
-      "Analyzing product details...",
-      "Processing market data...",
+      "Extracting product information from website...",
+      "Analyzing business model and services...",
+      "Researching competitor landscape...",
+      "Identifying direct competitors...",
       "Almost done, finalizing results..."
     ];
     

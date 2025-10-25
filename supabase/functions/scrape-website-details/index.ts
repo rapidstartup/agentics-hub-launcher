@@ -13,15 +13,79 @@ serve(async (req) => {
   try {
     const { url } = await req.json();
     
-    console.log('Analyzing website with Gemini search:', url);
+    console.log('Analyzing website:', url);
 
+    const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+    
+    if (!FIRECRAWL_API_KEY || !GEMINI_API_KEY) {
+      throw new Error('API keys not configured');
     }
 
-    // Use Gemini with search grounding to find competitors and analyze the business
-    const response = await fetch(
+    // Step 1: Use Firecrawl to extract product/service description from actual website content
+    console.log('Step 1: Extracting product description with Firecrawl...');
+    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: url,
+        formats: ['extract'],
+        extract: {
+          prompt: `Analyze this business website and provide a comprehensive description of their product or service. Include: what they do, what problems they solve, their unique value proposition, target market, and key differentiators. Be detailed and specific (minimum 100 characters).`,
+          schema: {
+            type: "object",
+            properties: {
+              product_service_description: {
+                type: "string",
+                description: "Comprehensive product/service description",
+                minLength: 100
+              }
+            },
+            required: ["product_service_description"]
+          }
+        }
+      }),
+    });
+
+    if (!firecrawlResponse.ok) {
+      const errorText = await firecrawlResponse.text();
+      console.error('Firecrawl error:', firecrawlResponse.status, errorText);
+      throw new Error(`Firecrawl error: ${firecrawlResponse.status}`);
+    }
+
+    const firecrawlData = await firecrawlResponse.json();
+    console.log('Firecrawl response:', firecrawlData);
+    
+    const productDescription = firecrawlData.data?.extract?.product_service_description;
+    
+    if (!productDescription) {
+      throw new Error('Could not extract product description from website');
+    }
+
+    // Step 2: Use Gemini with search grounding to find real competitors based on the business context
+    console.log('Step 2: Finding competitors with Gemini search...');
+    const geminiPrompt = `Research and identify 3 REAL direct competitor companies based on this business information:
+
+**Website:** ${url}
+**What They Do:** ${productDescription}
+
+Find companies that:
+1. Offer similar products/services in the same industry
+2. Target similar customers
+3. Solve similar problems
+4. Are direct competitors (NOT suppliers, partners, or unrelated businesses)
+
+Return their primary website URLs (format: https://competitor.com)
+
+Return ONLY a valid JSON object with this structure:
+{
+  "competitors": ["https://competitor1.com", "https://competitor2.com", "https://competitor3.com"]
+}`;
+
+    const geminiResponse = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent',
       {
         method: 'POST',
@@ -31,26 +95,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           contents: [{
-            parts: [{
-              text: `Analyze the business at ${url}. 
-
-1. Research and identify 3 REAL competitor companies in the same industry/market. Return their primary website URLs (format: https://competitor.com). These must be:
-   - External competitor businesses (NOT internal pages, privacy policies, or social media links)
-   - Direct competitors offering similar products/services
-   - Well-established companies in the same space
-
-2. Provide a comprehensive description (100+ characters) of what this company does, including:
-   - What problems they solve
-   - Their unique value proposition
-   - Target market
-   - Key differentiators
-
-Return ONLY a valid JSON object with this exact structure:
-{
-  "competitors": ["https://competitor1.com", "https://competitor2.com", "https://competitor3.com"],
-  "product_service_description": "detailed description here"
-}`
-            }]
+            parts: [{ text: geminiPrompt }]
           }],
           tools: [{
             googleSearch: {}
@@ -65,35 +110,39 @@ Return ONLY a valid JSON object with this exact structure:
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      throw new Error(`Gemini API error: ${response.status}`);
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error('Gemini error:', geminiResponse.status, errorText);
+      throw new Error(`Gemini error: ${geminiResponse.status}`);
     }
 
-    const geminiData = await response.json();
+    const geminiData = await geminiResponse.json();
     console.log('Gemini response:', JSON.stringify(geminiData, null, 2));
 
-    // Extract the text content from Gemini's response
     const textContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!textContent) {
       throw new Error('No content in Gemini response');
     }
 
-    // Parse the JSON from the response
     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Could not extract JSON from Gemini response');
     }
 
-    const extractedData = JSON.parse(jsonMatch[0]);
-    console.log('Extracted data:', extractedData);
-
-    // Return in the same format as before for frontend compatibility
-    return new Response(JSON.stringify({
+    const competitorData = JSON.parse(jsonMatch[0]);
+    
+    // Combine results
+    const finalResult = {
       success: true,
-      data: extractedData
-    }), {
+      data: {
+        product_service_description: productDescription,
+        competitors: competitorData.competitors || []
+      }
+    };
+
+    console.log('Final result:', finalResult);
+
+    return new Response(JSON.stringify(finalResult), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

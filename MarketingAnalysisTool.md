@@ -19,14 +19,15 @@
   - Social media, phone, email, address display ✅
 
 #### ✅ 4.2. Website Analysis (Competitors & Product/Service)
-- **Status:** COMPLETE (Fixed with Gemini Search)
+- **Status:** COMPLETE (Hybrid Firecrawl + Gemini Approach)
 - **Implementation:**
   - Sparkles/Mine icon with valid URL detection ✅
-  - Edge function `scrape-website-details` using Gemini with search grounding ✅
+  - Two-step analysis process:
+    1. **Firecrawl** extracts product/service description from actual website content ✅
+    2. **Gemini with search** finds competitors using full business context (URL + product description) ✅
   - Progress toasts during operation ✅
-  - Product description extraction ✅
-  - **FIXED:** Now uses Gemini's search tool to find real competitor websites ✅
-  - Competitors are properly identified through AI-powered web search ✅
+  - High-quality product descriptions from real website analysis ✅
+  - Accurate competitor identification through AI-powered research ✅
 
 #### ✅ 4.3. Competitor Analysis (Ideal Client Avatar)
 - **Status:** COMPLETE (Enhanced with Gemini Synthesis)
