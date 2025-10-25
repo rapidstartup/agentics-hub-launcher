@@ -61,18 +61,38 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
 
     const loadGoogleMaps = () => {
       if (window.google?.maps?.places) {
-        initAutocomplete();
+        console.log('Google Maps already loaded, initializing autocomplete');
+        setTimeout(() => initAutocomplete(), 100); // Small delay to ensure DOM is ready
         return;
       }
 
       const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (!GOOGLE_MAPS_API_KEY) return;
+      if (!GOOGLE_MAPS_API_KEY) {
+        console.error('Google Maps API key not found');
+        return;
+      }
+
+      console.log('Loading Google Maps API...');
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => {
+          console.log('Existing Google Maps script loaded');
+          setTimeout(() => initAutocomplete(), 100);
+        });
+        return;
+      }
 
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
       script.async = true;
       script.defer = true;
-      script.onload = () => initAutocomplete();
+      script.onload = () => {
+        console.log('Google Maps API loaded successfully');
+        setTimeout(() => initAutocomplete(), 100);
+      };
+      script.onerror = () => {
+        console.error('Failed to load Google Maps API');
+      };
       document.head.appendChild(script);
     };
 
@@ -80,8 +100,8 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
 
     return () => {
       // Cleanup autocomplete listener
-      if (autocompleteRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current);
+      if (autocompleteRef.current && window.google?.maps?.event) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
   }, [isOpen]);
@@ -89,17 +109,23 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
   const initAutocomplete = () => {
     if (!inputRef.current || !window.google?.maps?.places) return;
 
-    autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-      types: ['(cities)'],
-      fields: ['formatted_address']
-    });
+    try {
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+        types: ['(cities)'],
+        fields: ['formatted_address']
+      });
 
-    autocompleteRef.current.addListener('place_changed', () => {
-      const place = autocompleteRef.current.getPlace();
-      if (place.formatted_address) {
-        setLocation(place.formatted_address);
-      }
-    });
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        if (place.formatted_address) {
+          setLocation(place.formatted_address);
+        }
+      });
+
+      console.log('Google Maps Autocomplete initialized successfully');
+    } catch (error) {
+      console.error('Error initializing autocomplete:', error);
+    }
   };
 
   const handleSearch = async () => {

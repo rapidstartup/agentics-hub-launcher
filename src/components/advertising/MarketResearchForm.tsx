@@ -324,10 +324,14 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 animate-scale-in"
                   onClick={() => setIsSearchModalOpen(true)}
                 >
-                  <Search className="h-4 w-4" />
+                  <Search className="h-4 w-4 text-primary animate-pulse" 
+                    style={{ 
+                      animation: 'scale-in 0.4s ease-out, pulse 2s cubic-bezier(0.4,0,0.6,1) 3' 
+                    }} 
+                  />
                 </Button>
               )}
             </div>
@@ -349,14 +353,18 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 animate-scale-in"
                   onClick={handleMineWebsite}
                   disabled={isMiningWebsite}
                 >
                   {isMiningWebsite ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4 text-primary"
+                      style={{ 
+                        animation: 'scale-in 0.4s ease-out, pulse 2s cubic-bezier(0.4,0,0.6,1) 3' 
+                      }}
+                    />
                   )}
                 </Button>
               )}
@@ -381,14 +389,18 @@ export const MarketResearchForm = ({ onSubmitSuccess }: MarketResearchFormProps)
                     type="button"
                     size="icon"
                     variant="ghost"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 animate-scale-in"
                     onClick={() => handleAnalyzeCompetitor(num)}
                     disabled={miningCompetitors[num]}
                   >
                     {miningCompetitors[num] ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Star className="h-4 w-4" />
+                      <Star className="h-4 w-4 text-primary fill-primary"
+                        style={{ 
+                          animation: 'scale-in 0.4s ease-out, pulse 2s cubic-bezier(0.4,0,0.6,1) 3' 
+                        }}
+                      />
                     )}
                   </Button>
                 )}
