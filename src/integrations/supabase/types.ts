@@ -330,6 +330,150 @@ export type Database = {
           },
         ]
       }
+      admin_tasks: {
+        Row: {
+          assigned_to: string | null
+          client: string | null
+          created_at: string
+          department: string | null
+          due_date: string | null
+          id: string
+          name: string
+          priority: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          client?: string | null
+          created_at?: string
+          department?: string | null
+          due_date?: string | null
+          id?: string
+          name: string
+          priority: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          client?: string | null
+          created_at?: string
+          department?: string | null
+          due_date?: string | null
+          id?: string
+          name?: string
+          priority?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          ctr: number | null
+          id: string
+          impressions: number | null
+          name: string
+          project: string | null
+          roas: number | null
+          spend: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ctr?: number | null
+          id?: string
+          impressions?: number | null
+          name: string
+          project?: string | null
+          roas?: number | null
+          spend?: number | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ctr?: number | null
+          id?: string
+          impressions?: number | null
+          name?: string
+          project?: string | null
+          roas?: number | null
+          spend?: number | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      department_agents: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          department: string
+          id: string
+          metrics: Json | null
+          name: string
+          role: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          department: string
+          id?: string
+          metrics?: Json | null
+          name: string
+          role?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          department?: string
+          id?: string
+          metrics?: Json | null
+          name?: string
+          role?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      department_kpis: {
+        Row: {
+          created_at: string
+          department: string
+          id: string
+          label: string
+          trend: string | null
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          id?: string
+          label: string
+          trend?: string | null
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          id?: string
+          label?: string
+          trend?: string | null
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
       facebook_ad_accounts: {
         Row: {
           access_token_encrypted: string
