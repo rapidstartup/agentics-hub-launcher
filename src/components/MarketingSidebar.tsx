@@ -5,22 +5,13 @@ import {
   LayoutDashboard,
   LineChart,
   FolderKanban,
-  Wand2,
-  Brain,
-  Target,
-  Eye,
-  TrendingUp,
-  Award,
-  FileText,
-  BookOpen,
-  Image,
-  Palette,
-  BarChart3,
-  ArrowLeft,
   Users,
+  ArrowLeft,
+  PenSquare,
+  Megaphone,
 } from "lucide-react";
 
-export const AdvertisingSidebar = () => {
+export const MarketingSidebar = () => {
   const navigate = useNavigate();
   const { clientId } = useParams();
 
@@ -28,41 +19,17 @@ export const AdvertisingSidebar = () => {
     {
       label: "MAIN DASHBOARD",
       items: [
-        { title: "Overview", path: `/client/${clientId}/advertising`, icon: LayoutDashboard },
-        { title: "Analytics", path: `/client/${clientId}/advertising/analytics`, icon: LineChart },
-        { title: "Projects", path: `/client/${clientId}/advertising/projects`, icon: FolderKanban },
-        { title: "Advertising Agents", path: `/client/${clientId}/advertising/agents`, icon: Users },
+        { title: "Overview", path: `/client/${clientId}/marketing`, icon: LayoutDashboard },
+        { title: "Analytics", path: `/client/${clientId}/marketing/analytics`, icon: LineChart },
+        { title: "Projects", path: `/client/${clientId}/marketing/projects`, icon: FolderKanban },
+        { title: "Marketing Agents", path: `/client/${clientId}/marketing/agents`, icon: Users },
       ],
     },
     {
-      label: "AD LAUNCHER",
+      label: "CONTENT",
       items: [
-        { title: "Ad Creator", path: `/client/${clientId}/advertising/ad-creator`, icon: Wand2 },
-        { title: "AI CMO", path: `/client/${clientId}/advertising/ai-cmo`, icon: Brain },
-        { title: "Campaign Manager", path: `/client/${clientId}/advertising/campaign-manager`, icon: Target },
-      ],
-    },
-    {
-      label: "AD RESEARCH",
-      items: [
-        { title: "Ad Spy", path: `/client/${clientId}/advertising/ad-spy`, icon: Eye },
-        { title: "Ad Optimizer", path: `/client/${clientId}/advertising/ad-optimizer`, icon: BarChart3 },
-        { title: "Market Research", path: `/client/${clientId}/advertising/market-research`, icon: TrendingUp },
-      ],
-    },
-    {
-      label: "CENTRAL BRAIN",
-      items: [
-        { title: "Proven Assets", path: `/client/${clientId}/advertising/proven-assets`, icon: Award },
-        { title: "Offer Details", path: `/client/${clientId}/advertising/offer-details`, icon: FileText },
-        { title: "Knowledge Base", path: `/client/${clientId}/advertising/knowledge-base`, icon: BookOpen },
-        { title: "Creative Library", path: `/client/${clientId}/advertising/creative-library`, icon: Image },
-      ],
-    },
-    {
-      label: "PROJECT SETTINGS",
-      items: [
-        { title: "Brand Details", path: `/client/${clientId}/advertising/brand-details`, icon: Palette },
+        { title: "Content Planner", path: `/client/${clientId}/marketing/content-planner`, icon: PenSquare },
+        { title: "Campaigns", path: `/client/${clientId}/marketing/campaigns`, icon: Megaphone },
       ],
     },
   ];
@@ -75,7 +42,7 @@ export const AdvertisingSidebar = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 shrink-0">
             <Rocket className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl font-bold text-foreground whitespace-nowrap">AdLaunch Pro</h1>
+          <h1 className="text-xl font-bold text-foreground whitespace-nowrap">Marketing Hub</h1>
         </div>
       </div>
 
@@ -104,7 +71,7 @@ export const AdvertisingSidebar = () => {
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    end={item.path === `/client/${clientId}/advertising`}
+                    end={item.path === `/client/${clientId}/marketing`}
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                         isActive
@@ -125,3 +92,5 @@ export const AdvertisingSidebar = () => {
     </aside>
   );
 };
+
+

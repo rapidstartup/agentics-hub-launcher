@@ -78,6 +78,8 @@ export const ChatSidebar = () => {
               </div>
             );
 
+            // No nested submenu for Financials; handled inside Financials area
+
             return hasDepartmentAgents ? (
               <HoverCard key={item.id} openDelay={2000}>
                 <HoverCardTrigger asChild>
@@ -99,7 +101,7 @@ export const ChatSidebar = () => {
                 </HoverCardContent>
               </HoverCard>
             ) : (
-              <NavLink key={item.id} to={item.path}>
+              <NavLink key={item.id} to={item.path} end={item.id === "dashboard"}>
                 {({ isActive }) => navLinkContent(isActive)}
               </NavLink>
             );

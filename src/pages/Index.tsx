@@ -3,6 +3,7 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { StatsCard } from "@/components/StatsCard";
 import { DepartmentDetailCard } from "@/components/DepartmentDetailCard";
 import { Button } from "@/components/ui/button";
+import { ClientSwitcher } from "@/components/ClientSwitcher";
 import { 
   Bot,
   Building2,
@@ -53,6 +54,9 @@ const Index = () => {
     "techstart-solutions": "TechStart Solutions",
     "healthhub-medical": "HealthHub Medical",
     "global-consulting": "Global All-In-Consulting",
+    "imaginespace-ltd": "ImagineSpace Ltd",
+    "smartax-corp": "SMARTAX Corp",
+    "onward-marketing": "Onward Marketing Inc",
   };
   
   const clientName = clientNames[clientId || ""] || "Client";
@@ -67,10 +71,11 @@ const Index = () => {
         {/* Top Header Bar */}
         <div className="border-b border-border bg-background">
           <div className="flex items-center justify-between p-6">
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">
                 {clientName}
               </h1>
+              <ClientSwitcher />
               <span className="text-2xl font-bold text-foreground">|</span>
               <h2 className="text-2xl font-bold text-foreground">
                 Business Intelligence
