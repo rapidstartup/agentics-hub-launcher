@@ -603,6 +603,10 @@ export type Database = {
     }
     Functions: {
       check_and_trigger_scheduled_runs: { Args: never; Returns: undefined }
+      seed_demo_data_for_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar as CalendarIcon, GripVertical } from "lucide-react";
-import FullCalendar, { EventClickArg, EventDropArg, EventInput, EventResizeDoneArg } from "@fullcalendar/react";
+import FullCalendar from "@fullcalendar/react";
+import type { EventClickArg, EventDropArg, EventInput, EventContentArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { EventResizeDoneArg } from "@fullcalendar/interaction";
 // FullCalendar CSS: use plugin styles; core ships no CSS to import
 // Note: FullCalendar v6 ships JS-only modules. Styles can be added via custom CSS or CDN if desired.
 
@@ -23,6 +24,9 @@ type CalendarType = "Strategy" | "Advertising" | "Marketing" | "Sales" | "Operat
 
 interface AgencyEvent extends EventInput {
   id: string;
+  title: string;
+  start: string | Date;
+  end?: string | Date;
   calendar: CalendarType;
   description?: string;
 }
