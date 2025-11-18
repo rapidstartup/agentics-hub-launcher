@@ -1,10 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function getUserFromAuthHeader(req: Request): Promise<{ id: string } | null> {
+  const authHeader = req.headers.get('Authorization');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  if (!authHeader || !supabaseUrl || !anonKey) return null;
+  const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { Authorization: authHeader, apikey: anonKey }
+  });
+  if (!resp.ok) return null;
+  try {
+    const user = await resp.json();
+    return user && user.id ? user : null;
+  } catch {
+    return null;
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -27,14 +43,7 @@ serve(async (req) => {
       }
     }
 
-    const authHeader = req.headers.get('Authorization') ?? undefined;
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: authHeader ? { Authorization: authHeader } : {} } }
-    );
-
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getUserFromAuthHeader(req);
 
     if (!toolkit) {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
