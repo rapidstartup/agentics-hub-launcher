@@ -10,6 +10,7 @@ import MarketResearch from "./pages/MarketResearch";
 import AdOptimizer from "./pages/AdOptimizer";
 import AdOptimizerRunDetails from "./pages/AdOptimizerRunDetails";
 import AdSpy from "./pages/AdSpy";
+import AdCreatorDashboard from "./pages/advertising/AdCreatorDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Department from "./pages/Department";
@@ -73,6 +74,7 @@ const App = () => (
           <Route path="/client/:clientId/advertising/ad-optimizer" element={<AdOptimizer />} />
           <Route path="/client/:clientId/advertising/ad-optimizer/run/:runId" element={<AdOptimizerRunDetails />} />
           <Route path="/client/:clientId/advertising/ad-spy" element={<AdSpy />} />
+          <Route path="/client/:clientId/advertising/ad-creator" element={<AdCreatorDashboard />} />
           <Route path="/client/:clientId/advertising/agents" element={<AdvertisingAgents />} />
           {/* Strategy dedicated area */}
           <Route path="/client/:clientId/strategy" element={<Strategy />} />

@@ -3,6 +3,7 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { ClientSwitcher } from "@/components/ClientSwitcher";
+import { ConnectionsButtons } from "@/components/advertising/ConnectionsButtons";
 
 const ClientSettings = () => {
   const { clientId } = useParams();
@@ -25,10 +26,11 @@ const ClientSettings = () => {
           </div>
         </div>
 
-        <div className="p-10">
+        <div className="p-10 space-y-6">
           <div className="text-sm text-muted-foreground">
             Client-wide settings and configuration will appear here.
           </div>
+          <ConnectionsButtons />
         </div>
       </main>
     </div>
