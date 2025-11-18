@@ -7,15 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { AdKanbanBoard, Variant } from "@/components/advertising/AdKanbanBoard";
 
-type Variant = {
-  headline?: string;
-  primaryText: string;
-  cta?: string;
-  websiteUrl?: string;
-  rationale?: string;
-  status?: "review" | "needs_edits" | "approved" | "archived";
-};
+
 
 const API_BASE = "/functions/v1";
 
@@ -27,11 +21,15 @@ export default function AdCreatorDashboard() {
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const [assets, setAssets] = useState<any[]>([]);
+  const [selectedAssetIds, setSelectedAssetIds] = useState<string[]>([]);
+  const [step1Done, setStep1Done] = useState(false);
 
   const approved = useMemo(() => variants.filter(v => v.status === "approved"), [variants]);
   const review = useMemo(() => variants.filter(v => !v.status || v.status === "review"), [variants]);
   const needsEdits = useMemo(() => variants.filter(v => v.status === "needs_edits"), [variants]);
   const archived = useMemo(() => variants.filter(v => v.status === "archived"), [variants]);
+  const step2Enabled = step1Done;
+  const step3Enabled = approved.length > 0;
 
   async function fetchDriveImages() {
     try {
@@ -64,11 +62,42 @@ export default function AdCreatorDashboard() {
       const v = (data?.variants ?? []).map((x: Variant) => ({ ...x, status: "review" as const }));
       setVariants(v);
       toast.success(`Generated ${v.length} variants`);
+      setStep1Done(true);
     } catch (e) {
       console.error(e);
       toast.error("Generation failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function askAIUpdate(target: Variant, instruction: string): Promise<Variant | null> {
+    try {
+      const body = {
+        productContext: { ...productContext, instruction, current: target },
+        winningExamples: winningExamples.split("\n").filter(Boolean),
+        numVariants: 1
+      };
+      const r = await fetch(`${API_BASE}/generate-copy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await r.json();
+      const v = (data?.variants ?? [])[0];
+      if (!v) return null;
+      return {
+        headline: v.headline ?? target.headline,
+        primaryText: v.primaryText ?? target.primaryText,
+        cta: v.cta ?? target.cta,
+        websiteUrl: v.websiteUrl ?? target.websiteUrl,
+        rationale: v.rationale ?? target.rationale,
+        status: target.status
+      } as Variant;
+    } catch (e) {
+      console.error(e);
+      toast.error("AI update failed");
+      return null;
     }
   }
 
@@ -121,11 +150,34 @@ export default function AdCreatorDashboard() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <Card className="xl:col-span-2">
+          <Card className="xl:col-span-1">
             <CardHeader>
-              <CardTitle>Inputs</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-primary">①</span>
+                <CardTitle>Step 1 · Add creatives & inputs</CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <div className="mb-2 text-sm text-muted-foreground">Creatives</div>
+                <div className="space-y-2 max-h-52 overflow-auto pr-1">
+                  {assets?.slice(0, 50).map((f: any) => {
+                    const id = f.id ?? f?.files?.[0]?.id ?? String(Math.random());
+                    const checked = selectedAssetIds.includes(id);
+                    return (
+                      <label key={id} className="flex items-center gap-3 text-sm">
+                        <input type="checkbox" checked={checked} onChange={(e) => {
+                          setSelectedAssetIds(prev => e.target.checked ? [...prev, id] : prev.filter(x => x !== id));
+                        }} />
+                        <span className="truncate">{f?.name ?? JSON.stringify(f)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="mt-2">
+                  <Button variant="outline" onClick={fetchDriveImages}>Upload/Refresh</Button>
+                </div>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="text-sm text-muted-foreground">Brand</label>
@@ -153,84 +205,45 @@ export default function AdCreatorDashboard() {
               <div className="flex items-center gap-3">
                 <Input className="w-28" type="number" min={1} max={10} value={numVariants} onChange={(e) => setNumVariants(parseInt(e.target.value || "5", 10))} />
                 <Button onClick={onGenerate} disabled={loading}>{loading ? "Generating..." : "Generate variants"}</Button>
+                <Button variant={step1Done ? "default" : "secondary"} onClick={() => setStep1Done(true)}>Mark Step 1 complete</Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={step2Enabled ? "" : "opacity-50 pointer-events-none"}>
             <CardHeader>
-              <CardTitle>Assets (Google Drive)</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-primary">②</span>
+                <CardTitle>Step 2 · Set ad copy & tracking</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {variants.length === 0 ? (
+                <div className="text-sm text-muted-foreground">Generate variants in Step 1 to populate the board.</div>
+              ) : (
+                <AdKanbanBoard variants={variants} onChange={setVariants} onAskAIUpdate={askAIUpdate} />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className={approved.length > 0 ? "" : "opacity-50 pointer-events-none"}>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <span className="text-primary">③</span>
+                <CardTitle>Step 3 · Publish into ad account</CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid gap-2">
-                {assets?.slice(0, 6).map((f: any) => (
-                  <div key={f.id ?? f?.files?.[0]?.id} className="text-sm text-muted-foreground truncate">{f?.name ?? JSON.stringify(f)}</div>
-                ))}
-              </div>
-              <Button variant="outline" onClick={fetchDriveImages}>Refresh</Button>
+              <div className="text-sm text-muted-foreground">Approved: {approved.length}</div>
+              <Button onClick={onPublish}>Save & Publish (dry run)</Button>
             </CardContent>
           </Card>
         </div>
 
-        <div className="mt-6">
-          <Tabs defaultValue="review">
-            <TabsList>
-              <TabsTrigger value="review">Review ({review.length})</TabsTrigger>
-              <TabsTrigger value="needs_edits">Needs Edits ({needsEdits.length})</TabsTrigger>
-              <TabsTrigger value="approved">Approved ({approved.length})</TabsTrigger>
-              <TabsTrigger value="archived">Archived ({archived.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent value="review">
-              <VariantList items={review} onMove={setVariants} variants={variants} />
-            </TabsContent>
-            <TabsContent value="needs_edits">
-              <VariantList items={needsEdits} onMove={setVariants} variants={variants} />
-            </TabsContent>
-            <TabsContent value="approved">
-              <div className="mb-3">
-                <Button onClick={onPublish}>Publish approved (dry run)</Button>
-              </div>
-              <VariantList items={approved} onMove={setVariants} variants={variants} />
-            </TabsContent>
-            <TabsContent value="archived">
-              <VariantList items={archived} onMove={setVariants} variants={variants} />
-            </TabsContent>
-          </Tabs>
-        </div>
       </main>
     </div>
   );
 }
 
-function VariantList({ items, variants, onMove }: { items: Variant[]; variants: Variant[]; onMove: (v: Variant[]) => void }) {
-  function setStatus(v: Variant, status: Variant["status"]) {
-    const idx = variants.indexOf(v);
-    if (idx >= 0) {
-      const clone = variants.slice();
-      clone[idx] = { ...clone[idx], status };
-      onMove(clone);
-    }
-  }
-  return (
-    <div className="grid gap-3 md:grid-cols-2">
-      {items.map((v, i) => (
-        <Card key={i}>
-          <CardHeader>
-            <CardTitle className="text-base">{v.headline || "Ad Variant"}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-sm whitespace-pre-wrap">{v.primaryText}</div>
-            <div className="text-xs text-muted-foreground">CTA: {v.cta || "LEARN_MORE"} · {v.websiteUrl || ""}</div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setStatus(v, "needs_edits")}>Needs Edits</Button>
-              <Button size="sm" onClick={() => setStatus(v, "approved")}>Approve</Button>
-              <Button size="sm" variant="ghost" onClick={() => setStatus(v, "archived")}>Archive</Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
 
 

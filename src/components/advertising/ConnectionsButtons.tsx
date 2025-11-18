@@ -23,7 +23,7 @@ export function ConnectionsButtons() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Connections (via Rube/Composio)</CardTitle>
+        <CardTitle>Connections</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-3">
         <ConnectionItem label="Meta Ads" data={meta} />
