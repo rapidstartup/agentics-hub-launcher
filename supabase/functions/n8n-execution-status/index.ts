@@ -51,7 +51,7 @@ serve(async (req) => {
 
     const headers = { 'X-N8N-API-KEY': conn.api_key_encrypted as string };
 
-    const resp = await fetch(`${conn.base_url}/rest/executions/${encodeURIComponent(executionId)}`, { headers });
+    const resp = await fetch(`${conn.base_url}/api/v1/executions/${encodeURIComponent(executionId)}`, { headers });
     const text = await resp.text();
 
     if (!resp.ok) {

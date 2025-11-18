@@ -44,7 +44,7 @@ serve(async (req) => {
     baseUrl = baseUrl.replace(/\/+$/, '');
 
     // Test connection
-    const testResp = await fetch(`${baseUrl}/rest/workflows`, {
+    const testResp = await fetch(`${baseUrl}/api/v1/workflows`, {
       headers: {
         'X-N8N-API-KEY': apiKey,
       },

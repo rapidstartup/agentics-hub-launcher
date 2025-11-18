@@ -50,7 +50,7 @@ serve(async (req) => {
     const headers = { 'X-N8N-API-KEY': conn.api_key_encrypted as string };
 
     // List workflows
-    const wfResp = await fetch(`${conn.base_url}/rest/workflows`, { headers });
+    const wfResp = await fetch(`${conn.base_url}/api/v1/workflows`, { headers });
     if (!wfResp.ok) {
       const text = await wfResp.text().catch(() => '');
       return new Response(JSON.stringify({ error: `Failed to list workflows: ${wfResp.status} ${text}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
