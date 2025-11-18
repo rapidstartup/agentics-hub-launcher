@@ -26,3 +26,18 @@ verify_jwt = true
 
 [functions.ad-spy-recreate]
 verify_jwt = true
+
+[functions.metaads-publish]
+verify_jwt = true
+
+[functions.sheets-export]
+verify_jwt = true
+
+[functions.composio-manage-connection]
+verify_jwt = true
+
+[functions.drive-list]
+verify_jwt = true
+
+[functions.metaads-list]
+verify_jwt = true

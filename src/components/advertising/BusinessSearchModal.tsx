@@ -60,7 +60,7 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
     }
 
     const loadGoogleMaps = () => {
-      if (window.google?.maps?.places) {
+      if ((window as any).google?.maps?.places) {
         console.log('Google Maps already loaded, initializing autocomplete');
         setTimeout(() => initAutocomplete(), 100); // Small delay to ensure DOM is ready
         return;
@@ -100,17 +100,17 @@ export const BusinessSearchModal = ({ isOpen, onClose, companyName, onBusinessSe
 
     return () => {
       // Cleanup autocomplete listener
-      if (autocompleteRef.current && window.google?.maps?.event) {
-        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      if (autocompleteRef.current && (window as any).google?.maps?.event) {
+        (window as any).google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
   }, [isOpen]);
 
   const initAutocomplete = () => {
-    if (!inputRef.current || !window.google?.maps?.places) return;
+    if (!inputRef.current || !(window as any).google?.maps?.places) return;
 
     try {
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+      autocompleteRef.current = new (window as any).google.maps.places.Autocomplete(inputRef.current, {
         types: ['(cities)'],
         fields: ['formatted_address']
       });
