@@ -597,6 +597,45 @@ export type Database = {
         }
         Relationships: []
       }
+      n8n_connections: {
+        Row: {
+          api_key_encrypted: string
+          base_url: string
+          client_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string | null
+          scope: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key_encrypted: string
+          base_url: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          scope: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key_encrypted?: string
+          base_url?: string
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          scope?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
