@@ -41,7 +41,7 @@ export const DepartmentDetailCard = ({
   const [n8nConfigAgentKey, setN8nConfigAgentKey] = useState<string>("");
   const [n8nRunOpen, setN8nRunOpen] = useState(false);
   const [n8nRunFields, setN8nRunFields] = useState<RuntimeField[]>([]);
-  const [n8nRunConfig, setN8nRunConfig] = useState<{ connectionId: string; workflowId: string } | null>(null);
+  const [n8nRunConfig, setN8nRunConfig] = useState<{ connectionId: string; workflowId: string; webhookUrl?: string } | null>(null);
   const [n8nRunning, setN8nRunning] = useState(false);
   const { toast } = useToast();
 
@@ -73,12 +73,12 @@ export const DepartmentDetailCard = ({
         const fields = (cfg.input_mapping?.requiredFields ?? []) as RuntimeField[];
         if (fields.length > 0) {
           setN8nRunFields(fields);
-          setN8nRunConfig({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id });
+          setN8nRunConfig({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id, webhookUrl: cfg.webhook_url || undefined });
           setN8nRunOpen(true);
         } else {
           try {
             setN8nRunning(true);
-            await runN8nWorkflow({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id, payload: {}, waitTillFinished: true });
+            await runN8nWorkflow({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id, webhookUrl: cfg.webhook_url || undefined, payload: {}, waitTillFinished: true });
             toast({ title: "Agent started", description: `${agent.name} is running` });
           } finally {
             setN8nRunning(false);
@@ -250,7 +250,7 @@ export const DepartmentDetailCard = ({
           if (!n8nRunConfig) return;
           try {
             setN8nRunning(true);
-            await runN8nWorkflow({ connectionId: n8nRunConfig.connectionId, workflowId: n8nRunConfig.workflowId, payload: values, waitTillFinished: true });
+            await runN8nWorkflow({ connectionId: n8nRunConfig.connectionId, workflowId: n8nRunConfig.workflowId, webhookUrl: n8nRunConfig.webhookUrl, payload: values, waitTillFinished: true });
             toast({ title: "Agent started", description: "Workflow triggered" });
             setN8nRunOpen(false);
           } finally {

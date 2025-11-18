@@ -56,6 +56,44 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     };
 
+    // Webhook Execution Support
+    // If a webhook URL is provided in the payload or config, use it.
+    // Otherwise, attempt the Activation API (v1/workflows/{id}/activate) which simply turns it on,
+    // OR specific webhook-based triggering if the user has configured it.
+
+    // CURRENT STRATEGY:
+    // Since n8n Public API does not support arbitrary "Run Now" without a Webhook node,
+    // we will attempt to find a production webhook URL for the workflow if not explicitly provided.
+    // For now, we'll modify this function to support a "webhookUrl" param in the body.
+    
+    const webhookUrl = body?.webhookUrl ?? body?.webhook_url;
+
+    if (webhookUrl) {
+       const runResp = await fetch(webhookUrl, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(payload) 
+       });
+       
+       const text = await runResp.text();
+       let data;
+       try { data = JSON.parse(text); } catch { data = { raw: text }; }
+       
+       return new Response(JSON.stringify({ success: true, result: data }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // If no webhook URL, fall back to the internal API attempts (which will likely fail with 401 on Cloud)
+    // OR return a helpful error telling the user to configure a webhook.
+    
+    // Check if we are using n8n Cloud (often implied by the URL or failure of rest api)
+    const isCloud = conn.base_url.includes('n8n.cloud');
+    
+    if (isCloud) {
+       return new Response(JSON.stringify({ 
+         error: 'n8n Cloud requires a Webhook URL to trigger workflows. Please configure a Webhook in your agent settings or provide a webhookUrl.' 
+       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // First attempt: POST /rest/workflows/run
     const runBody = JSON.stringify({ workflowId, payload, waitTillFinished });
     let runResp = await fetch(`${conn.base_url}/rest/workflows/run`, { method: 'POST', headers, body: runBody });

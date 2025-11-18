@@ -32,6 +32,7 @@ export function N8nAgentConfigModal({
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>("");
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>("");
+  const [webhookUrl, setWebhookUrl] = useState<string>("");
   const [fields, setFields] = useState<RuntimeField[]>([]);
   const [agentName, setAgentName] = useState<string>(agentKey || "");
   const [role, setRole] = useState<string>("Automation Workflow");
@@ -102,6 +103,7 @@ export function N8nAgentConfigModal({
         displayRole: role || undefined,
         connectionId: selectedConnectionId,
         workflowId: selectedWorkflowId,
+        webhookUrl: webhookUrl || undefined,
         requiredFields: fields.filter((f) => f.key && f.label),
       });
       toast({ title: "Saved", description: "Agent configuration saved" });
@@ -109,6 +111,7 @@ export function N8nAgentConfigModal({
       setFields([]);
       setSelectedWorkflowId("");
       setSelectedConnectionId("");
+      setWebhookUrl("");
     } catch (e: any) {
       toast({ title: "Error", description: e?.message || "Failed to save agent config", variant: "destructive" });
     } finally {
@@ -173,6 +176,18 @@ export function N8nAgentConfigModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Webhook URL (Optional, for "Run Now")</Label>
+            <Input 
+              placeholder="e.g., https://n8n.cloud/webhook/..." 
+              value={webhookUrl} 
+              onChange={(e) => setWebhookUrl(e.target.value)} 
+            />
+            <p className="text-xs text-muted-foreground">
+              Required for n8n Cloud if you want to trigger this manually via "Run Now".
+            </p>
           </div>
 
           <Card className="border border-border bg-card p-4">

@@ -19,6 +19,7 @@ export interface AgentConfig {
   display_role?: string | null;
   connection_id: string;
   workflow_id: string;
+  webhook_url?: string | null;
   input_mapping: {
     requiredFields?: RuntimeField[];
     [k: string]: any;
@@ -72,6 +73,7 @@ export async function upsertAgentConfig(params: {
   displayRole?: string;
   connectionId: string;
   workflowId: string;
+  webhookUrl?: string;
   requiredFields?: RuntimeField[];
 }): Promise<AgentConfig> {
   const userId = await getCurrentUserId();
@@ -89,6 +91,7 @@ export async function upsertAgentConfig(params: {
       display_role: params.displayRole ?? null,
       connection_id: params.connectionId,
       workflow_id: params.workflowId,
+      webhook_url: params.webhookUrl ?? null,
       input_mapping: params.requiredFields?.length
         ? { requiredFields: params.requiredFields }
         : null,

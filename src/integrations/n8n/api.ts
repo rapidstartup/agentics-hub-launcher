@@ -58,6 +58,7 @@ export async function listN8nWorkflows(params: { connectionId: string }) {
 export async function runN8nWorkflow(params: {
   connectionId: string;
   workflowId: string;
+  webhookUrl?: string;
   payload?: Record<string, any>;
   waitTillFinished?: boolean;
 }) {
@@ -65,6 +66,7 @@ export async function runN8nWorkflow(params: {
     body: {
       connectionId: params.connectionId,
       workflowId: params.workflowId,
+      webhookUrl: params.webhookUrl,
       payload: params.payload ?? {},
       waitTillFinished: params.waitTillFinished ?? true,
     },

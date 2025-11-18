@@ -55,10 +55,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: `Failed to connect to n8n: ${testResp.status} ${text}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Store/Upsert connection (Note: api_key_encrypted should be encrypted via Vault in production)
+    // Store connection
     const { data, error } = await supabase
       .from('n8n_connections')
-      .upsert({
+      .insert({
         user_id: user.id,
         scope,
         client_id: scope === 'client' ? clientId : null,
@@ -66,13 +66,8 @@ serve(async (req) => {
         base_url: baseUrl,
         api_key_encrypted: apiKey,
         is_active: true,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'id' // allow multiple connections; no composite unique constraint
       })
       .select('id, scope, client_id, label, base_url, is_active, created_at, updated_at')
-      .order('created_at', { ascending: false })
-      .limit(1)
       .single();
 
     if (error) {
