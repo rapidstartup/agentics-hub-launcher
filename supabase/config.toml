@@ -41,3 +41,21 @@ verify_jwt = true
 
 [functions.metaads-list]
 verify_jwt = true
+
+[functions.n8n-connect]
+verify_jwt = true
+
+[functions.n8n-connections]
+verify_jwt = true
+
+[functions.n8n-execution-status]
+verify_jwt = true
+
+[functions.n8n-list]
+verify_jwt = true
+
+[functions.n8n-run]
+verify_jwt = true
+
+[functions.generate-copy]
+verify_jwt = true

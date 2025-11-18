@@ -37,7 +37,7 @@ export async function fetchAgentConfig(params: {
   clientId?: string;
 }): Promise<AgentConfig | null> {
   // Prefer client-scoped config, fallback to agency-scoped
-  const { data: clientRows, error: clientErr } = await supabase
+  const { data: clientRows, error: clientErr } = await (supabase as any)
     .from("agent_configs")
     .select("*")
     .eq("area", params.area)
@@ -51,7 +51,7 @@ export async function fetchAgentConfig(params: {
     return clientRows[0] as unknown as AgentConfig;
   }
 
-  const { data: agencyRows } = await supabase
+  const { data: agencyRows } = await (supabase as any)
     .from("agent_configs")
     .select("*")
     .eq("area", params.area)
@@ -77,7 +77,7 @@ export async function upsertAgentConfig(params: {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("agent_configs")
     .insert({
       user_id: userId,
@@ -109,7 +109,7 @@ export async function listAgentConfigs(params: {
 
   // Client scoped
   if (params.clientId) {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("agent_configs")
       .select("*")
       .eq("area", params.area)
@@ -119,7 +119,7 @@ export async function listAgentConfigs(params: {
   }
 
   // Agency scoped
-  const { data: agency } = await supabase
+  const { data: agency } = await (supabase as any)
     .from("agent_configs")
     .select("*")
     .eq("area", params.area)
