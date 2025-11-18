@@ -11,6 +11,11 @@ import { RunNowModal } from "./RunNowModal";
 import { StatusChangeModal } from "./StatusChangeModal";
 import { useParams } from "react-router-dom";
 import { Agent } from "@/data/departments";
+import { N8nAgentConfigModal } from "@/components/agents/N8nAgentConfigModal";
+import { RunAgentDynamicModal } from "@/components/agents/RunAgentDynamicModal";
+import { fetchAgentConfig, RuntimeField } from "@/integrations/n8n/agents";
+import { runN8nWorkflow } from "@/integrations/n8n/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface DepartmentDetailCardProps {
   title: string;
@@ -32,6 +37,13 @@ export const DepartmentDetailCard = ({
   const [runNowModalOpen, setRunNowModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [n8nConfigOpen, setN8nConfigOpen] = useState(false);
+  const [n8nConfigAgentKey, setN8nConfigAgentKey] = useState<string>("");
+  const [n8nRunOpen, setN8nRunOpen] = useState(false);
+  const [n8nRunFields, setN8nRunFields] = useState<RuntimeField[]>([]);
+  const [n8nRunConfig, setN8nRunConfig] = useState<{ connectionId: string; workflowId: string } | null>(null);
+  const [n8nRunning, setN8nRunning] = useState(false);
+  const { toast } = useToast();
 
   const clientNames: Record<string, string> = {
     "techstart-solutions": "TechStart Solutions",
@@ -47,8 +59,36 @@ export const DepartmentDetailCard = ({
   };
 
   const handleRunNowClick = (agent: Agent) => {
-    setSelectedAgent(agent);
-    setRunNowModalOpen(true);
+    // Special handling for Marketing's two automation agents -> use n8n run flow
+    if (title === "Marketing" && ["VSL Generator", "Perfect Webinar Script"].includes(agent.name)) {
+      setSelectedAgent(agent);
+      const agentKey = agent.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      (async () => {
+        const cfg = await fetchAgentConfig({ area: "marketing", agentKey, clientId: clientId });
+        if (!cfg) {
+          setN8nConfigAgentKey(agentKey);
+          setN8nConfigOpen(true);
+          return;
+        }
+        const fields = (cfg.input_mapping?.requiredFields ?? []) as RuntimeField[];
+        if (fields.length > 0) {
+          setN8nRunFields(fields);
+          setN8nRunConfig({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id });
+          setN8nRunOpen(true);
+        } else {
+          try {
+            setN8nRunning(true);
+            await runN8nWorkflow({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id, payload: {}, waitTillFinished: true });
+            toast({ title: "Agent started", description: `${agent.name} is running` });
+          } finally {
+            setN8nRunning(false);
+          }
+        }
+      })();
+    } else {
+      setSelectedAgent(agent);
+      setRunNowModalOpen(true);
+    }
   };
 
   const handleStatusClick = (agent: Agent) => {
@@ -190,6 +230,35 @@ export const DepartmentDetailCard = ({
           onSave={handleSaveStatus}
         />
       )}
+
+      {/* n8n config/run modals (marketing automations) */}
+      <N8nAgentConfigModal
+        open={n8nConfigOpen}
+        onOpenChange={setN8nConfigOpen}
+        scope="client"
+        clientId={clientId}
+        area="marketing"
+        agentKey={n8nConfigAgentKey}
+        title="Configure Marketing Agent"
+      />
+      <RunAgentDynamicModal
+        open={n8nRunOpen}
+        onOpenChange={setN8nRunOpen}
+        title="Provide inputs"
+        fields={n8nRunFields}
+        onRun={async (values) => {
+          if (!n8nRunConfig) return;
+          try {
+            setN8nRunning(true);
+            await runN8nWorkflow({ connectionId: n8nRunConfig.connectionId, workflowId: n8nRunConfig.workflowId, payload: values, waitTillFinished: true });
+            toast({ title: "Agent started", description: "Workflow triggered" });
+            setN8nRunOpen(false);
+          } finally {
+            setN8nRunning(false);
+          }
+        }}
+        running={n8nRunning}
+      />
     </>
   );
 };

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 import { ClientSwitcher } from "@/components/ClientSwitcher";
 import { ConnectionsButtons } from "@/components/advertising/ConnectionsButtons";
+import { N8nConnectForm } from "@/components/integrations/N8nConnectForm";
 
 const ClientSettings = () => {
   const { clientId } = useParams();
@@ -31,6 +32,7 @@ const ClientSettings = () => {
             Client-wide settings and configuration will appear here.
           </div>
           <ConnectionsButtons />
+
         </div>
       </main>
     </div>

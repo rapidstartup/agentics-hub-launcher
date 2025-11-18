@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { MoreHorizontal, Search, Megaphone, FileText, Plus } from "lucide-react";
+import { listN8nConnections, listN8nWorkflows } from "@/integrations/n8n/api";
+import { N8nAgentConfigModal } from "@/components/agents/N8nAgentConfigModal";
 
 type AgentStatus = "online" | "busy" | "offline";
 
@@ -53,6 +55,44 @@ function statusPillClasses(status: AgentStatus) {
 
 const AdvertisingAgents = () => {
   const { clientId } = useParams();
+  const [configOpen, setConfigOpen] = useState(false);
+  const [configAgentKey, setConfigAgentKey] = useState<string>("");
+
+  const [n8nRows, setN8nRows] = useState<AdvertisingAgent[]>([]);
+  const [n8nMap, setN8nMap] = useState<Record<string, { connectionId: string; workflowId: string }>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const rows: AdvertisingAgent[] = [];
+        const map: Record<string, { connectionId: string; workflowId: string }> = {};
+        const agency = await listN8nConnections({ scope: "agency" });
+        const client = clientId ? await listN8nConnections({ scope: "client", clientId }) : { connections: [] };
+        const all = [...(agency?.connections ?? []), ...(client?.connections ?? [])];
+        for (const c of all) {
+          const { workflows } = await listN8nWorkflows({ connectionId: c.id });
+          for (const w of workflows || []) {
+            const key = `n8n-${c.id}-${w.id}`;
+            rows.push({
+              id: key,
+              name: (w.name || `Workflow ${w.id}`) as string,
+              avatarUrl: "/n8n.svg",
+              status: "online",
+              activeCampaigns: 0,
+              optimizationProjects: 0,
+              performancePct: 80,
+            });
+            map[key] = { connectionId: c.id, workflowId: String(w.id) };
+          }
+        }
+        setN8nRows(rows);
+        setN8nMap(map);
+      } catch (e) {
+        console.error("Failed to load n8n workflows", e);
+        setN8nRows([]);
+      }
+    })();
+  }, [clientId]);
 
   const kpis = [
     { label: "Total Agents", value: "42" },
@@ -104,6 +144,8 @@ const AdvertisingAgents = () => {
     },
   ];
 
+  const combinedAgents = [...agents, ...n8nRows];
+
   const campaigns: CampaignOverview[] = [
     {
       name: "Summer Sale 2024",
@@ -150,6 +192,17 @@ const AdvertisingAgents = () => {
       return statusOk && qOk;
     });
   }, [agents, query, status]);
+
+  const filteredCombined = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = [...agents, ...n8nRows];
+    return list.filter((a) => {
+      const statusOk = status === "all" ? true : a.status === status;
+      const text = a.name.toLowerCase();
+      const qOk = q ? text.includes(q) : true;
+      return statusOk && qOk;
+    });
+  }, [agents, n8nRows, query, status]);
 
   return (
     <div className="flex h-screen w-full bg-background">
@@ -269,7 +322,7 @@ const AdvertisingAgents = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAgents.map((a) => (
+                  {filteredCombined.map((a) => (
                     <TableRow key={a.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -302,7 +355,14 @@ const AdvertisingAgents = () => {
                         <Progress value={a.performancePct} className="h-2" />
                       </TableCell>
                       <TableCell className="text-right">
-                        <button className="text-muted-foreground hover:text-foreground">
+                        <button
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            setConfigAgentKey(a.id);
+                            setConfigOpen(true);
+                          }}
+                          title="Edit configuration"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </TableCell>
@@ -341,6 +401,17 @@ const AdvertisingAgents = () => {
           </Card>
         </div>
       </main>
+
+      {/* Configure selected n8n agent */}
+      <N8nAgentConfigModal
+        open={configOpen}
+        onOpenChange={setConfigOpen}
+        scope="client"
+        clientId={clientId}
+        area="advertising"
+        agentKey={configAgentKey}
+        title="Configure Advertising Agent"
+      />
     </div>
   );
 };

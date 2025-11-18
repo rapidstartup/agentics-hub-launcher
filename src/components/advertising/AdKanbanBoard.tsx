@@ -12,6 +12,7 @@ export type Variant = {
   websiteUrl?: string;
   rationale?: string;
   status?: "review" | "needs_edits" | "approved" | "archived";
+  imageUrl?: string;
 };
 
 type Props = {
@@ -121,6 +122,9 @@ function Column({ title, items, color, actions }: { title: string; items: Varian
         {items.map((v, i) => (
           <Card key={i} className="border-border">
             <CardContent className="pt-4 space-y-3">
+              {v.imageUrl && (
+                <img src={v.imageUrl} alt={v.headline || "ad"} className="w-full h-36 object-cover rounded-md border border-border" />
+              )}
               <div className="text-sm font-medium">{v.headline || "Ad Variant"}</div>
               <div className="text-sm whitespace-pre-wrap text-muted-foreground">{v.primaryText}</div>
               <div className="text-xs text-muted-foreground">CTA: {v.cta || "LEARN_MORE"} {v.websiteUrl ? `· ${v.websiteUrl}` : ""}</div>
@@ -153,6 +157,7 @@ function RowActions({
   onAsk?: (instruction: string) => Promise<Variant | null> | undefined;
 }) {
   const [openEdit, setOpenEdit] = useState(false);
+  const [openView, setOpenView] = useState(false);
   const [openAsk, setOpenAsk] = useState(false);
   const [tmp, setTmp] = useState<Variant>(v);
   const [instruction, setInstruction] = useState("");
@@ -160,6 +165,31 @@ function RowActions({
 
   return (
     <>
+      <Dialog open={openView} onOpenChange={setOpenView}>
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">View</Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{v.headline || "Ad Variant"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {v.imageUrl && <img src={v.imageUrl} alt="ad" className="w-full max-h-[300px] object-cover rounded-md border border-border" />}
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">Primary text</div>
+              <div className="text-sm whitespace-pre-wrap">{v.primaryText}</div>
+            </div>
+            <div className="text-xs text-muted-foreground">CTA: {v.cta || "LEARN_MORE"} {v.websiteUrl ? `· ${v.websiteUrl}` : ""}</div>
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" onClick={() => { onApprove(); setOpenView(false); }}>Approve</Button>
+              <Button size="sm" variant="outline" onClick={() => { onNeedsEdits(); setOpenView(false); }}>Needs Edits</Button>
+              <Button size="sm" variant="ghost" onClick={() => { onArchive(); setOpenView(false); }}>Archive</Button>
+              <Button size="sm" variant="destructive" onClick={() => { onDelete(); setOpenView(false); }}>Delete</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogTrigger asChild>
           <Button size="sm" variant="outline">Edit</Button>

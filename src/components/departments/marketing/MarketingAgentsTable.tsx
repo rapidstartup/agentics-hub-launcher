@@ -10,7 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Mail } from "lucide-react";
+import { Eye, Pencil, Mail, RotateCw } from "lucide-react";
 
 export type MarketingAgentRow = {
   id: string;
@@ -78,9 +78,11 @@ function CircularProgress({ percent }: { percent: number }) {
 
 interface Props {
   rows: MarketingAgentRow[];
+  onRun?: (row: MarketingAgentRow) => void;
+  onEdit?: (row: MarketingAgentRow) => void;
 }
 
-export const MarketingAgentsTable = ({ rows }: Props) => {
+export const MarketingAgentsTable = ({ rows, onRun, onEdit }: Props) => {
   const data = useMemo(() => rows, [rows]);
 
   return (
@@ -134,8 +136,13 @@ export const MarketingAgentsTable = ({ rows }: Props) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Eye className="h-4 w-4" />
+                    {onRun ? (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Run now" onClick={() => onRun(r)}>
+                        <RotateCw className="h-4 w-4" />
+                      </Button>
+                    ) : null}
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit" onClick={() => onEdit?.(r)}>
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <Pencil className="h-4 w-4" />

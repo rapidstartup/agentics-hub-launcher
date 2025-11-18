@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- Copied from docs/AdExample1.md for preview as standalone asset -->
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ad Mockup Tool - Facebook Preview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#135bec",
+            "background-light": "#f6f6f8","background-dark": "#101622",
+            "facebook-blue": "#1877F2",
+            "facebook-gray-text": "#65676B",
+            "facebook-gray-border": "#CED0D4",
+          },
+          fontFamily: { "display": ["Inter", "sans-serif"] },
+          borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-display">
+<div class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col w-full max-w-[960px] flex-1">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-gray-200 dark:border-b-gray-800 px-10 py-3 bg-white dark:bg-gray-900/50 rounded-t-xl">
+<div class="flex items-center gap-4 text-slate-800 dark:text-slate-200">
+<div class="size-6 text-primary"></div>
+<h2 class="text-slate-800 dark:text-slate-200 text-lg font-bold leading-tight tracking-[-0.015em]">Ad Mockup Tool</h2>
+</div>
+</header>
+<main class="flex-1 p-4 sm:p-6 md:p-10 bg-background-light dark:bg-background-dark">
+<div class="max-w-[550px] mx-auto">
+<div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
+<div class="p-4 flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuALKbmcDc8aMJxhB2HktLfq_KMCuU-L9lsSx1EPhU7OqbyifZnv94HpOUGDJvLMcbEUCcSodnlwBOyF3xEuPEULKrApnfoZP0dHrV-OYu1RvU5F5B5Kfk7vcnSEz_QdkIDoVgcrrtcg6MKJ4JlUpCwNnooafhY2Un2stMrroFNqO4j9Oz5a4AKLkBi7yiRcqoQhpXM-MrhWuuKYwF1vNGvzrD2e4_ioCSjG9CaDtyoRqwuRuhmDrRMMKVq0YQmvpfZEjZ5QdqTDyg8');"></div>
+<div class="flex-1">
+<p class="text-sm font-semibold text-slate-800 dark:text-slate-200">Cozy Home Insurance</p>
+<div class="flex items-center gap-1.5 text-xs text-facebook-gray-text dark:text-gray-400"><span>Sponsored</span></div>
+</div>
+</div>
+<div class="px-4 pb-4"><p class="text-sm text-slate-700 dark:text-slate-300">
+Time to protect your biggest investment? Save up to 25% on home insurance this month and enjoy the peace of mind you deserve. Get your personalized quote in minutes! Don't miss out on our limited-time offer.
+</p></div>
+<div class="bg-black"><div class="w-full bg-center bg-no-repeat aspect-video bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB1TbcwCYiAybV2s1F90I7e-53fqZSPqJYrA6DELds41hNJS0jbsufat6QASqzP7mTvClsAMhy0l6zGko2K0q_-Slnmq3ytddaDQtv_njgy-BTqw_EdPuYams2HSuC2oaMY-oopHn27MV2N1QgVpOGaBpj3kLo5bXb7lYeJArrFZSXMnkFWSgfrZMloAQmnRyJuIozHglFdOG2P0xd__l3sMeM4QRvRAawByuGjQHgXX-gDrRW6ztUBlda-CEcOFwo_5KmHZo_YMlk');"></div></div>
+<div class="bg-gray-50 dark:bg-gray-700 p-3 flex items-center justify-between">
+<div class="flex flex-col gap-0.5">
+<p class="text-xs uppercase text-facebook-gray-text dark:text-gray-400">YOURINSURANCE.COM</p>
+<p class="text-slate-800 dark:text-slate-200 text-base font-bold leading-tight">Protect Your Home &amp; Your Wallet.</p>
+<p class="hidden sm:block text-facebook-gray-text dark:text-gray-400 text-sm font-normal leading-normal">See how much you can save today.</p>
+</div>
+<button class="flex-shrink-0 min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 px-5 bg-facebook-blue/10 dark:bg-facebook-blue/20 text-facebook-blue text-sm font-bold leading-normal">Get Quote</button>
+</div>
+</div></div>
+</main>
+</div></div></div>
+</body></html>
+

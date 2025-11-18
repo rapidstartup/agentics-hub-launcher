@@ -78,6 +78,22 @@ npx supabase secrets set COMPOSIO_AUTH_BASE="https://api.composio.dev/auth/new" 
 
 Then redeploy the functions from the section above.
 
+If you have a specific managed auth config id from your provider manager, set it so the Connect URL includes it automatically:
+```
+npx supabase secrets set COMPOSIO_AUTH_CONFIG_ID_METAADS="ac_XXXXXXXXXXXX"
+```
+or a global default:
+```
+npx supabase secrets set COMPOSIO_AUTH_CONFIG_ID="ac_XXXXXXXXXXXX"
+```
+
+Slug naming rule (important):
+- Per‑provider keys must follow `COMPOSIO_AUTH_CONFIG_ID_<SLUG>` where `<SLUG>` is uppercase and matches the toolkit used in the UI:
+  - METAADS → `COMPOSIO_AUTH_CONFIG_ID_METAADS`
+  - GOOGLEDRIVE → `COMPOSIO_AUTH_CONFIG_ID_GOOGLEDRIVE`
+  - GOOGLESHEETS → `COMPOSIO_AUTH_CONFIG_ID_GOOGLESHEETS`
+- The connection function uppercases the toolkit name (`metaads|googledrive|googlesheets`) and looks up `COMPOSIO_AUTH_CONFIG_ID_<SLUG>`. If set, it is appended as `auth_config_id` to the redirect URL. A global `COMPOSIO_AUTH_CONFIG_ID` is used as a fallback.
+
 ### Google Sheets note
 - Share any target spreadsheet with the `GOOGLE_SERVICE_ACCOUNT_EMAIL` so the exporter can write.
 - You can also call `google-sheets-connect` directly with `{ spreadsheetId: "<id or url>", spreadsheetName?: "Ad Generator" }`.
@@ -87,6 +103,9 @@ Then redeploy the functions from the section above.
 
 ### More details
 - For deeper configuration and supported providers, consult the vendor-managed auth docs (Composio/Rube). The UI stays neutral; only the backend needs the managed-auth and proxy URLs.
+
+State passed during Connect
+- The connect URL state includes `{ uid, toolkit, clientId }` so your backend or auth provider can associate tokens with the selected client.
 
 ## Mastra
 Local dev:

@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark, minimal scrollbars for overflow areas */
+.scroll-dark{
+  scrollbar-width: thin;
+  scrollbar-color: rgb(63 63 70) transparent; /* zinc-700 on transparent */
+}
+.scroll-dark::-webkit-scrollbar{
+  width: 8px;
+  height: 8px;
+}
+.scroll-dark::-webkit-scrollbar-track{
+  background: transparent;
+}
+.scroll-dark::-webkit-scrollbar-thumb{
+  background: rgb(63 63 70);
+  border-radius: 9999px;
+}
+.scroll-dark:hover::-webkit-scrollbar-thumb{
+  background: rgb(82 82 91);
+}
+
 /* 
   AGENTICS HUB - BRANDING GUIDELINES
   ===================================

@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
 const navigationItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
@@ -57,6 +58,7 @@ const clients = [
 export const AdminSidebar = () => {
   const [selectedClient, setSelectedClient] = useState("all");
   const navigate = useNavigate();
+  const { isOpen } = useSidebarToggle();
 
   const handleClientChange = (clientId: string) => {
     setSelectedClient(clientId);
@@ -79,7 +81,7 @@ export const AdminSidebar = () => {
   };
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
+    <aside className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col border-r border-border bg-sidebar`}>
       {/* Brand Header */}
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">

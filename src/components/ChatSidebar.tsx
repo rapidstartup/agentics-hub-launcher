@@ -18,9 +18,11 @@ import {
 } from "@/components/ui/hover-card";
 import { NavLink, useParams } from "react-router-dom";
 import { departmentsData } from "@/data/departments";
+import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
 export const ChatSidebar = () => {
   const { clientId } = useParams();
+  const { isOpen } = useSidebarToggle();
   
   const navigationItems = [
     { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: `/client/${clientId}`, agents: [] },
@@ -46,7 +48,7 @@ export const ChatSidebar = () => {
   ];
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
+    <aside className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col border-r border-border bg-sidebar`}>
       {/* Brand Header */}
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">

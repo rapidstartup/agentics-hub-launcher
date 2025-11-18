@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { N8nConnectForm } from "@/components/integrations/N8nConnectForm";
 
 const AdminSettings = () => {
   return (
@@ -50,6 +51,10 @@ const AdminSettings = () => {
               <Switch id="incident" defaultChecked />
             </div>
           </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 mt-6">
+          <N8nConnectForm scope="agency" />
         </div>
 
         <div className="mt-6">

@@ -10,10 +10,12 @@ import {
   Phone,
   Plug,
 } from "lucide-react";
+import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
 export const SalesSidebar = () => {
   const navigate = useNavigate();
   const { clientId } = useParams();
+  const { isOpen } = useSidebarToggle();
 
   const sections = [
     {
@@ -36,7 +38,7 @@ export const SalesSidebar = () => {
   ];
 
   return (
-    <aside className="flex h-screen min-w-64 w-64 shrink-0 flex-col border-r border-border bg-background">
+    <aside className={`${isOpen ? "flex" : "hidden"} h-screen min-w-64 w-64 shrink-0 flex-col border-r border-border bg-background`}>
       {/* Header */}
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">

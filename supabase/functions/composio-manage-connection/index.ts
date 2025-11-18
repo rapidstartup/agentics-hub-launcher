@@ -13,18 +13,28 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const toolkit = url.searchParams.get('toolkit') ?? '';
+    let toolkit = url.searchParams.get('toolkit') ?? '';
+    let clientId = url.searchParams.get('clientId') ?? undefined;
 
+    // Also accept toolkit/clientId via JSON body (when invoked through supabase-js)
+    if (!toolkit && req.headers.get('content-type')?.includes('application/json')) {
+      try {
+        const body = await req.json();
+        if (typeof body?.toolkit === 'string') toolkit = body.toolkit;
+        if (typeof body?.clientId === 'string') clientId = body.clientId;
+      } catch {
+        // ignore
+      }
+    }
+
+    const authHeader = req.headers.get('Authorization') ?? undefined;
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { global: { headers: authHeader ? { Authorization: authHeader } : {} } }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!toolkit) {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -32,15 +42,30 @@ serve(async (req) => {
 
     // Optional: Your backend can store per-user connection state in a table.
     // For now, we surface a generic status and a redirect_url constructed from env.
-    const base = Deno.env.get('COMPOSIO_AUTH_BASE'); // e.g. https://api.composio.dev/auth/new
-    const state = encodeURIComponent(JSON.stringify({ uid: user.id, toolkit }));
-    const redirect_url = base ? `${base}?toolkit=${encodeURIComponent(toolkit)}&state=${state}` : null;
+    const base = Deno.env.get('COMPOSIO_AUTH_BASE'); // e.g. https://api.composio.dev/auth/new or with query params
+    const state = encodeURIComponent(JSON.stringify({ uid: user?.id ?? null, toolkit, clientId }));
+
+    // Optional per-provider or global managed auth config ids
+    const globalAuthCfg = Deno.env.get('COMPOSIO_AUTH_CONFIG_ID') ?? undefined;
+    const perToolkitAuthCfg = Deno.env.get(`COMPOSIO_AUTH_CONFIG_ID_${toolkit.toUpperCase()}`) ?? undefined;
+    const authCfg = perToolkitAuthCfg ?? globalAuthCfg;
+
+    // Assemble URL with correct delimiter whether base already contains `?` or not
+    const params: string[] = [
+      `toolkit=${encodeURIComponent(toolkit)}`,
+      `state=${state}`
+    ];
+    if (authCfg) params.push(`auth_config_id=${encodeURIComponent(authCfg)}`);
+
+    const redirect_url = base
+      ? `${base}${base.includes('?') ? '&' : '?'}${params.join('&')}`
+      : null;
 
     // Placeholder connection status. You can wire this to a persistent store later.
-    const status = 'disconnected';
+    const status = user ? 'disconnected' : 'anonymous';
 
     const requestId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`;
-    console.log(JSON.stringify({ event: 'composio-manage-connection', requestId, userId: user.id, toolkit, hasRedirect: !!redirect_url }));
+    console.log(JSON.stringify({ event: 'composio-manage-connection', requestId, userId: user?.id ?? null, toolkit, clientId, hasRedirect: !!redirect_url }));
     return new Response(
       JSON.stringify({ status, redirect_url, requestId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

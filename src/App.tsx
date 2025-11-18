@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SidebarToggleProvider } from "@/hooks/use-sidebar-toggle";
+import { SidebarToggleOverlay } from "@/components/SidebarToggleOverlay";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
@@ -58,8 +60,10 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
+      <SidebarToggleProvider>
+        <BrowserRouter>
+          <SidebarToggleOverlay />
+          <Routes>
           <Route path="/" element={<Navigate to="/client/techstart-solutions" replace />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/client/:clientId" element={<Index />} />
@@ -122,8 +126,9 @@ const App = () => (
           <Route path="/admin/notifications" element={<AdminNotifications />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </SidebarToggleProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

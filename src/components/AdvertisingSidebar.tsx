@@ -19,10 +19,12 @@ import {
   ArrowLeft,
   Users,
 } from "lucide-react";
+import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
 export const AdvertisingSidebar = () => {
   const navigate = useNavigate();
   const { clientId } = useParams();
+  const { isOpen } = useSidebarToggle();
 
   const navigationSections = [
     {
@@ -68,7 +70,7 @@ export const AdvertisingSidebar = () => {
   ];
 
   return (
-    <aside className="flex h-screen min-w-64 w-64 flex-col border-r border-border bg-background shrink-0">
+    <aside className={`${isOpen ? "flex" : "hidden"} h-screen min-w-64 w-64 flex-col border-r border-border bg-background shrink-0`}>
       {/* Header with Logo */}
       <div className="border-b border-border p-6">
         <div className="flex items-center gap-3">
