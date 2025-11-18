@@ -99,12 +99,13 @@ serve(async (req) => {
     };
 
     // Optionally persist an audit log row
-    await supabase.from('ad_publish_runs').insert({
+    const { error: auditError } = await supabase.from('ad_publish_runs').insert({
       project_id: (body as any).projectId ?? null,
       created_by: user.id,
       status: 'pending',
       payload
-    }).select().single().catch(() => null);
+    }).select().single();
+    // Ignore errors since this is an optional audit log
 
     console.log(JSON.stringify({ event: 'metaads-publish:dry-run', requestId }));
     return new Response(JSON.stringify({ created: [], payload, requestId, note: 'Dry-run; set COMPOSIO_PROXY_URL and remove dryRun to execute.' }), {
