@@ -72,6 +72,18 @@ const initialRows: MarketingAgentRow[] = [
     campaignsText: "0/10 Campaigns",
     healthPercent: 45,
   },
+  {
+    id: "asset-creator",
+    name: "Asset Creator",
+    role: "Visual Design Consultant",
+    avatarUrl: "/gemini.svg",
+    status: "active",
+    contentProgressPercent: 0,
+    contentText: "—",
+    campaignsProgressPercent: 0,
+    campaignsText: "—",
+    healthPercent: 100,
+  },
 ];
 
 export default function MarketingAgents() {

@@ -30,6 +30,31 @@ export const listMetaAccountsTool: Tool = {
   },
 };
 
+export const generateImageTool: Tool = {
+  name: 'generateImage',
+  description: 'Generate image asset via Gemini (Edge function)',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      prompt: { type: 'string' },
+      logoUrl: { type: 'string', nullable: true },
+      referenceImageUrl: { type: 'string', nullable: true },
+    },
+    required: ['prompt'],
+  } as any,
+  execute: async (input: {
+    prompt: string;
+    logoUrl?: string;
+    referenceImageUrl?: string;
+  }) => {
+    const resp = await authedFetch(`/functions/v1/generate-image`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    return await resp.json();
+  },
+};
+
 export const driveListTool: Tool = {
   name: 'driveList',
   description: 'List Google Drive files via edge function',
