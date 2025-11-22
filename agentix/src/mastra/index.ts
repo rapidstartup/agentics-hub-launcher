@@ -6,11 +6,12 @@ import { weatherWorkflow } from './workflows/weather-workflow';
 import { weatherAgent } from './agents/weather-agent';
 import { adCreatorWorkflow } from './workflows/ad-creator-workflow';
 import { adCreatorAgent } from './agents/ad-creator-agent';
+import { assetCreatorAgent } from './agents/asset-creator-agent';
 import { toolCallAppropriatenessScorer, completenessScorer, translationScorer } from './scorers/weather-scorer';
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow, adCreatorWorkflow },
-  agents: { weatherAgent, adCreatorAgent },
+  agents: { weatherAgent, adCreatorAgent, assetCreatorAgent },
   scorers: { toolCallAppropriatenessScorer, completenessScorer, translationScorer },
   storage: new LibSQLStore({
     // stores observability, scores, ... into memory storage, if it needs to persist, change to file:../mastra.db

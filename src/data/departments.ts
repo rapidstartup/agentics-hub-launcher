@@ -58,6 +58,7 @@ export const departmentsData: Department[] = [
       { name: "VSL Generator", status: "Active", canRunNow: true },
       { name: "Perfect Webinar Script", status: "Active", canRunNow: true },
       { name: "Perfect Webinar Creator", status: "Paused", canRunNow: true },
+      { name: "Asset Creator", status: "Active", canRunNow: true },
     ],
   },
   {
