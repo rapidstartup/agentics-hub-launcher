@@ -373,43 +373,70 @@ export type Database = {
         Row: {
           agent_key: string
           area: string
+          avatar_url: string | null
           client_id: string | null
-          connection_id: string
+          connection_id: string | null
           created_at: string
+          description: string | null
+          display_name: string | null
+          display_role: string | null
+          execution_mode: string | null
           id: string
           input_mapping: Json | null
+          input_schema: Json | null
+          is_predefined: boolean
+          output_behavior: string | null
           output_mapping: Json | null
           scope: string
           updated_at: string
-          user_id: string
+          user_id: string | null
+          webhook_url: string | null
           workflow_id: string
         }
         Insert: {
           agent_key: string
           area: string
+          avatar_url?: string | null
           client_id?: string | null
-          connection_id: string
+          connection_id?: string | null
           created_at?: string
+          description?: string | null
+          display_name?: string | null
+          display_role?: string | null
+          execution_mode?: string | null
           id?: string
           input_mapping?: Json | null
+          input_schema?: Json | null
+          is_predefined?: boolean
+          output_behavior?: string | null
           output_mapping?: Json | null
           scope?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
+          webhook_url?: string | null
           workflow_id: string
         }
         Update: {
           agent_key?: string
           area?: string
+          avatar_url?: string | null
           client_id?: string | null
-          connection_id?: string
+          connection_id?: string | null
           created_at?: string
+          description?: string | null
+          display_name?: string | null
+          display_role?: string | null
+          execution_mode?: string | null
           id?: string
           input_mapping?: Json | null
+          input_schema?: Json | null
+          is_predefined?: boolean
+          output_behavior?: string | null
           output_mapping?: Json | null
           scope?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
+          webhook_url?: string | null
           workflow_id?: string
         }
         Relationships: [
@@ -599,6 +626,153 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base_collections: {
+        Row: {
+          client_id: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          scope: Database["public"]["Enums"]["kb_scope"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      knowledge_base_item_collections: {
+        Row: {
+          added_at: string
+          collection_id: string
+          id: string
+          item_id: string
+        }
+        Insert: {
+          added_at?: string
+          collection_id: string
+          id?: string
+          item_id: string
+        }
+        Update: {
+          added_at?: string
+          collection_id?: string
+          id?: string
+          item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_item_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_item_collections_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_base_items: {
+        Row: {
+          category: Database["public"]["Enums"]["kb_category"]
+          client_id: string | null
+          created_at: string
+          description: string | null
+          external_url: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          is_archived: boolean
+          is_pinned: boolean
+          metadata: Json
+          mime_type: string | null
+          project_id: string | null
+          scope: Database["public"]["Enums"]["kb_scope"]
+          source_department: string
+          tags: string[] | null
+          task_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["kb_category"]
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          is_archived?: boolean
+          is_pinned?: boolean
+          metadata?: Json
+          mime_type?: string | null
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          source_department: string
+          tags?: string[] | null
+          task_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["kb_category"]
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          is_archived?: boolean
+          is_pinned?: boolean
+          metadata?: Json
+          mime_type?: string | null
+          project_id?: string | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          source_department?: string
+          tags?: string[] | null
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       market_research_reports: {
         Row: {
           client_avatar_description: string
@@ -701,7 +875,23 @@ export type Database = {
       }
     }
     Enums: {
+      execution_mode: "n8n" | "internal"
+      kb_category:
+        | "document"
+        | "image"
+        | "video"
+        | "audio"
+        | "template"
+        | "script"
+        | "brand_asset"
+        | "winning_ad"
+        | "research"
+        | "playbook"
+        | "faq"
+        | "offer"
+      kb_scope: "agency" | "client" | "project" | "task"
       n8n_scope: "agency" | "client"
+      output_behavior: "chat_stream" | "modal_display" | "field_populate"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -829,7 +1019,24 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      execution_mode: ["n8n", "internal"],
+      kb_category: [
+        "document",
+        "image",
+        "video",
+        "audio",
+        "template",
+        "script",
+        "brand_asset",
+        "winning_ad",
+        "research",
+        "playbook",
+        "faq",
+        "offer",
+      ],
+      kb_scope: ["agency", "client", "project", "task"],
       n8n_scope: ["agency", "client"],
+      output_behavior: ["chat_stream", "modal_display", "field_populate"],
     },
   },
 } as const
