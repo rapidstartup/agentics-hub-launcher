@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarToggleProvider } from "@/hooks/use-sidebar-toggle";
 import { SidebarToggleOverlay } from "@/components/SidebarToggleOverlay";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
@@ -69,71 +70,71 @@ const App = () => (
         <BrowserRouter>
           <SidebarToggleOverlay />
           <Routes>
-          <Route path="/" element={<Navigate to="/client/techstart-solutions" replace />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/client/:clientId" element={<Index />} />
+          <Route path="/" element={<ProtectedRoute><Navigate to="/client/techstart-solutions" replace /></ProtectedRoute>} />
+          <Route path="/client/:clientId" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           {/* Client-level quick access routes (must be above department catch-all) */}
-          <Route path="/client/:clientId/settings" element={<ClientSettings />} />
-          <Route path="/client/:clientId/projects" element={<ClientProjects />} />
-          <Route path="/client/:clientId/knowledge" element={<ClientKnowledge />} />
-          <Route path="/client/:clientId/analytics" element={<ClientAnalytics />} />
-          <Route path="/client/:clientId/system" element={<SystemControl />} />
-          <Route path="/client/:clientId/advertising" element={<Advertising />} />
-          <Route path="/client/:clientId/advertising/market-research" element={<MarketResearch />} />
-          <Route path="/client/:clientId/advertising/ad-optimizer" element={<AdOptimizer />} />
-          <Route path="/client/:clientId/advertising/ad-optimizer/run/:runId" element={<AdOptimizerRunDetails />} />
-          <Route path="/client/:clientId/advertising/ad-spy" element={<AdSpy />} />
-          <Route path="/client/:clientId/advertising/ad-creator" element={<AdCreatorDashboard />} />
-          <Route path="/client/:clientId/advertising/agents" element={<AdvertisingAgents />} />
+          <Route path="/client/:clientId/settings" element={<ProtectedRoute><ClientSettings /></ProtectedRoute>} />
+          <Route path="/client/:clientId/projects" element={<ProtectedRoute><ClientProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/knowledge" element={<ProtectedRoute><ClientKnowledge /></ProtectedRoute>} />
+          <Route path="/client/:clientId/analytics" element={<ProtectedRoute><ClientAnalytics /></ProtectedRoute>} />
+          <Route path="/client/:clientId/system" element={<ProtectedRoute><SystemControl /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/market-research" element={<ProtectedRoute><MarketResearch /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/ad-optimizer" element={<ProtectedRoute><AdOptimizer /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/ad-optimizer/run/:runId" element={<ProtectedRoute><AdOptimizerRunDetails /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/ad-spy" element={<ProtectedRoute><AdSpy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/ad-creator" element={<ProtectedRoute><AdCreatorDashboard /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           {/* Strategy dedicated area */}
-          <Route path="/client/:clientId/strategy" element={<Strategy />} />
-          <Route path="/client/:clientId/strategy/agents" element={<StrategyAgents />} />
-          <Route path="/client/:clientId/strategy/market-positioning" element={<StrategyMarketPositioning />} />
-          <Route path="/client/:clientId/strategy/knowledge-bases" element={<StrategyKnowledgeBases />} />
-          <Route path="/client/:clientId/strategy/company-brain" element={<StrategyCompanyBrain />} />
+          <Route path="/client/:clientId/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/strategy/agents" element={<ProtectedRoute><StrategyAgents /></ProtectedRoute>} />
+          <Route path="/client/:clientId/strategy/market-positioning" element={<ProtectedRoute><StrategyMarketPositioning /></ProtectedRoute>} />
+          <Route path="/client/:clientId/strategy/knowledge-bases" element={<ProtectedRoute><StrategyKnowledgeBases /></ProtectedRoute>} />
+          <Route path="/client/:clientId/strategy/company-brain" element={<ProtectedRoute><StrategyCompanyBrain /></ProtectedRoute>} />
           {/* Sales dedicated area */}
-          <Route path="/client/:clientId/sales" element={<Sales />} />
-          <Route path="/client/:clientId/sales/analytics" element={<SalesAnalytics />} />
-          <Route path="/client/:clientId/sales/projects" element={<SalesProjects />} />
-          <Route path="/client/:clientId/sales/agents" element={<SalesAgents />} />
-          <Route path="/client/:clientId/sales/pipeline" element={<SalesPipeline />} />
-          <Route path="/client/:clientId/sales/call-scripts" element={<SalesCallScripts />} />
-          <Route path="/client/:clientId/sales/crm-integration" element={<SalesCrmIntegration />} />
+          <Route path="/client/:clientId/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/analytics" element={<ProtectedRoute><SalesAnalytics /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/projects" element={<ProtectedRoute><SalesProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/agents" element={<ProtectedRoute><SalesAgents /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/pipeline" element={<ProtectedRoute><SalesPipeline /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/call-scripts" element={<ProtectedRoute><SalesCallScripts /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/crm-integration" element={<ProtectedRoute><SalesCrmIntegration /></ProtectedRoute>} />
           {/* Operations dedicated area */}
-          <Route path="/client/:clientId/operations" element={<Operations />} />
-          <Route path="/client/:clientId/operations/analytics" element={<OperationsAnalytics />} />
-          <Route path="/client/:clientId/operations/projects" element={<OperationsProjects />} />
-          <Route path="/client/:clientId/operations/agents" element={<OperationsAgents />} />
-          <Route path="/client/:clientId/operations/automation" element={<OperationsAutomation />} />
-          <Route path="/client/:clientId/operations/resource-optimization" element={<OperationsResourceOptimization />} />
-          <Route path="/client/:clientId/operations/quality-control" element={<OperationsQualityControl />} />
+          <Route path="/client/:clientId/operations" element={<ProtectedRoute><Operations /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/analytics" element={<ProtectedRoute><OperationsAnalytics /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/projects" element={<ProtectedRoute><OperationsProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/agents" element={<ProtectedRoute><OperationsAgents /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/automation" element={<ProtectedRoute><OperationsAutomation /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/resource-optimization" element={<ProtectedRoute><OperationsResourceOptimization /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/quality-control" element={<ProtectedRoute><OperationsQualityControl /></ProtectedRoute>} />
           {/* Back-compat alias */}
-          <Route path="/client/:clientId/operations-agents" element={<Navigate to="/client/:clientId/operations/agents" replace />} />
+          <Route path="/client/:clientId/operations-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/operations/agents" replace /></ProtectedRoute>} />
           {/* Marketing dedicated area */}
-          <Route path="/client/:clientId/marketing" element={<Marketing />} />
-          <Route path="/client/:clientId/marketing/agents" element={<MarketingAgents />} />
-          <Route path="/client/:clientId/marketing/ad-spy" element={<MarketingAdSpy />} />
-          <Route path="/client/:clientId/marketing/market-research" element={<MarketingMarketResearch />} />
-          <Route path="/client/:clientId/marketing/ad-creator" element={<MarketingAdCreator />} />
-          <Route path="/client/:clientId/marketing/landing-page-copywriter" element={<LandingPageCopywriter />} />
-          <Route path="/client/:clientId/marketing/email-copywriter" element={<EmailCopywriter />} />
+          <Route path="/client/:clientId/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/agents" element={<ProtectedRoute><MarketingAgents /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/ad-spy" element={<ProtectedRoute><MarketingAdSpy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/market-research" element={<ProtectedRoute><MarketingMarketResearch /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/ad-creator" element={<ProtectedRoute><MarketingAdCreator /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/landing-page-copywriter" element={<ProtectedRoute><LandingPageCopywriter /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/email-copywriter" element={<ProtectedRoute><EmailCopywriter /></ProtectedRoute>} />
           {/* Back-compat alias */}
-          <Route path="/client/:clientId/marketing-agents" element={<Navigate to="/client/:clientId/marketing/agents" replace />} />
+          <Route path="/client/:clientId/marketing-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/marketing/agents" replace /></ProtectedRoute>} />
           {/* Financials dedicated area */}
-          <Route path="/client/:clientId/financials" element={<Financials />} />
-          <Route path="/client/:clientId/financials/agents" element={<FinancialAgents />} />
-          <Route path="/client/:clientId/financials/analytics" element={<FinancialsAnalytics />} />
-          <Route path="/client/:clientId/financials/projects" element={<FinancialsProjects />} />
-          <Route path="/client/:clientId/financials/reports" element={<FinancialsReports />} />
+          <Route path="/client/:clientId/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
+          <Route path="/client/:clientId/financials/agents" element={<ProtectedRoute><FinancialAgents /></ProtectedRoute>} />
+          <Route path="/client/:clientId/financials/analytics" element={<ProtectedRoute><FinancialsAnalytics /></ProtectedRoute>} />
+          <Route path="/client/:clientId/financials/projects" element={<ProtectedRoute><FinancialsProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/financials/reports" element={<ProtectedRoute><FinancialsReports /></ProtectedRoute>} />
           {/* Operations-style alias for Agents direct link */}
-          <Route path="/client/:clientId/financial-agents" element={<FinancialAgents />} />
+          <Route path="/client/:clientId/financial-agents" element={<ProtectedRoute><FinancialAgents /></ProtectedRoute>} />
           {/* Generic department route (after specific advertising/marketing routes) */}
-          <Route path="/client/:clientId/:departmentId" element={<Department />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/admin/calendar" element={<AdminCalendar />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/client/:clientId/:departmentId" element={<ProtectedRoute><Department /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
+          <Route path="/admin/calendar" element={<ProtectedRoute><AdminCalendar /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+          <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>

@@ -155,14 +155,14 @@ export default function MarketingAdCreator() {
     }
   }
 
-  function handleApprove(id: string) {
-    setVariants(vs => vs.map(v => v.id === id ? { ...v, status: "approved" } : v));
+  function handleApprove(id: number) {
+    setVariants(vs => vs.map((v, i) => i === id ? { ...v, status: "approved" as const } : v));
   }
-  function handleReject(id: string) {
-    setVariants(vs => vs.map(v => v.id === id ? { ...v, status: "rejected" } : v));
+  function handleReject(id: number) {
+    setVariants(vs => vs.map((v, i) => i === id ? { ...v, status: "archived" as const } : v));
   }
-  function handleReset(id: string) {
-    setVariants(vs => vs.map(v => v.id === id ? { ...v, status: "pending" } : v));
+  function handleReset(id: number) {
+    setVariants(vs => vs.map((v, i) => i === id ? { ...v, status: "review" as const } : v));
   }
 
   async function handlePublish() {
@@ -267,7 +267,7 @@ export default function MarketingAdCreator() {
             {isGenerating ? (
               <Step2Loading
                 phases={phases}
-                currentPhase={phaseIndex}
+                phaseIndex={phaseIndex}
                 skeletonCount={skeletonCount}
                 builtCount={builtCount}
               />
@@ -276,9 +276,7 @@ export default function MarketingAdCreator() {
             ) : (
               <AdVariantList
                 variants={variants}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onReset={handleReset}
+                onChange={setVariants}
               />
             )}
           </CardContent>
