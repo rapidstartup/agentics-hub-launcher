@@ -369,6 +369,59 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_configs: {
+        Row: {
+          agent_key: string
+          area: string
+          client_id: string | null
+          connection_id: string
+          created_at: string
+          id: string
+          input_mapping: Json | null
+          output_mapping: Json | null
+          scope: string
+          updated_at: string
+          user_id: string
+          workflow_id: string
+        }
+        Insert: {
+          agent_key: string
+          area: string
+          client_id?: string | null
+          connection_id: string
+          created_at?: string
+          id?: string
+          input_mapping?: Json | null
+          output_mapping?: Json | null
+          scope?: string
+          updated_at?: string
+          user_id: string
+          workflow_id: string
+        }
+        Update: {
+          agent_key?: string
+          area?: string
+          client_id?: string | null
+          connection_id?: string
+          created_at?: string
+          id?: string
+          input_mapping?: Json | null
+          output_mapping?: Json | null
+          scope?: string
+          updated_at?: string
+          user_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_configs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "n8n_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string
@@ -648,7 +701,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      n8n_scope: "agency" | "client"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -775,6 +828,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      n8n_scope: ["agency", "client"],
+    },
   },
 } as const
