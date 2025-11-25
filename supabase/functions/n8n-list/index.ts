@@ -55,7 +55,9 @@ serve(async (req) => {
       const text = await wfResp.text().catch(() => '');
       return new Response(JSON.stringify({ error: `Failed to list workflows: ${wfResp.status} ${text}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const workflows = await wfResp.json().catch(() => []);
+    
+    const wfData = await wfResp.json().catch(() => ({}));
+    const workflows = Array.isArray(wfData.data) ? wfData.data : (Array.isArray(wfData) ? wfData : []);
 
     // Try listing projects (ignore on failure)
     let projects: unknown[] = [];

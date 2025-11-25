@@ -155,7 +155,6 @@ export function N8nConnectForm({ scope, clientId, onConnected }: { scope: N8nSco
             ))}
           </div>
         )}
-        {/* Note: In future, restrict agency-level connections creation to admin/agency owners only. */}
       </CardContent>
     </Card>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RotateCw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ScheduleManagementModal } from "./ScheduleManagementModal";
 import { RunNowModal } from "./RunNowModal";
 import { StatusChangeModal } from "./StatusChangeModal";
@@ -44,6 +46,7 @@ export const DepartmentDetailCard = ({
   const [n8nRunConfig, setN8nRunConfig] = useState<{ connectionId: string; workflowId: string; webhookUrl?: string } | null>(null);
   const [n8nRunning, setN8nRunning] = useState(false);
   const { toast } = useToast();
+  const [agentSource, setAgentSource] = useState<Record<string, "n8n" | "mastra">>({});
 
   const clientNames: Record<string, string> = {
     "techstart-solutions": "TechStart Solutions",
@@ -53,12 +56,35 @@ export const DepartmentDetailCard = ({
 
   const clientName = clientNames[clientId || ""] || "Client";
 
-  const handleScheduleClick = (agent: Agent) => {
+  const groupedAgents = useMemo(() => {
+    const groups: Record<string, Agent[]> = {};
+    agents.forEach((agent) => {
+      if (!groups[agent.name]) {
+        groups[agent.name] = [];
+      }
+      groups[agent.name].push(agent);
+    });
+    return Object.values(groups);
+  }, [agents]);
+
+  const handleSourceChange = (agentName: string, newSource: "n8n" | "mastra") => {
+    setAgentSource(prev => ({ ...prev, [agentName]: newSource }));
+  };
+
+  const getAgentFromGroup = (agentGroup: Agent[]) => {
+    if (agentGroup.length === 1) return agentGroup[0];
+    const source = agentSource[agentGroup[0].name] || "n8n";
+    return agentGroup.find(a => a.source === source) || agentGroup[0];
+  }
+
+  const handleScheduleClick = (agentGroup: Agent[]) => {
+    const agent = getAgentFromGroup(agentGroup);
     setSelectedAgent(agent);
     setScheduleModalOpen(true);
   };
 
-  const handleRunNowClick = (agent: Agent) => {
+  const handleRunNowClick = (agentGroup: Agent[]) => {
+    const agent = getAgentFromGroup(agentGroup);
     // Special handling for Marketing's two automation agents -> use n8n run flow
     if (title === "Marketing" && ["VSL Generator", "Perfect Webinar Script"].includes(agent.name)) {
       setSelectedAgent(agent);
@@ -91,7 +117,8 @@ export const DepartmentDetailCard = ({
     }
   };
 
-  const handleStatusClick = (agent: Agent) => {
+  const handleStatusClick = (agentGroup: Agent[]) => {
+    const agent = getAgentFromGroup(agentGroup);
     setSelectedAgent(agent);
     setStatusModalOpen(true);
   };
@@ -117,43 +144,62 @@ export const DepartmentDetailCard = ({
     }
   };
 
-  const agentListContent = agents.map((agent, index) => (
-    <div
-      key={index}
-      className="flex items-center justify-between gap-3 py-2 text-sm group hover:bg-muted/50 px-2 rounded-md transition-colors"
-    >
-      <span className="text-foreground flex-1">{agent.name}</span>
-      <div className="flex items-center gap-2 ml-auto">
-        {agent.schedule && (
-          <Badge
-            variant="outline"
-            className="cursor-pointer hover:bg-primary/10 text-xs capitalize"
-            onClick={() => handleScheduleClick(agent)}
+  const agentListContent = groupedAgents.map((agentGroup, index) => {
+    const agent = getAgentFromGroup(agentGroup);
+    const hasMultipleSources = agentGroup.length > 1;
+
+    return (
+      <div
+        key={index}
+        className="flex items-center justify-between gap-3 py-2 text-sm group hover:bg-muted/50 px-2 rounded-md transition-colors"
+      >
+        <span className="text-foreground flex-1">{agent.name}</span>
+        <div className="flex items-center gap-2 ml-auto">
+          {hasMultipleSources ? (
+             <div className="flex items-center space-x-2">
+               <Label htmlFor={`source-switch-${index}`} className="text-xs text-muted-foreground">External</Label>
+               <Switch
+                 id={`source-switch-${index}`}
+                 checked={(agentSource[agent.name] || 'n8n') === 'mastra'}
+                 onCheckedChange={(checked) => handleSourceChange(agent.name, checked ? 'mastra' : 'n8n')}
+               />
+               <Label htmlFor={`source-switch-${index}`} className="text-xs text-muted-foreground">Internal</Label>
+             </div>
+          ) : (
+            <Badge variant="outline" className="text-xs capitalize">{agent.source || 'n8n'}</Badge>
+          )}
+
+          {agent.schedule && (
+            <Badge
+              variant="outline"
+              className="cursor-pointer hover:bg-primary/10 text-xs capitalize"
+              onClick={() => handleScheduleClick(agentGroup)}
+            >
+              {agent.schedule}
+            </Badge>
+          )}
+          {agent.canRunNow && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-30 group-hover:opacity-100 transition-opacity"
+              onClick={() => handleRunNowClick(agentGroup)}
+              title="Run now"
+            >
+              <RotateCw className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <button
+            onClick={() => handleStatusClick(agentGroup)}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            title={`Status: ${agent.status}`}
           >
-            {agent.schedule}
-          </Badge>
-        )}
-        {agent.canRunNow && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 opacity-30 group-hover:opacity-100 transition-opacity"
-            onClick={() => handleRunNowClick(agent)}
-            title="Run now"
-          >
-            <RotateCw className="h-3.5 w-3.5" />
-          </Button>
-        )}
-        <button
-          onClick={() => handleStatusClick(agent)}
-          className="cursor-pointer hover:opacity-80 transition-opacity"
-          title={`Status: ${agent.status}`}
-        >
-          <div className={`h-2 w-2 rounded-full ${getStatusDotColor(agent.status)}`} />
-        </button>
+            <div className={`h-2 w-2 rounded-full ${getStatusDotColor(agent.status)}`} />
+          </button>
+        </div>
       </div>
-    </div>
-  ));
+    );
+  });
 
   return (
     <>

@@ -38,6 +38,7 @@ export async function listN8nConnections(params?: {
   clientId?: string;
 }) {
   const { data, error } = await supabase.functions.invoke("n8n-connections", {
+    method: "POST", // Important for body to be parsed correctly in some setups
     body: {
       scope: params?.scope,
       clientId: params?.clientId,

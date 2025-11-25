@@ -65,7 +65,7 @@ export function N8nAgentConfigModal({
       if (!selectedConnectionId) return;
       try {
         const { workflows } = await listN8nWorkflows({ connectionId: selectedConnectionId });
-        setWorkflows(workflows || []);
+        setWorkflows(Array.isArray(workflows) ? workflows : []);
       } catch (e) {
         console.error(e);
         setWorkflows([]);
