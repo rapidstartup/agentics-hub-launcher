@@ -225,7 +225,7 @@ export function KnowledgeBaseUploadModal({
         file_size: fileSize,
         mime_type: mimeType,
         metadata: {},
-      });
+      } as any);
 
       if (dbError) throw dbError;
 

@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import type { Database } from "@/integrations/supabase/types";
 import {
   Select,
   SelectContent,
@@ -94,7 +95,7 @@ export function KnowledgeBaseBrowser({
       }
 
       if (categoryFilter && categoryFilter.length > 0) {
-        query = query.in("category", categoryFilter);
+        query = query.in("category", categoryFilter as Database["public"]["Enums"]["kb_category"][]);
       }
 
       const { data, error } = await query;

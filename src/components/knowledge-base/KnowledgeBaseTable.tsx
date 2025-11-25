@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { Database } from "@/integrations/supabase/types";
 import {
   Select,
   SelectContent,
@@ -142,7 +143,7 @@ export function KnowledgeBaseTable({
       if (scope) query = query.eq("scope", scope);
       if (projectId) query = query.eq("project_id", projectId);
       if (categoryFilter && categoryFilter.length > 0) {
-        query = query.in("category", categoryFilter);
+        query = query.in("category", categoryFilter as Database["public"]["Enums"]["kb_category"][]);
       }
 
       const { data, error } = await query;
