@@ -1,97 +1,313 @@
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ChatSidebar } from "@/components/ChatSidebar";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Upload, RefreshCcw } from "lucide-react";
+import {
+  BookOpen,
+  Upload,
+  RefreshCcw,
+  FolderOpen,
+  FileText,
+  Image,
+  Video,
+  Star,
+  Target,
+  Palette,
+  Music,
+  FileCode,
+  HelpCircle,
+  Gift,
+  Plus,
+  Brain,
+  Sparkles,
+} from "lucide-react";
 import { ClientSwitcher } from "@/components/ClientSwitcher";
+import {
+  KnowledgeBaseTable,
+  KnowledgeBaseUploadModal,
+  type KBItem,
+} from "@/components/knowledge-base";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+const categoryStats = [
+  { key: "document", label: "Documents", icon: FileText, color: "text-blue-400" },
+  { key: "image", label: "Images", icon: Image, color: "text-purple-400" },
+  { key: "video", label: "Videos", icon: Video, color: "text-red-400" },
+  { key: "winning_ad", label: "Winning Ads", icon: Star, color: "text-yellow-400" },
+  { key: "playbook", label: "Playbooks", icon: Target, color: "text-orange-400" },
+  { key: "brand_asset", label: "Brand Assets", icon: Palette, color: "text-pink-400" },
+];
 
 const ClientKnowledge = () => {
   const { clientId } = useParams();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [pinnedItems, setPinnedItems] = useState<KBItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  type Doc = { id: string; title: string; type: "FAQ" | "Offer" | "Playbook" | "Doc"; updated: string; };
+  async function fetchStats() {
+    try {
+      // Fetch category counts
+      const { data: items } = await supabase
+        .from("knowledge_base_items")
+        .select("category, is_pinned")
+        .or(`client_id.eq.${clientId},scope.eq.agency`)
+        .eq("is_archived", false);
 
-  const pinnedDocs: Doc[] = useMemo(
-    () => [
-      { id: "kb-001", title: "TechStart ICP & Messaging Pillars", type: "Playbook", updated: "2025-11-10" },
-      { id: "kb-002", title: "Core Offer: Managed Ads + Creative", type: "Offer", updated: "2025-11-08" },
-      { id: "kb-003", title: "FAQ: Billing & Reporting Cadence", type: "FAQ", updated: "2025-11-05" },
-      { id: "kb-004", title: "Onboarding Checklist", type: "Doc", updated: "2025-11-01" },
-    ],
-    [],
-  );
+      if (items) {
+        const counts: Record<string, number> = {};
+        items.forEach((item: { category: string }) => {
+          counts[item.category] = (counts[item.category] || 0) + 1;
+        });
+        setCategoryCounts(counts);
+        setTotalItems(items.length);
+      }
+
+      // Fetch pinned items
+      const { data: pinned } = await supabase
+        .from("knowledge_base_items")
+        .select("*")
+        .or(`client_id.eq.${clientId},scope.eq.agency`)
+        .eq("is_archived", false)
+        .eq("is_pinned", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
+
+      if (pinned) {
+        setPinnedItems(pinned as KBItem[]);
+      }
+    } catch (err) {
+      console.error("Error fetching stats:", err);
+    }
+  }
+
+  useEffect(() => {
+    fetchStats();
+  }, [clientId, refreshKey]);
+
+  const handleRefresh = () => {
+    setRefreshKey((k) => k + 1);
+    toast.success("Knowledge base refreshed");
+  };
+
+  const handleUploadSuccess = () => {
+    setRefreshKey((k) => k + 1);
+  };
 
   return (
     <div className="flex h-screen w-full bg-background">
       <ChatSidebar />
       <main className="flex-1 overflow-auto">
-        <div className="border-b border-border bg-background">
+        {/* Header */}
+        <div className="border-b border-border bg-background sticky top-0 z-10">
           <div className="flex items-center justify-between p-6">
             <div className="flex items-center gap-3">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-2xl font-bold text-foreground">Knowledge Base</h1>
-              <span className="text-sm text-muted-foreground">for</span>
-              <ClientSwitcher />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
+                <BookOpen className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Knowledge Base</h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>for</span>
+                  <ClientSwitcher />
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" className="gap-2">
-                <Upload className="h-4 w-4" />
-                Import
-              </Button>
-              <Button className="gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleRefresh}>
                 <RefreshCcw className="h-4 w-4" />
-                Reindex Company Brain
+                Refresh
+              </Button>
+              <Button className="gap-2" onClick={() => setUploadOpen(true)}>
+                <Upload className="h-4 w-4" />
+                Upload
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="p-10">
-          <div className="mb-8">
-            <h2 className="mb-3 text-lg font-semibold text-foreground">Pinned</h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {pinnedDocs.map((doc) => (
-                <Card key={doc.id} className="border border-border bg-card p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{doc.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">Last updated {doc.updated}</p>
+        <div className="p-6 lg:p-10 space-y-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categoryStats.map((stat) => {
+              const count = categoryCounts[stat.key] || 0;
+              return (
+                <Card key={stat.key} className="bg-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-secondary ${stat.color}`}>
+                        <stat.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-foreground">{count}</p>
+                        <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      </div>
                     </div>
-                    <Badge variant="secondary">{doc.type}</Badge>
-                  </div>
+                  </CardContent>
                 </Card>
-              ))}
+              );
+            })}
+          </div>
+
+          {/* Pinned Items */}
+          {pinnedItems.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Star className="h-5 w-5 text-yellow-500" />
+                <h2 className="text-lg font-semibold text-foreground">Pinned Items</h2>
+                <Badge variant="secondary">{pinnedItems.length}</Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pinnedItems.map((item) => (
+                  <Card key={item.id} className="border border-border bg-card hover:shadow-lg transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-foreground truncate">{item.title}</p>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                              {item.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-3">
+                            <Badge variant="outline">{item.source_department}</Badge>
+                            <Badge variant="secondary">{item.category.replace("_", " ")}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card className="border border-border bg-card p-6">
-              <h3 className="text-base font-semibold text-foreground">Suggested Sources</h3>
-              <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                <li>Help Center / FAQs</li>
-                <li>Offer pages and sales collateral</li>
-                <li>Product docs and internal notes</li>
-                <li>Meeting notes and customer interviews</li>
-              </ul>
+          {/* Company Brain Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <Card className="xl:col-span-2 border border-border bg-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-primary" />
+                    Company Brain Status
+                  </CardTitle>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Reindex
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="rounded-lg bg-secondary/50 p-4">
+                      <p className="text-2xl font-bold text-foreground">{totalItems}</p>
+                      <p className="text-xs text-muted-foreground">Total Items</p>
+                    </div>
+                    <div className="rounded-lg bg-secondary/50 p-4">
+                      <p className="text-2xl font-bold text-foreground">{pinnedItems.length}</p>
+                      <p className="text-xs text-muted-foreground">Pinned</p>
+                    </div>
+                    <div className="rounded-lg bg-secondary/50 p-4">
+                      <p className="text-2xl font-bold text-foreground">
+                        {Object.keys(categoryCounts).length}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Categories</p>
+                    </div>
+                    <div className="rounded-lg bg-green-500/10 p-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        <p className="text-sm font-medium text-green-500">Ready</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">RAG Status</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    The Company Brain indexes all knowledge base items to power AI agents with context about your business.
+                    Reindex after major updates to keep search and AI responses fresh.
+                  </p>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="border border-border bg-card p-6">
-              <h3 className="text-base font-semibold text-foreground">Company Brain Status</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Indexed sources: product docs, knowledge base entries, support articles, and sales collateral.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Tip: Reindex after large updates to FAQs or offers to keep search fresh.
-              </p>
+            <Card className="border border-border bg-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setUploadOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Upload New Asset
+                </Button>
+                <div className="pt-3 border-t border-border">
+                  <p className="text-sm font-medium text-foreground mb-3">Suggested Sources</p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4" />
+                      Help Center / FAQs
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Gift className="h-4 w-4" />
+                      Offer pages and sales collateral
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Product docs and internal notes
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Star className="h-4 w-4" />
+                      Winning ad creatives
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" />
+                      Brand guidelines and assets
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
             </Card>
           </div>
+
+          {/* Main Knowledge Base Table */}
+          <Card className="border border-border bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                All Items
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <KnowledgeBaseTable
+                key={refreshKey}
+                clientId={clientId}
+                showUpload
+                onUploadClick={() => setUploadOpen(true)}
+              />
+            </CardContent>
+          </Card>
         </div>
       </main>
+
+      {/* Upload Modal */}
+      <KnowledgeBaseUploadModal
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        clientId={clientId}
+        onSuccess={handleUploadSuccess}
+      />
     </div>
   );
 };
 
 export default ClientKnowledge;
-
-

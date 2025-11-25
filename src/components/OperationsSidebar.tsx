@@ -10,6 +10,7 @@ import {
   Workflow,
   Cog,
   ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -34,6 +35,12 @@ export const OperationsSidebar = () => {
         { title: "Process Automation", path: `/client/${clientId}/operations/automation`, icon: Cog },
         { title: "Resource Optimization", path: `/client/${clientId}/operations/resource-optimization`, icon: Workflow },
         { title: "Quality Control", path: `/client/${clientId}/operations/quality-control`, icon: ShieldCheck },
+      ],
+    },
+    {
+      label: "RESOURCES",
+      items: [
+        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
       ],
     },
   ];

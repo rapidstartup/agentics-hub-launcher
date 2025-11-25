@@ -144,8 +144,8 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit }: Props) => {
                     <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit" onClick={() => onEdit?.(r)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Pencil className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8" title="View">
+                      <Eye className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <Mail className="h-4 w-4" />

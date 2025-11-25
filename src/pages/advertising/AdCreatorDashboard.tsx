@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Variant } from "@/components/advertising/AdKanbanBoard";
-import { Star, X, Globe, Check, Bot, BarChart3, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Star, X, Globe, Check, Bot, BarChart3, ExternalLink, CheckCircle2, FolderOpen, BookOpen } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Step2Loading } from "@/components/advertising/Step2Loading";
 import { AdVariantList } from "@/components/advertising/AdVariantList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { KnowledgeBaseBrowser, type KBItem } from "@/components/knowledge-base";
 
 const API_BASE = "/functions/v1";
 
@@ -37,6 +38,10 @@ export default function AdCreatorDashboard() {
   // Preview lightbox for HTML creatives
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Knowledge Base integration
+  const [kbBrowserOpen, setKbBrowserOpen] = useState(false);
+  const [kbSelectedItems, setKbSelectedItems] = useState<KBItem[]>([]);
 
   // Audience builder (chips + AI helper)
   const [audienceInput, setAudienceInput] = useState<string>("");
@@ -194,13 +199,22 @@ export default function AdCreatorDashboard() {
     setVariants([]);
     startProgress(numVariants);
     try {
+      // Build Knowledge Base context if items are selected
+      const kbContext = kbSelectedItems.length > 0 ? kbSelectedItems.map(item => ({
+        title: item.title,
+        category: item.category,
+        description: item.description || "",
+        tags: item.tags || [],
+      })) : undefined;
+
       const body = {
         productContext: {
           ...productContext,
           audience: audienceChips.length ? audienceChips.join(", ") : productContext.audience,
         },
         winningExamples: winningExamples.split("\n").filter(Boolean),
-        numVariants
+        numVariants,
+        knowledgeBaseContext: kbContext, // Pass KB context to generation
       };
       const r = await fetch(`${API_BASE}/generate-copy`, {
         method: "POST",
@@ -428,6 +442,18 @@ export default function AdCreatorDashboard() {
         {/* Preview Lightbox */}
         <LightboxPreview open={previewOpen} onOpenChange={setPreviewOpen} url={previewUrl} />
 
+        {/* Knowledge Base Browser */}
+        <KnowledgeBaseBrowser
+          open={kbBrowserOpen}
+          onOpenChange={setKbBrowserOpen}
+          clientId={clientId}
+          categoryFilter={["winning_ad", "brand_asset", "playbook", "script", "image"]}
+          maxSelect={5}
+          onConfirm={(items) => setKbSelectedItems(items)}
+          title="Select Assets from Knowledge Base"
+          description="Choose winning ads, brand assets, or playbooks to inform your ad generation."
+        />
+
         {/* Publish modal */}
         <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
           <DialogContent className="max-w-md">
@@ -620,6 +646,41 @@ export default function AdCreatorDashboard() {
               <div>
                 <label className="text-sm text-muted-foreground">Offer</label>
                 <Input value={productContext.offer} onChange={(e) => setProductContext({ ...productContext, offer: e.target.value })} placeholder="Offer" />
+              </div>
+
+              {/* Knowledge Base Assets Section */}
+              <div className="border-t border-border pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-muted-foreground flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Knowledge Base Assets (optional)
+                  </label>
+                  <Button variant="outline" size="sm" onClick={() => setKbBrowserOpen(true)} className="gap-2">
+                    <FolderOpen className="h-4 w-4" />
+                    Browse KB
+                  </Button>
+                </div>
+                {kbSelectedItems.length > 0 ? (
+                  <div className="space-y-2 max-h-40 overflow-auto pr-1 scroll-dark">
+                    {kbSelectedItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 text-sm bg-secondary/50 rounded-lg p-2">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        <span className="flex-1 truncate">{item.title}</span>
+                        <span className="text-xs text-muted-foreground">{item.category.replace("_", " ")}</span>
+                        <button
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() => setKbSelectedItems(kbSelectedItems.filter((i) => i.id !== item.id))}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Add playbooks, winning ads, or brand assets from your Knowledge Base to inform ad generation.
+                  </p>
+                )}
               </div>
 
               

@@ -9,6 +9,7 @@ import {
   Workflow,
   Phone,
   Plug,
+  BookOpen,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -33,6 +34,12 @@ export const SalesSidebar = () => {
         { title: "Pipeline Manager", path: `/client/${clientId}/sales/pipeline`, icon: Workflow },
         { title: "Call Scripts", path: `/client/${clientId}/sales/call-scripts`, icon: Phone },
         { title: "CRM Integration", path: `/client/${clientId}/sales/crm-integration`, icon: Plug },
+      ],
+    },
+    {
+      label: "RESOURCES",
+      items: [
+        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
       ],
     },
   ];

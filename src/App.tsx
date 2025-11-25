@@ -18,6 +18,11 @@ import NotFound from "./pages/NotFound";
 import Department from "./pages/Department";
 import OperationsAgents from "./pages/OperationsAgents";
 import MarketingAgents from "./pages/MarketingAgents";
+import MarketingAdSpy from "./pages/marketing/MarketingAdSpy";
+import MarketingMarketResearch from "./pages/marketing/MarketingMarketResearch";
+import MarketingAdCreator from "./pages/marketing/MarketingAdCreator";
+import LandingPageCopywriter from "./pages/marketing/LandingPageCopywriter";
+import EmailCopywriter from "./pages/marketing/EmailCopywriter";
 import AdvertisingAgents from "./pages/AdvertisingAgents";
 import Marketing from "./pages/Marketing";
 import Operations from "./pages/Operations";
@@ -107,6 +112,11 @@ const App = () => (
           {/* Marketing dedicated area */}
           <Route path="/client/:clientId/marketing" element={<Marketing />} />
           <Route path="/client/:clientId/marketing/agents" element={<MarketingAgents />} />
+          <Route path="/client/:clientId/marketing/ad-spy" element={<MarketingAdSpy />} />
+          <Route path="/client/:clientId/marketing/market-research" element={<MarketingMarketResearch />} />
+          <Route path="/client/:clientId/marketing/ad-creator" element={<MarketingAdCreator />} />
+          <Route path="/client/:clientId/marketing/landing-page-copywriter" element={<LandingPageCopywriter />} />
+          <Route path="/client/:clientId/marketing/email-copywriter" element={<EmailCopywriter />} />
           {/* Back-compat alias */}
           <Route path="/client/:clientId/marketing-agents" element={<Navigate to="/client/:clientId/marketing/agents" replace />} />
           {/* Financials dedicated area */}

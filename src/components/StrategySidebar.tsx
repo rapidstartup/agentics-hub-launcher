@@ -8,6 +8,7 @@ import {
   BookText,
   Brain,
   ArrowLeft,
+  BookOpen,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -28,8 +29,14 @@ export const StrategySidebar = () => {
       label: "STRATEGY AGENTS",
       items: [
         { title: "Market Positioning Plan", path: `/client/${clientId}/strategy/market-positioning`, icon: Target },
-        { title: "Knowledge Bases (FAQ, Offers)", path: `/client/${clientId}/strategy/knowledge-bases`, icon: BookText },
         { title: "Company Brain (RAG)", path: `/client/${clientId}/strategy/company-brain`, icon: Brain },
+      ],
+    },
+    {
+      label: "RESOURCES",
+      items: [
+        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
+        { title: "FAQs & Offers", path: `/client/${clientId}/strategy/knowledge-bases`, icon: BookText },
       ],
     },
   ];

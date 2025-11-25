@@ -3,9 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { MarketingSidebar } from "@/components/MarketingSidebar";
 import { DepartmentKPIs } from "@/components/departments/DepartmentKPIs";
 import type { DepartmentKpi } from "@/components/departments/types";
-import {
-  Input
-} from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -15,15 +13,19 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download, Filter, Search, Megaphone, Plus } from "lucide-react";
+import { Download, Filter, Search, Megaphone, Plus, Bot } from "lucide-react";
 import {
   MarketingAgentsTable,
   type MarketingAgentRow,
 } from "@/components/departments/marketing/MarketingAgentsTable";
 import { N8nAgentConfigModal } from "@/components/agents/N8nAgentConfigModal";
-import { RunAgentDynamicModal } from "@/components/agents/RunAgentDynamicModal";
-import { fetchAgentConfig, listAgentConfigs, RuntimeField } from "@/integrations/n8n/agents";
-import { runN8nWorkflow } from "@/integrations/n8n/api";
+import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
+import { 
+  AgentConfig, 
+  fetchAgentConfig, 
+  listAgentConfigs, 
+  getAgentInputFields 
+} from "@/integrations/n8n/agents";
 import { useToast } from "@/hooks/use-toast";
 
 const kpis: DepartmentKpi[] = [
@@ -32,7 +34,7 @@ const kpis: DepartmentKpi[] = [
   { label: "Department Health", value: "92%", trend: { direction: "down", value: "-1% from last week" } },
 ];
 
-const initialRows: MarketingAgentRow[] = [
+const humanAgents: MarketingAgentRow[] = [
   {
     id: "jane-doe",
     name: "Jane Doe",
@@ -72,19 +74,13 @@ const initialRows: MarketingAgentRow[] = [
     campaignsText: "0/10 Campaigns",
     healthPercent: 45,
   },
-  {
-    id: "asset-creator",
-    name: "Asset Creator",
-    role: "Visual Design Consultant",
-    avatarUrl: "/gemini.svg",
-    status: "active",
-    contentProgressPercent: 0,
-    contentText: "—",
-    campaignsProgressPercent: 0,
-    campaignsText: "—",
-    healthPercent: 100,
-  },
 ];
+
+// Extended row type to include agent config
+interface ExtendedMarketingAgentRow extends MarketingAgentRow {
+  isAI?: boolean;
+  config?: AgentConfig;
+}
 
 export default function MarketingAgents() {
   const { clientId } = useParams();
@@ -92,42 +88,43 @@ export default function MarketingAgents() {
 
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "on-leave">("all");
-  const [rows, setRows] = useState<MarketingAgentRow[]>(initialRows);
+  const [aiAgents, setAiAgents] = useState<ExtendedMarketingAgentRow[]>([]);
 
-  // n8n agent config/run state
+  // Modal state
   const [configOpen, setConfigOpen] = useState(false);
   const [configAgentKey, setConfigAgentKey] = useState<string>("");
   const [addOpen, setAddOpen] = useState(false);
-  const [runOpen, setRunOpen] = useState(false);
-  const [runFields, setRunFields] = useState<RuntimeField[]>([]);
-  const [runConfig, setRunConfig] = useState<{ connectionId: string; workflowId: string } | null>(null);
-  const [running, setRunning] = useState(false);
+  
+  // Runner state
+  const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
+  const [runnerOpen, setRunnerOpen] = useState(false);
 
   function toAgentKey(name: string): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   }
 
-  // Append automation agents to table (VSL & Perfect Webinar Script)
-  useEffect(() => {
-    setRows([...initialRows]);
-  }, []);
-
   async function refreshDynamicAgents() {
-    const cfgs = await listAgentConfigs({ area: "marketing", clientId: clientId });
-    const mapped: MarketingAgentRow[] = (cfgs || []).map((cfg) => ({
-      id: `n8n-${cfg.agent_key}`,
-      name: cfg.display_name || cfg.agent_key,
-      role: cfg.display_role || "Automation Workflow",
-      avatarUrl: "/n8n.svg",
-      status: "active",
-      contentProgressPercent: 0,
-      contentText: "—",
-      campaignsProgressPercent: 0,
-      campaignsText: "—",
-      healthPercent: 96,
-    }));
-    // Prepend dynamic rows
-    setRows((prev) => [...mapped, ...initialRows]);
+    try {
+      const cfgs = await listAgentConfigs({ area: "marketing", clientId: clientId, includePredefined: true });
+      const mapped: ExtendedMarketingAgentRow[] = (cfgs || []).map((cfg) => ({
+        id: `ai-${cfg.agent_key}`,
+        name: cfg.display_name || cfg.agent_key,
+        role: cfg.display_role || "AI Agent",
+        avatarUrl: cfg.avatar_url || "/n8n.svg",
+        status: "active" as const,
+        contentProgressPercent: 0,
+        contentText: cfg.is_predefined ? "Predefined" : "—",
+        campaignsProgressPercent: 0,
+        campaignsText: cfg.output_behavior === "chat_stream" ? "Chat" : "Form",
+        healthPercent: 100,
+        isAI: true,
+        config: cfg,
+      }));
+      setAiAgents(mapped);
+    } catch (e) {
+      console.error("Failed to load AI agents:", e);
+      setAiAgents([]);
+    }
   }
 
   useEffect(() => {
@@ -135,78 +132,67 @@ export default function MarketingAgents() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
 
+  // Combine AI agents with human agents
+  const allRows: ExtendedMarketingAgentRow[] = useMemo(() => {
+    return [...aiAgents, ...humanAgents.map(h => ({ ...h, isAI: false }))];
+  }, [aiAgents]);
+
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter((r) => {
+    return allRows.filter((r) => {
       const statusOk = status === "all" ? true : r.status === status;
       const text = `${r.name} ${r.role}`.toLowerCase();
       return statusOk && (q ? text.includes(q) : true);
     });
-  }, [rows, query, status]);
+  }, [allRows, query, status]);
 
-  async function handleRun(row: MarketingAgentRow) {
-    // Only act for the two automation agents; others could later integrate
-    const key = row.id?.startsWith("n8n-") ? row.id.slice(4) : toAgentKey(row.name);
-    try {
-      const cfg = await fetchAgentConfig({ area: "marketing", agentKey: key, clientId: clientId });
-      if (!cfg) {
-        // Prompt to configure
-        setConfigAgentKey(key);
-        setConfigOpen(true);
-        return;
-      }
-      const fields = (cfg.input_mapping?.requiredFields ?? []) as RuntimeField[];
-      if (fields.length > 0) {
-        setRunFields(fields);
-        setRunConfig({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id });
-        setRunOpen(true);
-      } else {
-        setRunning(true);
-        await runN8nWorkflow({ connectionId: cfg.connection_id, workflowId: cfg.workflow_id, payload: {}, waitTillFinished: true });
-        toast({ title: "Agent started", description: `${row.name} is running` });
-        setRunning(false);
-      }
-    } catch (e: any) {
-      toast({ title: "Run failed", description: e?.message || "Unable to run agent", variant: "destructive" });
-      setRunning(false);
+  async function handleRun(row: ExtendedMarketingAgentRow) {
+    // If it's an AI agent with config, use the universal runner
+    if (row.isAI && row.config) {
+      setSelectedAgent(row.config);
+      setRunnerOpen(true);
+      return;
     }
+
+    // For AI agents without inline config, try to fetch it
+    if (row.id?.startsWith("ai-")) {
+      const key = row.id.slice(3);
+      try {
+        const cfg = await fetchAgentConfig({ area: "marketing", agentKey: key, clientId });
+        if (cfg) {
+          setSelectedAgent(cfg);
+          setRunnerOpen(true);
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Fallback: prompt to configure
+    const key = row.id?.startsWith("ai-") ? row.id.slice(3) : toAgentKey(row.name);
+    setConfigAgentKey(key);
+    setConfigOpen(true);
   }
 
-  async function confirmDynamicRun(values: Record<string, any>) {
-    if (!runConfig) return;
-    try {
-      setRunning(true);
-      await runN8nWorkflow({
-        connectionId: runConfig.connectionId,
-        workflowId: runConfig.workflowId,
-        payload: values,
-        waitTillFinished: true,
-      });
-      toast({ title: "Agent started", description: "Workflow triggered with provided inputs" });
-      setRunOpen(false);
-    } catch (e: any) {
-      toast({ title: "Run failed", description: e?.message || "Unable to run agent", variant: "destructive" });
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  function handleEdit(row: MarketingAgentRow) {
-    setConfigAgentKey(toAgentKey(row.name));
+  function handleEdit(row: ExtendedMarketingAgentRow) {
+    const key = row.id?.startsWith("ai-") ? row.id.slice(3) : toAgentKey(row.name);
+    setConfigAgentKey(key);
     setConfigOpen(true);
   }
 
   function handleExport() {
-    const rows = filteredRows.map((r) => ({
+    const exportRows = filteredRows.map((r) => ({
       name: r.name,
       role: r.role,
+      type: r.isAI ? "AI Agent" : "Human",
       status: r.status,
       content: r.contentText,
       campaigns: r.campaignsText,
       health: `${r.healthPercent}%`,
     }));
-    const header = Object.keys(rows[0] || {}).join(",");
-    const csv = [header, ...rows.map((r) => Object.values(r).join(","))].join("\n");
+    const header = Object.keys(exportRows[0] || {}).join(",");
+    const csv = [header, ...exportRows.map((r) => Object.values(r).join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -215,6 +201,25 @@ export default function MarketingAgents() {
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  // Update KPIs based on actual agent counts
+  const dynamicKpis: DepartmentKpi[] = [
+    { 
+      label: "Total Agents", 
+      value: String(allRows.length), 
+      trend: { direction: "up", value: `${aiAgents.length} AI` } 
+    },
+    { 
+      label: "Active Campaigns", 
+      value: "8", 
+      trend: { direction: "up", value: "+5% from last week" } 
+    },
+    { 
+      label: "Department Health", 
+      value: "92%", 
+      trend: { direction: "down", value: "-1% from last week" } 
+    },
+  ];
 
   return (
     <div className="flex h-screen w-full bg-background">
@@ -250,8 +255,40 @@ export default function MarketingAgents() {
         <div className="space-y-8 p-10">
           {/* KPI Cards */}
           <section>
-            <DepartmentKPIs kpis={kpis} />
+            <DepartmentKPIs kpis={dynamicKpis} />
           </section>
+
+          {/* AI Agents Quick Access */}
+          {aiAgents.length > 0 && (
+            <section>
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                AI Agents
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {aiAgents.slice(0, 3).map((agent) => (
+                  <Card 
+                    key={agent.id}
+                    className="p-4 cursor-pointer hover:border-primary transition-colors"
+                    onClick={() => agent.config && (setSelectedAgent(agent.config), setRunnerOpen(true))}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground truncate">{agent.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{agent.role}</p>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {agent.config?.output_behavior === "chat_stream" ? "Chat" : "Form"}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Controls */}
           <Card className="flex flex-wrap items-center justify-between gap-4 border border-border bg-card p-4">
@@ -295,7 +332,16 @@ export default function MarketingAgents() {
           </section>
         </div>
 
-        {/* Config & Run modals */}
+        {/* Universal Agent Runner */}
+        {selectedAgent && (
+          <UniversalAgentRunner
+            agent={selectedAgent}
+            open={runnerOpen}
+            onOpenChange={setRunnerOpen}
+          />
+        )}
+
+        {/* Config modals */}
         <N8nAgentConfigModal
           open={configOpen}
           onOpenChange={setConfigOpen}
@@ -304,8 +350,10 @@ export default function MarketingAgents() {
           area="marketing"
           agentKey={configAgentKey}
           title="Configure Marketing Agent"
+          onSaved={refreshDynamicAgents}
         />
-        {/* Add new agent (name + config) */}
+        
+        {/* Add new agent */}
         <N8nAgentConfigModal
           open={addOpen}
           onOpenChange={(open) => {
@@ -316,18 +364,9 @@ export default function MarketingAgents() {
           clientId={clientId}
           area="marketing"
           title="Add Marketing Agent"
-        />
-        <RunAgentDynamicModal
-          open={runOpen}
-          onOpenChange={setRunOpen}
-          title="Provide inputs"
-          fields={runFields}
-          onRun={confirmDynamicRun}
-          running={running}
+          onSaved={refreshDynamicAgents}
         />
       </main>
     </div>
   );
 }
-
-

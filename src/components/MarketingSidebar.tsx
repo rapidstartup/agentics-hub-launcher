@@ -9,6 +9,12 @@ import {
   ArrowLeft,
   PenSquare,
   Megaphone,
+  Eye,
+  Wand2,
+  TrendingUp,
+  FileEdit,
+  Mail,
+  BookOpen,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -28,10 +34,31 @@ export const MarketingSidebar = () => {
       ],
     },
     {
+      label: "RESEARCH TOOLS",
+      items: [
+        { title: "Ad Spy", path: `/client/${clientId}/marketing/ad-spy`, icon: Eye },
+        { title: "Market Research", path: `/client/${clientId}/marketing/market-research`, icon: TrendingUp },
+      ],
+    },
+    {
+      label: "CREATIVE TOOLS",
+      items: [
+        { title: "Ad Creator", path: `/client/${clientId}/marketing/ad-creator`, icon: Wand2 },
+        { title: "Landing Page Copy", path: `/client/${clientId}/marketing/landing-page-copywriter`, icon: FileEdit },
+        { title: "Email Copywriter", path: `/client/${clientId}/marketing/email-copywriter`, icon: Mail },
+      ],
+    },
+    {
       label: "CONTENT",
       items: [
         { title: "Content Planner", path: `/client/${clientId}/marketing/content-planner`, icon: PenSquare },
         { title: "Campaigns", path: `/client/${clientId}/marketing/campaigns`, icon: Megaphone },
+      ],
+    },
+    {
+      label: "RESOURCES",
+      items: [
+        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
       ],
     },
   ];

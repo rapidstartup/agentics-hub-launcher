@@ -1,9 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { OperationsSidebar } from "@/components/OperationsSidebar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, BarChart3, ArrowLeft } from "lucide-react";
+import { Plus, BarChart3, ArrowLeft, Bot, Play, Settings } from "lucide-react";
+import { AgentConfig, listAgentConfigs, listPredefinedAgents } from "@/integrations/n8n/agents";
+import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
+import { N8nAgentConfigModal } from "@/components/agents/N8nAgentConfigModal";
+import { useToast } from "@/hooks/use-toast";
 
 type Presence = "online" | "busy" | "offline";
 
@@ -14,9 +19,11 @@ interface OpsAgent {
   avatar: string;
   presence: Presence;
   isSelected?: boolean;
+  isAI?: boolean;
+  config?: AgentConfig;
 }
 
-const AGENTS: OpsAgent[] = [
+const HUMAN_AGENTS: OpsAgent[] = [
   {
     id: "olivia-rhye",
     name: "Olivia Rhye",
@@ -24,7 +31,6 @@ const AGENTS: OpsAgent[] = [
     avatar:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuCp7I3X34xs2nAgaD4_ap28gmAfZb1KERd-LeW_aVqc-HE4Pfi44c-8x8QHEneiS6X9UU5bLeelULEu-QKL0vShKQunykPTefHSagWMHFgCCywD05msibM2tJww99b30caVvc5s_kFc31K3HdXwIYkwrHml6k5y_eWVdjvheFgxKmSJWn-Tvxatu-T-eqDgEfiwCrEx9hUPk5nbSlNhIUvml6dSmkIhquDM7VeVKiNCCxLGc-7-qI3OavPhynQf1k17mHJj4bdjb52w",
     presence: "online",
-    isSelected: true,
   },
   {
     id: "phoenix-baker",
@@ -50,22 +56,6 @@ const AGENTS: OpsAgent[] = [
       "https://lh3.googleusercontent.com/aida-public/AB6AXuDgmSdWWL1o7JFIv6fe8PxLQdDixLy_LGOmzn5aWynRsOx3jhAMMrs94NOylWBE9-CH_j4uG_8Q-BYpQy4-dNGsw9ssMSSikOKun7d-ECUPJLPiiH1n6aDpKPgFth6cWlBtaXw_CWZqM7DuT7-4ftk1kOKJ6Uv4cJNC9Ra-_6N_AEH1OhoOWjRXw5oDKFFeaUcBYc8RnApFCd-2A_E9wwvhO2-8kADdpAK-VfzhAOX6pBBebqOS4EJpx-Y04QCKOSNq65hX_ZsU-QE5",
     presence: "offline",
   },
-  {
-    id: "candice-wu",
-    name: "Candice Wu",
-    role: "Support Agent",
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAX2jkslwTXI5xIQum3hSM98p8dE5vfe9XtmLfZDRpwWqsNuQGyJ9DDieL1uqyJFhrp5G66nPOCEGqLu4-Huhy4YbHQm5h7Jj2ypsQuwtsgX146pAfVssaTWSLveu8_ZcNt7y24TfRlWe-MXxQw37fQ6YlC2s-5DQf2yk6i-u_jfhBv33yqdbFGkiB8FpYbt-Vv63LoQXQS7x7nerlI9amEiuDiH5frUu9KFTESocXHXgq1yrvncfxG5mx9YGR0KwFbz8c_ndezOuNV",
-    presence: "online",
-  },
-  {
-    id: "natali-craig",
-    name: "Natali Craig",
-    role: "Process Analyst",
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDP73mx7MtF_hl6bltYzqjb33rRR4h-GalXpTo1ghiaovIpg_xUEH39uGSLRGTmsrrYUz4yYpV4gfCAaIlqQ8MVt5yh0LjDf7SAs5EziqKPsYpVjQ60oSWBWK_BSYcdZ2R4h7iiFyYBpvorhJInYQFImkjHLFiXUE-Hfa8HUlwUtJhTyfkR29pplFMVZdA1HmYwfr9Ziuyhx0O8LhW_UsdyAYUMgcnJYoT_t-V4PtomyMgm1l3mFGJatRGIlOmaXw0AJGBxkfHUTykA",
-    presence: "offline",
-  },
 ];
 
 function presenceDotColor(p: Presence) {
@@ -77,6 +67,55 @@ function presenceDotColor(p: Presence) {
 export default function OperationsAgents() {
   const { clientId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const [aiAgents, setAiAgents] = useState<OpsAgent[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<OpsAgent | null>(null);
+  const [runnerOpen, setRunnerOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+
+  // Load AI agents from database
+  useEffect(() => {
+    loadAiAgents();
+  }, [clientId]);
+
+  async function loadAiAgents() {
+    try {
+      // Get both predefined and user-configured agents for operations
+      const configs = await listAgentConfigs({ area: "operations", clientId, includePredefined: true });
+      
+      const mapped: OpsAgent[] = configs.map((cfg) => ({
+        id: `ai-${cfg.agent_key}`,
+        name: cfg.display_name || cfg.agent_key,
+        role: cfg.display_role || "AI Agent",
+        avatar: cfg.avatar_url || "/placeholder.svg",
+        presence: "online" as Presence,
+        isAI: true,
+        config: cfg,
+      }));
+
+      setAiAgents(mapped);
+    } catch (e) {
+      console.error("Failed to load AI agents:", e);
+    }
+  }
+
+  const allAgents = [...aiAgents, ...HUMAN_AGENTS];
+
+  function handleAgentClick(agent: OpsAgent) {
+    setSelectedAgent(agent);
+    if (agent.isAI && agent.config) {
+      setRunnerOpen(true);
+    }
+  }
+
+  function handleConfigureAgent(agent: OpsAgent) {
+    if (agent.isAI) {
+      setSelectedAgent(agent);
+      setConfigOpen(true);
+    }
+  }
 
   return (
     <div className="flex h-screen w-full bg-background">
@@ -99,11 +138,11 @@ export default function OperationsAgents() {
               Operations Agents
             </h1>
             <p className="text-sm text-muted-foreground">
-              Manage operational agents, presence, and performance.
+              Manage operational agents, AI assistants, and team performance.
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button className="gap-2" variant="outline">
+            <Button className="gap-2" variant="outline" onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4" />
               Add Agent
             </Button>
@@ -120,7 +159,9 @@ export default function OperationsAgents() {
           <aside className="lg:col-span-4">
             <Card className="flex h-full flex-col gap-6 border border-border bg-card p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-foreground">Agents ({AGENTS.length})</h2>
+                <h2 className="text-lg font-bold text-foreground">
+                  Agents ({allAgents.length})
+                </h2>
                 <span className="text-muted-foreground">•••</span>
               </div>
 
@@ -145,37 +186,105 @@ export default function OperationsAgents() {
                     Status: All
                   </Button>
                   <Button variant="outline" className="h-8 text-xs">
-                    Role
+                    Type: All
                   </Button>
                 </div>
               </div>
 
-              <div className="-mx-2 flex flex-col gap-2 overflow-y-auto pr-2">
-                {AGENTS.map((a) => (
-                  <div
-                    key={a.id}
-                    className={`flex cursor-pointer items-center gap-4 rounded-lg p-2 ${
-                      a.isSelected ? "bg-primary/10" : "hover:bg-muted"
-                    }`}
-                  >
-                    <div className="relative">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={a.avatar} alt={a.name} />
-                        <AvatarFallback>{a.name.slice(0, 2)}</AvatarFallback>
-                      </Avatar>
-                      <span
-                        className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card ${presenceDotColor(
-                          a.presence,
-                        )}`}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">{a.name}</p>
-                      <p className="text-xs text-muted-foreground">{a.role}</p>
-                    </div>
-                    <span className="text-primary">›</span>
+              {/* AI Agents Section */}
+              {aiAgents.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    AI Agents
+                  </h3>
+                  <div className="-mx-2 flex flex-col gap-2">
+                    {aiAgents.map((a) => (
+                      <div
+                        key={a.id}
+                        className={`flex cursor-pointer items-center gap-4 rounded-lg p-2 ${
+                          selectedAgent?.id === a.id ? "bg-primary/10" : "hover:bg-muted"
+                        }`}
+                        onClick={() => handleAgentClick(a)}
+                      >
+                        <div className="relative">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={a.avatar} alt={a.name} />
+                            <AvatarFallback>
+                              <Bot className="h-5 w-5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <span
+                            className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card ${presenceDotColor(
+                              a.presence,
+                            )}`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-foreground truncate">{a.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{a.role}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAgentClick(a);
+                            }}
+                          >
+                            <Play className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleConfigureAgent(a);
+                            }}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* Human Team Section */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Team Members</h3>
+                <div className="-mx-2 flex flex-col gap-2 overflow-y-auto pr-2">
+                  {HUMAN_AGENTS.map((a) => (
+                    <div
+                      key={a.id}
+                      className={`flex cursor-pointer items-center gap-4 rounded-lg p-2 ${
+                        selectedAgent?.id === a.id ? "bg-primary/10" : "hover:bg-muted"
+                      }`}
+                      onClick={() => setSelectedAgent(a)}
+                    >
+                      <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={a.avatar} alt={a.name} />
+                          <AvatarFallback>{a.name.slice(0, 2)}</AvatarFallback>
+                        </Avatar>
+                        <span
+                          className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card ${presenceDotColor(
+                            a.presence,
+                          )}`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">{a.name}</p>
+                        <p className="text-xs text-muted-foreground">{a.role}</p>
+                      </div>
+                      <span className="text-primary">›</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Card>
           </aside>
@@ -187,12 +296,12 @@ export default function OperationsAgents() {
               <Card className="border border-border bg-card p-5">
                 <div className="text-sm text-muted-foreground">Active Agents</div>
                 <div className="mt-1 text-3xl font-bold text-foreground">
-                  10 <span className="text-base font-medium text-muted-foreground">/ 12</span>
+                  {allAgents.filter(a => a.presence === "online").length} <span className="text-base font-medium text-muted-foreground">/ {allAgents.length}</span>
                 </div>
               </Card>
               <Card className="border border-border bg-card p-5">
-                <div className="text-sm text-muted-foreground">Automation Success</div>
-                <div className="mt-1 text-3xl font-bold text-foreground">94%</div>
+                <div className="text-sm text-muted-foreground">AI Agents</div>
+                <div className="mt-1 text-3xl font-bold text-foreground">{aiAgents.length}</div>
               </Card>
               <Card className="border border-border bg-card p-5">
                 <div className="text-sm text-muted-foreground">Team Efficiency</div>
@@ -314,9 +423,39 @@ export default function OperationsAgents() {
             </div>
           </section>
         </div>
+
+        {/* Universal Agent Runner Modal */}
+        {selectedAgent?.isAI && selectedAgent.config && (
+          <UniversalAgentRunner
+            agent={selectedAgent.config}
+            open={runnerOpen}
+            onOpenChange={setRunnerOpen}
+          />
+        )}
+
+        {/* Agent Configuration Modal */}
+        <N8nAgentConfigModal
+          open={configOpen}
+          onOpenChange={setConfigOpen}
+          scope="client"
+          clientId={clientId}
+          area="operations"
+          agentKey={selectedAgent?.config?.agent_key}
+          title={`Configure ${selectedAgent?.name || "Agent"}`}
+          onSaved={loadAiAgents}
+        />
+
+        {/* Add New Agent Modal */}
+        <N8nAgentConfigModal
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          scope="client"
+          clientId={clientId}
+          area="operations"
+          title="Add Operations Agent"
+          onSaved={loadAiAgents}
+        />
       </main>
     </div>
   );
 }
-
-

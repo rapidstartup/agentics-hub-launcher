@@ -636,6 +636,153 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_base_items: {
+        Row: {
+          id: string
+          user_id: string
+          scope: "agency" | "client" | "project" | "task"
+          client_id: string | null
+          project_id: string | null
+          task_id: string | null
+          source_department: string
+          category: string
+          title: string
+          description: string | null
+          tags: string[] | null
+          file_path: string | null
+          external_url: string | null
+          file_name: string | null
+          file_size: number | null
+          mime_type: string | null
+          metadata: Json
+          is_pinned: boolean
+          is_archived: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          scope?: "agency" | "client" | "project" | "task"
+          client_id?: string | null
+          project_id?: string | null
+          task_id?: string | null
+          source_department: string
+          category?: string
+          title: string
+          description?: string | null
+          tags?: string[] | null
+          file_path?: string | null
+          external_url?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          mime_type?: string | null
+          metadata?: Json
+          is_pinned?: boolean
+          is_archived?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          scope?: "agency" | "client" | "project" | "task"
+          client_id?: string | null
+          project_id?: string | null
+          task_id?: string | null
+          source_department?: string
+          category?: string
+          title?: string
+          description?: string | null
+          tags?: string[] | null
+          file_path?: string | null
+          external_url?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          mime_type?: string | null
+          metadata?: Json
+          is_pinned?: boolean
+          is_archived?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_base_collections: {
+        Row: {
+          id: string
+          user_id: string
+          scope: "agency" | "client" | "project" | "task"
+          client_id: string | null
+          name: string
+          description: string | null
+          icon: string | null
+          color: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          scope?: "agency" | "client" | "project" | "task"
+          client_id?: string | null
+          name: string
+          description?: string | null
+          icon?: string | null
+          color?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          scope?: "agency" | "client" | "project" | "task"
+          client_id?: string | null
+          name?: string
+          description?: string | null
+          icon?: string | null
+          color?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      knowledge_base_item_collections: {
+        Row: {
+          id: string
+          item_id: string
+          collection_id: string
+          added_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          collection_id: string
+          added_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          collection_id?: string
+          added_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_item_collections_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_item_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_base_collections"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

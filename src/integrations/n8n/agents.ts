@@ -1,12 +1,22 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { N8nScope } from "./api";
 
+export type FieldType = "text" | "number" | "boolean" | "textarea" | "select";
+export type OutputBehavior = "chat_stream" | "modal_display" | "field_populate";
+export type ExecutionMode = "n8n" | "internal";
+
 export interface RuntimeField {
   key: string;
   label: string;
-  type: "text" | "number" | "boolean";
+  type: FieldType;
   required?: boolean;
   defaultValue?: string | number | boolean;
+  placeholder?: string;
+  options?: string[]; // For select type
+}
+
+export interface InputSchema {
+  fields: RuntimeField[];
 }
 
 export interface AgentConfig {
@@ -17,14 +27,21 @@ export interface AgentConfig {
   agent_key: string;
   display_name?: string | null;
   display_role?: string | null;
+  description?: string | null;
   connection_id: string;
   workflow_id: string;
   webhook_url?: string | null;
+  input_schema?: InputSchema | null;
   input_mapping: {
     requiredFields?: RuntimeField[];
+    fields?: RuntimeField[];
     [k: string]: any;
   } | null;
   output_mapping: any;
+  output_behavior?: OutputBehavior | null;
+  execution_mode?: ExecutionMode | null;
+  is_predefined?: boolean;
+  avatar_url?: string | null;
 }
 
 export async function getCurrentUserId(): Promise<string | null> {
@@ -107,6 +124,7 @@ export async function upsertAgentConfig(params: {
 export async function listAgentConfigs(params: {
   area: string;
   clientId?: string;
+  includePredefined?: boolean;
 }): Promise<AgentConfig[]> {
   const pieces: AgentConfig[] = [];
 
@@ -121,15 +139,87 @@ export async function listAgentConfigs(params: {
     if (Array.isArray(data)) pieces.push(...(data as any));
   }
 
-  // Agency scoped
-  const { data: agency } = await (supabase as any)
+  // Agency scoped (including predefined if requested)
+  const agencyQuery = (supabase as any)
     .from("agent_configs")
     .select("*")
     .eq("area", params.area)
     .eq("scope", "agency");
+  
+  // By default include predefined, can exclude with includePredefined: false
+  if (params.includePredefined === false) {
+    agencyQuery.eq("is_predefined", false);
+  }
+
+  const { data: agency } = await agencyQuery;
   if (Array.isArray(agency)) pieces.push(...(agency as any));
 
   return pieces;
+}
+
+/**
+ * List all predefined agents for a department area
+ */
+export async function listPredefinedAgents(area: string): Promise<AgentConfig[]> {
+  const { data } = await (supabase as any)
+    .from("agent_configs")
+    .select("*")
+    .eq("area", area)
+    .eq("is_predefined", true)
+    .order("display_name", { ascending: true });
+  
+  return (data || []) as unknown as AgentConfig[];
+}
+
+/**
+ * Get the input fields from an agent config.
+ * Checks input_schema first, then falls back to input_mapping.requiredFields
+ */
+export function getAgentInputFields(config: AgentConfig): RuntimeField[] {
+  // Prefer input_schema.fields
+  if (config.input_schema?.fields?.length) {
+    return config.input_schema.fields;
+  }
+  // Fallback to input_mapping.fields or input_mapping.requiredFields
+  if (config.input_mapping?.fields?.length) {
+    return config.input_mapping.fields;
+  }
+  if (config.input_mapping?.requiredFields?.length) {
+    return config.input_mapping.requiredFields;
+  }
+  return [];
+}
+
+/**
+ * Execute an agent via its webhook URL directly (for predefined agents)
+ */
+export async function executeAgentWebhook(params: {
+  webhookUrl: string;
+  payload: Record<string, any>;
+}): Promise<{ success: boolean; result: any; error?: string }> {
+  try {
+    const response = await fetch(params.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params.payload),
+    });
+
+    const text = await response.text();
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { raw: text };
+    }
+
+    if (!response.ok) {
+      return { success: false, result: null, error: text };
+    }
+
+    return { success: true, result: data };
+  } catch (e: any) {
+    return { success: false, result: null, error: e?.message || "Unknown error" };
+  }
 }
 
 
