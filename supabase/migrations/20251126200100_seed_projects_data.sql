@@ -43,12 +43,20 @@ returns void as $$
 declare
   v_user_id uuid;
   v_project_id uuid;
+  v_client_exists boolean;
 begin
   -- Get first user
   select id into v_user_id from auth.users limit 1;
   
   if v_user_id is null then
     raise notice 'No users found, skipping project seed';
+    return;
+  end if;
+
+  -- Check if techstart-solutions client exists
+  select exists(select 1 from public.clients where slug = 'techstart-solutions') into v_client_exists;
+  if not v_client_exists then
+    raise warning 'Client techstart-solutions does not exist. Please run clients seed migration first.';
     return;
   end if;
 
@@ -60,7 +68,7 @@ begin
 
   -- Strategy: Market Positioning Plan
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'Market Positioning Plan', 'Define ICP, messaging pillars, and differentiation for Q1 campaigns.', 'strategy', 'Strategy Team', 'in_progress', 65, '2025-12-01')
+  values (v_user_id, 'techstart-solutions', 'Market Positioning Plan', 'Define ICP, messaging pillars, and differentiation for Q1 campaigns.', 'strategy', 'Strategy Team', 'in_progress', 65, '2025-12-01')
   returning id into v_project_id;
   
   -- Add some tasks
@@ -72,11 +80,11 @@ begin
 
   -- Strategy: Knowledge Base Rollout
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'Knowledge Base Rollout', 'Centralize FAQs and offer pages; align with company brain indexing.', 'strategy', 'Strategy Ops', 'in_progress', 40, '2025-12-15');
+  values (v_user_id, 'techstart-solutions', 'Knowledge Base Rollout', 'Centralize FAQs and offer pages; align with company brain indexing.', 'strategy', 'Strategy Ops', 'in_progress', 40, '2025-12-15');
 
   -- Advertising: Ad Creative Strategist
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'Ad Creative Strategist', 'Stand up creative strategy workflow for evergreen offers.', 'advertising', 'Advertising', 'not_started', 0, '2025-12-20')
+  values (v_user_id, 'techstart-solutions', 'Ad Creative Strategist', 'Stand up creative strategy workflow for evergreen offers.', 'advertising', 'Advertising', 'not_started', 0, '2025-12-20')
   returning id into v_project_id;
 
   -- Assign Copywriter agent
@@ -85,7 +93,7 @@ begin
 
   -- Advertising: Facebook Ads Library Scraper
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'Facebook Ads Library Scraper', 'Competitor scans and creative board generation.', 'advertising', 'Advertising', 'in_progress', 30, '2025-11-28')
+  values (v_user_id, 'techstart-solutions', 'Facebook Ads Library Scraper', 'Competitor scans and creative board generation.', 'advertising', 'Advertising', 'in_progress', 30, '2025-11-28')
   returning id into v_project_id;
 
   insert into public.project_tasks (user_id, project_id, title, description, assignee, status, priority, due_date)
@@ -95,7 +103,7 @@ begin
 
   -- Marketing: VSL Generator
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'VSL Generator', 'Produce and iterate long-form VSL variants from briefs.', 'marketing', 'Content', 'in_progress', 55, '2025-12-05')
+  values (v_user_id, 'techstart-solutions', 'VSL Generator', 'Produce and iterate long-form VSL variants from briefs.', 'marketing', 'Content', 'in_progress', 55, '2025-12-05')
   returning id into v_project_id;
 
   -- Assign Prompt Engineer agent
@@ -104,7 +112,7 @@ begin
 
   -- Operations: Automation Rollout
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'Automation Rollout', 'Automate recurring workflows and approvals.', 'operations', 'Ops', 'in_progress', 45, '2025-12-08')
+  values (v_user_id, 'techstart-solutions', 'Automation Rollout', 'Automate recurring workflows and approvals.', 'operations', 'Ops', 'in_progress', 45, '2025-12-08')
   returning id into v_project_id;
 
   -- Assign Meeting Agent and Personal Assistant
@@ -115,11 +123,11 @@ begin
 
   -- Financials: Budget Forecasting Implementation
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'Budget Forecasting Implementation', 'Monthly rolling forecast and revenue analytics integration.', 'financials', 'FP&A', 'in_progress', 20, '2025-12-12');
+  values (v_user_id, 'techstart-solutions', 'Budget Forecasting Implementation', 'Monthly rolling forecast and revenue analytics integration.', 'financials', 'FP&A', 'in_progress', 20, '2025-12-12');
 
   -- Sales: CRM Cleanup & Pipeline Hygiene
   insert into public.projects (user_id, client_id, title, description, department_id, owner, status, progress, due_date)
-  values (v_user_id, 'demo-client', 'CRM Cleanup & Pipeline Hygiene', 'Normalize stages, dedupe leads, and enforce SLAs.', 'sales', 'Sales Ops', 'blocked', 15, '2025-12-03')
+  values (v_user_id, 'techstart-solutions', 'CRM Cleanup & Pipeline Hygiene', 'Normalize stages, dedupe leads, and enforce SLAs.', 'sales', 'Sales Ops', 'blocked', 15, '2025-12-03')
   returning id into v_project_id;
 
   insert into public.project_tasks (user_id, project_id, title, description, assignee, status, priority, due_date)

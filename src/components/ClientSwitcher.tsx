@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Select,
@@ -8,18 +8,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Building2 } from "lucide-react";
-
-type ClientOption = {
-  slug: string;
-  name: string;
-  type: string;
-};
+import { Building2, Loader2 } from "lucide-react";
+import { listClients, type Client } from "@/integrations/clients/api";
 
 /**
  * ClientSwitcher
  *
  * Allows an admin to quickly switch between clients from within any client page.
+ * Now loads clients from the database instead of hardcoded array.
  *
  * Auth Note:
  * - In production this control should be restricted to users with admin privileges.
@@ -28,18 +24,25 @@ type ClientOption = {
 export function ClientSwitcher() {
   const navigate = useNavigate();
   const { clientId } = useParams();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const clients: ClientOption[] = useMemo(
-    () => [
-      { slug: "techstart-solutions", name: "TechStart Solutions", type: "B2B SaaS" },
-      { slug: "healthhub-medical", name: "HealthHub Medical", type: "Healthcare" },
-      { slug: "global-consulting", name: "Global All-In-Consulting", type: "Consulting" },
-      { slug: "imaginespace-ltd", name: "ImagineSpace Ltd", type: "Creative" },
-      { slug: "smartax-corp", name: "SMARTAX Corp", type: "Finance" },
-      { slug: "onward-marketing", name: "Onward Marketing Inc", type: "Marketing" },
-    ],
-    [],
-  );
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  async function loadClients() {
+    try {
+      const data = await listClients();
+      setClients(data);
+    } catch (e) {
+      console.error("Failed to load clients:", e);
+      // Fallback to empty array - will show "Switch client" placeholder
+      setClients([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const selectedValue = clientId ?? "all";
 
@@ -58,14 +61,20 @@ export function ClientSwitcher() {
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="inline-flex items-center">
-            <Select value={selectedValue} onValueChange={handleChange}>
+            <Select value={selectedValue} onValueChange={handleChange} disabled={loading}>
               <SelectTrigger className="h-9 bg-background border-border text-sm inline-flex items-center gap-2 w-auto min-w-[200px]">
                 <Building2 className="h-4 w-4 shrink-0" />
-                {selectedClient ? (
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : selectedClient ? (
                   <span className="inline-flex items-center gap-1.5 flex-1 text-left">
                     <span className="font-medium">{selectedClient.name}</span>
-                    <span className="text-muted-foreground">—</span>
-                    <span className="text-muted-foreground">{selectedClient.type}</span>
+                    {selectedClient.type && (
+                      <>
+                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">{selectedClient.type}</span>
+                      </>
+                    )}
                   </span>
                 ) : (
                   <SelectValue placeholder="Switch client" />
@@ -77,7 +86,9 @@ export function ClientSwitcher() {
                   <SelectItem key={c.slug} value={c.slug}>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{c.name}</span>
-                      <span className="text-xs text-muted-foreground">{c.type}</span>
+                      {c.type && (
+                        <span className="text-xs text-muted-foreground">{c.type}</span>
+                      )}
                     </div>
                   </SelectItem>
                 ))}
@@ -92,5 +103,3 @@ export function ClientSwitcher() {
     </TooltipProvider>
   );
 }
-
-
