@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import {
   HelpCircle,
   Gift,
 } from "lucide-react";
+import { getKnowledgeBaseFileUrl } from "@/lib/knowledge-base-utils";
 
 export interface KBItem {
   id: string;
@@ -121,6 +123,93 @@ function formatDate(date: string): string {
   });
 }
 
+// Helper component for image preview with signed URL
+function KnowledgeBaseImagePreview({
+  category,
+  filePath,
+  title,
+  CategoryIcon,
+  categoryColors,
+}: {
+  category: string;
+  filePath?: string;
+  title: string;
+  CategoryIcon: React.ElementType;
+  categoryColors: Record<string, string>;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (category === "image" && filePath) {
+      getKnowledgeBaseFileUrl(filePath)
+        .then((url) => {
+          setImageUrl(url);
+          setLoading(false);
+        })
+        .catch(() => {
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
+  }, [category, filePath]);
+
+  return (
+    <div className={`h-32 flex items-center justify-center ${categoryColors[category]}`}>
+      {category === "image" && filePath && imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={title}
+          className="h-full w-full object-cover"
+          onError={() => setImageUrl(null)}
+        />
+      ) : loading ? (
+        <div className="h-full w-full flex items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      ) : (
+        <CategoryIcon className="h-12 w-12" />
+      )}
+    </div>
+  );
+}
+
+// Helper component for download link with signed URL
+function KnowledgeBaseDownloadLink({ filePath }: { filePath: string }) {
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getKnowledgeBaseFileUrl(filePath, 3600)
+      .then((url) => {
+        setDownloadUrl(url);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, [filePath]);
+
+  if (loading || !downloadUrl) {
+    return (
+      <DropdownMenuItem disabled>
+        <Download className="mr-2 h-4 w-4" />
+        Loading...
+      </DropdownMenuItem>
+    );
+  }
+
+  return (
+    <DropdownMenuItem asChild>
+      <a href={downloadUrl} download>
+        <Download className="mr-2 h-4 w-4" />
+        Download
+      </a>
+    </DropdownMenuItem>
+  );
+}
+
 export function KnowledgeBaseCard({
   item,
   onView,
@@ -185,17 +274,13 @@ export function KnowledgeBaseCard({
       )}
 
       {/* Thumbnail / Icon area */}
-      <div className={`h-32 flex items-center justify-center ${categoryColors[item.category]}`}>
-        {item.category === "image" && item.file_path ? (
-          <img
-            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/knowledge-base/${item.file_path}`}
-            alt={item.title}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <CategoryIcon className="h-12 w-12" />
-        )}
-      </div>
+      <KnowledgeBaseImagePreview
+        category={item.category}
+        filePath={item.file_path}
+        title={item.title}
+        CategoryIcon={CategoryIcon}
+        categoryColors={categoryColors}
+      />
 
       {/* Content */}
       <div className="p-4 space-y-3">
@@ -228,15 +313,7 @@ export function KnowledgeBaseCard({
                 </DropdownMenuItem>
               )}
               {item.file_path && (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/knowledge-base/${item.file_path}`}
-                    download
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </a>
-                </DropdownMenuItem>
+                <KnowledgeBaseDownloadLink filePath={item.file_path} />
               )}
               <DropdownMenuSeparator />
               {onEdit && (

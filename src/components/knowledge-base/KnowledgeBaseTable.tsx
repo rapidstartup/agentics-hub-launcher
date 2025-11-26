@@ -54,6 +54,7 @@ import {
 import { KnowledgeBaseCard, type KBItem } from "./KnowledgeBaseCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getKnowledgeBaseFileUrl } from "@/lib/knowledge-base-utils";
 
 interface KnowledgeBaseTableProps {
   clientId?: string;
@@ -440,15 +441,7 @@ export function KnowledgeBaseTable({
                             </DropdownMenuItem>
                           )}
                           {item.file_path && (
-                            <DropdownMenuItem asChild>
-                              <a
-                                href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/knowledge-base/${item.file_path}`}
-                                download
-                              >
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                              </a>
-                            </DropdownMenuItem>
+                            <KnowledgeBaseTableDownloadLink filePath={item.file_path} />
                           )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleTogglePin(item)}>
@@ -478,6 +471,41 @@ export function KnowledgeBaseTable({
         </div>
       )}
     </div>
+  );
+}
+
+// Helper component for download link in table
+function KnowledgeBaseTableDownloadLink({ filePath }: { filePath: string }) {
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getKnowledgeBaseFileUrl(filePath, 3600)
+      .then((url) => {
+        setDownloadUrl(url);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, [filePath]);
+
+  if (loading || !downloadUrl) {
+    return (
+      <DropdownMenuItem disabled>
+        <Download className="mr-2 h-4 w-4" />
+        Loading...
+      </DropdownMenuItem>
+    );
+  }
+
+  return (
+    <DropdownMenuItem asChild>
+      <a href={downloadUrl} download>
+        <Download className="mr-2 h-4 w-4" />
+        Download
+      </a>
+    </DropdownMenuItem>
   );
 }
 
