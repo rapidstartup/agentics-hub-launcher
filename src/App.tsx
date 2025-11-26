@@ -59,6 +59,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminCalendar from "./pages/AdminCalendar";
 import AdminSettings from "./pages/AdminSettings";
 import AdminNotifications from "./pages/AdminNotifications";
+import AdminClients from "./pages/AdminClients";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,7 @@ const App = () => (
           {/* Generic department route (after specific advertising/marketing routes) */}
           <Route path="/client/:clientId/:departmentId" element={<ProtectedRoute><Department /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/clients" element={<ProtectedRoute><AdminClients /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/calendar" element={<ProtectedRoute><AdminCalendar /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />

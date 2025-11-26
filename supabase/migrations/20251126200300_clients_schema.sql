@@ -38,19 +38,29 @@ create index if not exists idx_clients_slug on public.clients(slug);
 create index if not exists idx_clients_active on public.clients(is_active) where is_active = true;
 
 -- RLS Policies
+-- Agency-level access: all authenticated users can view active clients
+-- Users can only create/update/delete their own clients
 do $policies$
 begin
-  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clients' and policyname = 'clients_select_own') then
-    create policy clients_select_own on public.clients for select using (auth.uid() = user_id);
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clients' and policyname = 'clients_select_all_active') then
+    create policy clients_select_all_active on public.clients 
+      for select 
+      using (auth.uid() is not null and is_active = true);
   end if;
   if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clients' and policyname = 'clients_insert_own') then
-    create policy clients_insert_own on public.clients for insert with check (auth.uid() = user_id);
+    create policy clients_insert_own on public.clients 
+      for insert 
+      with check (auth.uid() = user_id);
   end if;
   if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clients' and policyname = 'clients_update_own') then
-    create policy clients_update_own on public.clients for update using (auth.uid() = user_id);
+    create policy clients_update_own on public.clients 
+      for update 
+      using (auth.uid() = user_id);
   end if;
   if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clients' and policyname = 'clients_delete_own') then
-    create policy clients_delete_own on public.clients for delete using (auth.uid() = user_id);
+    create policy clients_delete_own on public.clients 
+      for delete 
+      using (auth.uid() = user_id);
   end if;
 end
 $policies$;

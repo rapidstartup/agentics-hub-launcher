@@ -7,8 +7,16 @@ returns void as $$
 declare
   v_user_id uuid;
 begin
-  -- Get first user (system placeholder for seeded data)
-  select id into v_user_id from auth.users limit 1;
+  -- Try to find admin user by email first, fallback to first user
+  select id into v_user_id 
+  from auth.users 
+  where email = 'admin@admin.com' 
+  limit 1;
+  
+  -- Fallback to first user if admin not found
+  if v_user_id is null then
+    select id into v_user_id from auth.users limit 1;
+  end if;
   
   if v_user_id is null then
     raise notice 'No users found, skipping client seed';

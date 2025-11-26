@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Hexagon,
   Gauge,
@@ -14,7 +14,8 @@ import {
   Bell,
   ArrowLeftRight,
   ChevronDown,
-  Building2
+  Building2,
+  Loader2
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -26,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
+import { listClients, type Client } from "@/integrations/clients/api";
 
 const navigationItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
@@ -45,20 +47,28 @@ const quickAccessItems = [
   { id: "client-view", title: "Switch to Client View", icon: ArrowLeftRight, path: "/" },
 ];
 
-const clients = [
-  { id: "all", name: "All Clients", type: "Overview" },
-  { id: "techstart", name: "TechStart Solutions", type: "B2B SaaS" },
-  { id: "healthhub", name: "HealthHub Medical", type: "Healthcare" },
-  { id: "global", name: "Global All-In-Consulting", type: "Consulting" },
-  { id: "imaginespace", name: "ImagineSpace Ltd", type: "Creative" },
-  { id: "smartax", name: "SMARTAX Corp", type: "Finance" },
-  { id: "onward", name: "Onward Marketing Inc", type: "Marketing" },
-];
-
 export const AdminSidebar = () => {
   const [selectedClient, setSelectedClient] = useState("all");
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loadingClients, setLoadingClients] = useState(true);
   const navigate = useNavigate();
   const { isOpen } = useSidebarToggle();
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  async function loadClients() {
+    try {
+      const data = await listClients();
+      setClients(data);
+    } catch (e) {
+      console.error("Failed to load clients:", e);
+      setClients([]);
+    } finally {
+      setLoadingClients(false);
+    }
+  }
 
   const handleClientChange = (clientId: string) => {
     setSelectedClient(clientId);
@@ -66,17 +76,8 @@ export const AdminSidebar = () => {
     if (clientId === "all") {
       navigate("/admin");
     } else {
-      const clientSlugMap: Record<string, string> = {
-        "techstart": "techstart-solutions",
-        "healthhub": "healthhub-medical",
-        "global": "global-consulting",
-        "imaginespace": "imaginespace-ltd",
-        "smartax": "smartax-corp",
-        "onward": "onward-marketing"
-      };
-      
-      const slug = clientSlugMap[clientId] || clientId;
-      navigate(`/client/${slug}`);
+      // clientId is the slug
+      navigate(`/client/${clientId}`);
     }
   };
 
@@ -96,19 +97,31 @@ export const AdminSidebar = () => {
 
       {/* Client Switcher */}
       <div className="px-3 py-4 border-b border-border">
-        <Select value={selectedClient} onValueChange={handleClientChange}>
+        <Select value={selectedClient} onValueChange={handleClientChange} disabled={loadingClients}>
           <SelectTrigger className="w-full bg-sidebar border-border text-sm h-10">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              <SelectValue placeholder="Select client" />
+              {loadingClients ? (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              ) : (
+                <SelectValue placeholder="Select client" />
+              )}
             </div>
           </SelectTrigger>
           <SelectContent className="bg-popover border-border">
+            <SelectItem value="all">
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">All Clients</span>
+                <span className="text-xs text-muted-foreground">Overview</span>
+              </div>
+            </SelectItem>
             {clients.map((client) => (
-              <SelectItem key={client.id} value={client.id}>
+              <SelectItem key={client.id} value={client.slug}>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">{client.name}</span>
-                  <span className="text-xs text-muted-foreground">{client.type}</span>
+                  {client.type && (
+                    <span className="text-xs text-muted-foreground">{client.type}</span>
+                  )}
                 </div>
               </SelectItem>
             ))}
