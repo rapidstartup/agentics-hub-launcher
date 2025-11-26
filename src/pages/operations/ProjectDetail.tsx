@@ -60,6 +60,7 @@ import type {
 } from "@/integrations/projects/types";
 import { listAgentConfigs, AgentConfig } from "@/integrations/n8n/agents";
 import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
+import { AgentChatWindow } from "@/components/agents/AgentChatWindow";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -153,7 +154,9 @@ export default function ProjectDetail() {
 
   // Agent runner state
   const [availableAgents, setAvailableAgents] = useState<AgentConfig[]>([]);
+  const [chatAgents, setChatAgents] = useState<AgentConfig[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
+  const [selectedChatAgent, setSelectedChatAgent] = useState<AgentConfig | null>(null);
   const [runnerOpen, setRunnerOpen] = useState(false);
 
   // Dialogs
@@ -168,8 +171,14 @@ export default function ProjectDetail() {
   useEffect(() => {
     loadProject();
     loadStatuses();
-    loadAgents();
   }, [projectId, clientId]);
+
+  // Load agents separately when clientId is available
+  useEffect(() => {
+    if (clientId) {
+      loadAgents();
+    }
+  }, [clientId]);
 
   async function loadProject() {
     if (!projectId) return;
@@ -197,19 +206,28 @@ export default function ProjectDetail() {
   async function loadAgents() {
     if (!clientId) return;
     try {
-      // Load agents that could be used on this project
-      const deptId = project?.department_id || "marketing";
-      const configs = await listAgentConfigs({ area: deptId, clientId, includePredefined: true });
-      setAvailableAgents(configs);
+      // Load agents from multiple areas to get all available chat agents
+      const areas = ["marketing", "operations", "strategy", "sales", "advertising", "financials"];
+      const allConfigs: AgentConfig[] = [];
+      
+      for (const area of areas) {
+        const configs = await listAgentConfigs({ area, clientId, includePredefined: true });
+        allConfigs.push(...configs);
+      }
+      
+      // Dedupe by id
+      const uniqueConfigs = Array.from(new Map(allConfigs.map(c => [c.id, c])).values());
+      
+      setAvailableAgents(uniqueConfigs);
+      
+      // Filter chat-based agents (those with output_behavior === 'chat_stream')
+      const chatBased = uniqueConfigs.filter(c => c.output_behavior === "chat_stream");
+      setChatAgents(chatBased);
     } catch (e) {
       console.error("Failed to load agents:", e);
     }
   }
 
-  // Reload agents when project loads
-  useEffect(() => {
-    if (project) loadAgents();
-  }, [project?.department_id]);
 
   // Asset grouped by status
   const assetsByStatus = useMemo(() => {
@@ -388,57 +406,201 @@ export default function ProjectDetail() {
           <div className="flex-1 overflow-hidden">
             {/* Chat Tab */}
             {activeTab === "chat" && (
-              <div className="h-full flex flex-col">
-                <ScrollArea className="flex-1 p-4">
-                  <div className="space-y-4">
-                    {(project.comments || []).length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No messages yet. Start the conversation!</p>
-                      </div>
-                    ) : (
-                      [...(project.comments || [])].reverse().map((comment) => (
-                        <div key={comment.id} className="flex gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
-                              <User className="h-4 w-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-sm text-foreground">
-                                {comment.author_name || "User"}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(comment.created_at).toLocaleString()}
-                              </span>
-                            </div>
-                            <p className="text-sm text-foreground mt-1">{comment.content}</p>
-                          </div>
+              <div className="h-full flex">
+                {/* Agent Selector Sidebar */}
+                <div className="w-64 border-r border-border bg-card flex flex-col">
+                  <div className="p-4 border-b border-border">
+                    <h3 className="font-semibold text-foreground mb-1">Chat With</h3>
+                    <p className="text-xs text-muted-foreground">Select an AI agent or team chat</p>
+                  </div>
+                  <ScrollArea className="flex-1">
+                    <div className="p-2 space-y-1">
+                      {/* Team Chat Option */}
+                      <div
+                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          selectedChatAgent === null
+                            ? "bg-primary/10 border border-primary"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setSelectedChatAgent(null)}
+                      >
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-blue-500/20 text-blue-500">
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground">Team Chat</p>
+                          <p className="text-xs text-muted-foreground truncate">Project discussion</p>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-                <div className="border-t border-border p-4">
-                  <div className="flex gap-2">
-                    <Textarea
-                      placeholder="Type a message..."
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      className="min-h-[44px] max-h-32 resize-none"
-                      rows={1}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAddComment();
-                        }
-                      }}
+                        {(project.comments || []).length > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {project.comments?.length}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Chat Agents */}
+                      {chatAgents.length > 0 && (
+                        <>
+                          <div className="py-2 px-3">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              Chat Agents
+                            </p>
+                          </div>
+                          {chatAgents.map((agent) => (
+                            <div
+                              key={agent.id}
+                              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                                selectedChatAgent?.id === agent.id
+                                  ? "bg-primary/10 border border-primary"
+                                  : "hover:bg-muted"
+                              }`}
+                              onClick={() => setSelectedChatAgent(agent)}
+                            >
+                              <Avatar className="h-9 w-9">
+                                {agent.avatar_url ? (
+                                  <AvatarImage src={agent.avatar_url} alt={agent.display_name || ""} />
+                                ) : (
+                                  <AvatarImage src="/n8n.svg" alt="AI Agent" />
+                                )}
+                                <AvatarFallback>
+                                  <Bot className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm text-foreground truncate">
+                                  {agent.display_name || agent.agent_key}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {agent.display_role || "AI Agent"}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Modal-based Agents (Copywriter, etc.) */}
+                      {availableAgents.filter(a => a.output_behavior !== "chat_stream").length > 0 && (
+                        <>
+                          <div className="py-2 px-3">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              Run Agents
+                            </p>
+                          </div>
+                          {availableAgents
+                            .filter((a) => a.output_behavior !== "chat_stream")
+                            .map((agent) => (
+                              <div
+                                key={agent.id}
+                                className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-muted"
+                                onClick={() => handleRunAgent(agent)}
+                              >
+                                <Avatar className="h-9 w-9">
+                                  {agent.avatar_url ? (
+                                    <AvatarImage src={agent.avatar_url} alt={agent.display_name || ""} />
+                                  ) : (
+                                    <AvatarImage src="/n8n.svg" alt="AI Agent" />
+                                  )}
+                                  <AvatarFallback>
+                                    <Bot className="h-4 w-4" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm text-foreground truncate">
+                                    {agent.display_name || agent.agent_key}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {agent.display_role || "AI Agent"}
+                                  </p>
+                                </div>
+                                <Play className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            ))}
+                        </>
+                      )}
+
+                      {availableAgents.length === 0 && (
+                        <div className="p-4 text-center">
+                          <Bot className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                          <p className="text-xs text-muted-foreground">
+                            No agents available yet.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                {/* Chat Content Area */}
+                <div className="flex-1 flex flex-col">
+                  {selectedChatAgent ? (
+                    /* Agent Chat */
+                    <AgentChatWindow
+                      agent={selectedChatAgent}
+                      clientId={clientId}
+                      className="h-full border-0 rounded-none"
                     />
-                    <Button onClick={handleAddComment} disabled={!chatInput.trim()}>
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  ) : (
+                    /* Team Chat */
+                    <>
+                      <ScrollArea className="flex-1 p-4">
+                        <div className="space-y-4">
+                          {(project.comments || []).length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                              <p>No messages yet. Start the conversation!</p>
+                            </div>
+                          ) : (
+                            [...(project.comments || [])].reverse().map((comment) => (
+                              <div key={comment.id} className="flex gap-3">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>
+                                    <User className="h-4 w-4" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-sm text-foreground">
+                                      {comment.author_name || "User"}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(comment.created_at).toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-foreground mt-1">{comment.content}</p>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </ScrollArea>
+                      <div className="border-t border-border p-4">
+                        <div className="flex gap-2">
+                          <Textarea
+                            placeholder="Type a message..."
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            className="min-h-[44px] max-h-32 resize-none"
+                            rows={1}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleAddComment();
+                              }
+                            }}
+                          />
+                          <Button onClick={handleAddComment} disabled={!chatInput.trim()}>
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
