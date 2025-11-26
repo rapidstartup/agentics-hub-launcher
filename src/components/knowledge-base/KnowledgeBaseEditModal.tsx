@@ -253,11 +253,12 @@ export function KnowledgeBaseEditModal({
               <TabsTrigger value="content">
                 Scraped Content
                 {scrapedContent && <span className="ml-2 text-xs opacity-70">({Math.ceil(scrapedContent.length / 1000)}k)</span>}
+                {!scrapedContent && <span className="ml-2 text-xs opacity-50">(Not scraped)</span>}
               </TabsTrigger>
             )}
           </TabsList>
 
-          <TabsContent value="details" className="flex-1 overflow-auto space-y-4 mt-4">
+          <TabsContent value="details" className="flex-1 overflow-auto space-y-4 mt-4 pr-2">
             {/* Title */}
             <div>
               <label className="text-sm text-muted-foreground">Title *</label>
@@ -408,68 +409,66 @@ export function KnowledgeBaseEditModal({
             </div>
           </TabsContent>
 
-          {scrapedContent && (
-            <TabsContent value="content" className="flex-1 overflow-auto mt-4">
-              <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-foreground">Scraped Content</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Markdown format • {scrapedContent.length.toLocaleString()} characters
-                      {item.metadata && typeof item.metadata === "object" && "scraped_at" in item.metadata && (
-                        <span> • Scraped {new Date(String(item.metadata.scraped_at)).toLocaleDateString()}</span>
-                      )}
+          {item.external_url && (
+            <TabsContent value="content" className="flex-1 overflow-auto mt-4 pr-2">
+              {scrapedContent ? (
+                <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">Scraped Content</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Markdown format • {scrapedContent.length.toLocaleString()} characters
+                        {item.metadata && typeof item.metadata === "object" && "scraped_at" in item.metadata && (
+                          <span> • Scraped {new Date(String(item.metadata.scraped_at)).toLocaleDateString()}</span>
+                        )}
+                      </div>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleScrapeAgain}
+                      disabled={scraping}
+                      className="gap-2"
+                    >
+                      {scraping ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Scraping...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCcw className="h-3 w-3" />
+                          Scrape Again
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleScrapeAgain}
-                    disabled={scraping}
-                    className="gap-2"
-                  >
+                  <div className="prose prose-sm dark:prose-invert max-w-none border-t border-border pt-4">
+                    <ReactMarkdown>{scrapedContent}</ReactMarkdown>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
+                  <FileText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Scraped Content</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This external URL hasn't been scraped yet, or the content was removed.
+                  </p>
+                  <Button onClick={handleScrapeAgain} disabled={scraping} className="gap-2">
                     {scraping ? (
                       <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Scraping...
                       </>
                     ) : (
                       <>
-                        <RefreshCcw className="h-3 w-3" />
-                        Scrape Again
+                        <RefreshCcw className="h-4 w-4" />
+                        Scrape Content Now
                       </>
                     )}
                   </Button>
                 </div>
-                <div className="prose prose-sm dark:prose-invert max-w-none border-t border-border pt-4">
-                  <ReactMarkdown>{scrapedContent}</ReactMarkdown>
-                </div>
-              </div>
-            </TabsContent>
-          )}
-          
-          {item.external_url && !scrapedContent && (
-            <TabsContent value="content" className="flex-1 overflow-auto mt-4">
-              <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-                <FileText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No Scraped Content</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  This external URL hasn't been scraped yet, or the content was removed.
-                </p>
-                <Button onClick={handleScrapeAgain} disabled={scraping} className="gap-2">
-                  {scraping ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Scraping...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCcw className="h-4 w-4" />
-                      Scrape Content Now
-                    </>
-                  )}
-                </Button>
-              </div>
+              )}
             </TabsContent>
           )}
         </Tabs>
