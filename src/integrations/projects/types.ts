@@ -132,6 +132,7 @@ export interface UpdateProjectInput {
 
 export interface CreateAssetInput {
   project_id: string;
+  client_id?: string;
   title: string;
   asset_type: AssetType;
   content?: string;

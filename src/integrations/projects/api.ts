@@ -163,6 +163,31 @@ export async function listAssetStatuses(clientId?: string): Promise<ProjectAsset
   return clientStatuses.length > 0 ? clientStatuses : statuses.filter(s => !s.client_id);
 }
 
+export async function ensureDefaultAssetStatuses(clientId?: string): Promise<ProjectAssetStatus[]> {
+  let statuses = await listAssetStatuses(clientId);
+  if (statuses.length > 0) return statuses;
+
+  const defaults = [
+    { name: "Draft", color: "#6366f1", sort_order: 0, is_default: true, is_final: false },
+    { name: "Client Review", color: "#f59e0b", sort_order: 1, is_default: false, is_final: false },
+    { name: "Approved", color: "#10b981", sort_order: 2, is_default: false, is_final: true },
+  ];
+
+  for (const status of defaults) {
+    await createAssetStatus({
+      client_id: clientId,
+      name: status.name,
+      color: status.color,
+      sort_order: status.sort_order,
+      is_default: status.is_default,
+      is_final: status.is_final,
+    });
+  }
+
+  statuses = await listAssetStatuses(clientId);
+  return statuses;
+}
+
 export async function createAssetStatus(input: {
   client_id?: string;
   name: string;
@@ -216,7 +241,7 @@ export async function createAsset(input: CreateAssetInput): Promise<ProjectAsset
   let statusName = "Draft";
 
   if (!statusId) {
-    const statuses = await listAssetStatuses();
+    const statuses = await ensureDefaultAssetStatuses(input.client_id);
     const defaultStatus = statuses.find(s => s.is_default) || statuses[0];
     if (defaultStatus) {
       statusId = defaultStatus.id;
@@ -436,6 +461,7 @@ export async function addComment(input: {
 
 export async function saveAgentOutputAsAsset(params: {
   projectId: string;
+  clientId: string;
   agentConfigId: string;
   agentName: string;
   title: string;
@@ -444,6 +470,7 @@ export async function saveAgentOutputAsAsset(params: {
 }): Promise<ProjectAsset> {
   return createAsset({
     project_id: params.projectId,
+    client_id: params.clientId,
     title: params.title,
     asset_type: params.assetType || "text",
     content: params.content,

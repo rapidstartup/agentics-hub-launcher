@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
+  ArrowRight,
   MessageSquare,
   Layout,
   Columns3,
@@ -26,6 +27,7 @@ import {
   BarChart3,
   Play,
   Bot,
+  Eye,
   User,
   Calendar,
   CheckCircle2,
@@ -47,7 +49,8 @@ import {
   createTask,
   updateTaskStatus,
   addComment,
-  saveAgentOutputAsAsset,
+  ensureDefaultAssetStatuses,
+  approveAsset,
 } from "@/integrations/projects/api";
 import type {
   ProjectWithDetails,
@@ -172,6 +175,9 @@ export default function ProjectDetail() {
   const [teamChatMode, setTeamChatMode] = useState<"comments" | "gemini">("comments");
   const [geminiMessages, setGeminiMessages] = useState<Array<{ role: "user" | "assistant"; content: string; timestamp: Date }>>([]);
   const [geminiLoading, setGeminiLoading] = useState(false);
+  const [assetDetailOpen, setAssetDetailOpen] = useState(false);
+  const [activeAsset, setActiveAsset] = useState<ProjectAsset | null>(null);
+  const [assetActionId, setAssetActionId] = useState<string | null>(null);
 
   // Load project data
   useEffect(() => {
@@ -200,9 +206,11 @@ export default function ProjectDetail() {
     }
   }
 
-  async function loadStatuses() {
+  async function loadStatuses(autoSeed: boolean = true) {
     try {
-      const data = await listAssetStatuses(clientId);
+      const data = autoSeed
+        ? await ensureDefaultAssetStatuses(clientId || undefined)
+        : await listAssetStatuses(clientId || undefined);
       setStatuses(data);
     } catch (e) {
       console.error("Failed to load statuses:", e);
@@ -235,19 +243,36 @@ export default function ProjectDetail() {
   }
 
 
+  const sortedStatuses = useMemo(
+    () => [...statuses].sort((a, b) => a.sort_order - b.sort_order),
+    [statuses]
+  );
+
+  const statusMap = useMemo(() => {
+    const map = new Map<string, ProjectAssetStatus>();
+    sortedStatuses.forEach((status) => map.set(status.id, status));
+    return map;
+  }, [sortedStatuses]);
+
+  const statusOrderMap = useMemo(() => {
+    const map = new Map<string, number>();
+    sortedStatuses.forEach((status, index) => map.set(status.id, index));
+    return map;
+  }, [sortedStatuses]);
+
   // Asset grouped by status
   const assetsByStatus = useMemo(() => {
     const map: Record<string, ProjectAsset[]> = {};
-    for (const status of statuses) {
+    for (const status of sortedStatuses) {
       map[status.id] = [];
     }
     for (const asset of project?.assets || []) {
-      const key = asset.status_id || "unassigned";
+      const key = asset.status_id || (sortedStatuses[0]?.id ?? "unassigned");
       if (!map[key]) map[key] = [];
       map[key].push(asset);
     }
     return map;
-  }, [project?.assets, statuses]);
+  }, [project?.assets, sortedStatuses]);
 
   // Handlers
   async function handleAddComment() {
@@ -316,7 +341,7 @@ export default function ProjectDetail() {
   }
 
   async function handleAssetDrop(assetId: string, newStatusId: string) {
-    const status = statuses.find((s) => s.id === newStatusId);
+    const status = statusMap.get(newStatusId);
     if (!status) return;
     try {
       await updateAssetStatus(assetId, newStatusId, status.name);
@@ -326,30 +351,71 @@ export default function ProjectDetail() {
     }
   }
 
-  function handleRunAgent(agent: AgentConfig) {
-    setSelectedAgent(agent);
-    setRunnerOpen(true);
+  function handleViewAsset(asset: ProjectAsset) {
+    setActiveAsset(asset);
+    setAssetDetailOpen(true);
   }
 
-  // When agent completes, save output as asset
-  async function handleAgentComplete(agent: AgentConfig, output: any) {
-    if (!projectId) return;
+  async function handleAssetStatusSelect(asset: ProjectAsset, newStatusId: string) {
+    if (!newStatusId) return;
+    const status = statuses.find((s) => s.id === newStatusId);
+    if (!status) return;
     try {
-      const content = typeof output === "string" ? output : JSON.stringify(output, null, 2);
-      await saveAgentOutputAsAsset({
-        projectId,
-        agentConfigId: agent.id,
-        agentName: agent.display_name || agent.agent_key,
-        title: `${agent.display_name || agent.agent_key} Output - ${new Date().toLocaleDateString()}`,
-        content,
-        assetType: "text",
-      });
-      toast({ title: "Asset Created", description: "Agent output saved as project asset" });
+      setAssetActionId(asset.id);
+      const updated = await updateAssetStatus(asset.id, status.id, status.name);
+      if (activeAsset?.id === asset.id) {
+        setActiveAsset(updated);
+      }
       loadProject();
     } catch (e) {
       console.error(e);
+      toast({ title: "Error", description: "Failed to update status.", variant: "destructive" });
+    } finally {
+      setAssetActionId(null);
     }
-    setRunnerOpen(false);
+  }
+
+  async function handleAdvanceAsset(asset: ProjectAsset, direction: "next" | "prev") {
+    if (!sortedStatuses.length) return;
+    const currentIndex = asset.status_id ? statusOrderMap.get(asset.status_id) ?? 0 : 0;
+    const targetIndex = direction === "next" ? currentIndex + 1 : currentIndex - 1;
+    const targetStatus = sortedStatuses[targetIndex];
+    if (!targetStatus) return;
+    try {
+      setAssetActionId(asset.id);
+      const updated = await updateAssetStatus(asset.id, targetStatus.id, targetStatus.name);
+      if (activeAsset?.id === asset.id) {
+        setActiveAsset(updated);
+      }
+      loadProject();
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error", description: "Unable to move asset.", variant: "destructive" });
+    } finally {
+      setAssetActionId(null);
+    }
+  }
+
+  async function handleApproveAsset(asset: ProjectAsset) {
+    try {
+      setAssetActionId(asset.id);
+      const updated = await approveAsset(asset.id, project.owner || "Project Reviewer");
+      if (activeAsset?.id === asset.id) {
+        setActiveAsset(updated);
+      }
+      toast({ title: "Asset Approved", description: `${asset.title} marked as approved.` });
+      loadProject();
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error", description: "Failed to approve asset.", variant: "destructive" });
+    } finally {
+      setAssetActionId(null);
+    }
+  }
+
+  function handleRunAgent(agent: AgentConfig) {
+    setSelectedAgent(agent);
+    setRunnerOpen(true);
   }
 
   if (loading) {
@@ -770,64 +836,168 @@ export default function ProjectDetail() {
             {/* Kanban Tab */}
             {activeTab === "kanban" && (
               <div className="h-full p-4 overflow-x-auto">
-                <div className="flex gap-4 h-full min-w-max">
-                  {statuses.map((status) => (
-                    <div
-                      key={status.id}
-                      className="w-80 flex-shrink-0 flex flex-col bg-muted/30 rounded-lg"
-                    >
-                      <div
-                        className="px-4 py-3 border-b border-border flex items-center justify-between"
-                        style={{ borderTopColor: status.color, borderTopWidth: 3 }}
-                      >
-                        <span className="font-semibold text-foreground">{status.name}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {assetsByStatus[status.id]?.length || 0}
-                        </Badge>
-                      </div>
-                      <ScrollArea className="flex-1 p-2">
-                        <div className="space-y-2">
-                          {(assetsByStatus[status.id] || []).map((asset) => (
-                            <Card
-                              key={asset.id}
-                              className="p-3 cursor-move hover:border-primary/50 transition-colors"
-                              draggable
-                              onDragStart={(e) => e.dataTransfer.setData("assetId", asset.id)}
-                              onDragOver={(e) => e.preventDefault()}
-                              onDrop={(e) => {
-                                const assetId = e.dataTransfer.getData("assetId");
-                                if (assetId) handleAssetDrop(assetId, status.id);
-                              }}
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                {assetTypeIcons[asset.asset_type]}
-                                <span className="font-medium text-sm text-foreground truncate">
-                                  {asset.title}
-                                </span>
-                              </div>
-                              {asset.content && (
-                                <p className="text-xs text-muted-foreground line-clamp-2">
-                                  {asset.content}
-                                </p>
-                              )}
-                            </Card>
-                          ))}
-                          {/* Drop zone */}
-                          <div
-                            className="h-20 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center text-muted-foreground text-sm"
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => {
-                              const assetId = e.dataTransfer.getData("assetId");
-                              if (assetId) handleAssetDrop(assetId, status.id);
-                            }}
-                          >
-                            Drop here
-                          </div>
-                        </div>
-                      </ScrollArea>
+                {sortedStatuses.length === 0 ? (
+                  <div className="flex h-full items-center justify-center text-center text-muted-foreground">
+                    <div>
+                      <p className="mb-3">No workflow stages configured yet.</p>
+                      <Button onClick={() => loadStatuses(true)}>Initialize Default Stages</Button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-4 h-full min-w-max">
+                    {sortedStatuses.map((status) => {
+                      const assetsInColumn = assetsByStatus[status.id] || [];
+                      return (
+                        <div
+                          key={status.id}
+                          className="w-80 flex-shrink-0 flex flex-col bg-muted/20 rounded-xl border border-border/50"
+                        >
+                          <div
+                            className="px-4 py-3 border-b border-border flex items-center justify-between"
+                            style={{ borderTopColor: status.color, borderTopWidth: 4 }}
+                          >
+                            <div>
+                              <span className="font-semibold text-foreground text-sm block">
+                                {status.name}
+                              </span>
+                              {status.is_final && (
+                                <span className="text-[11px] text-emerald-400">Final Approval</span>
+                              )}
+                              {status.is_default && (
+                                <span className="text-[11px] text-muted-foreground">Entry Stage</span>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {assetsInColumn.length}
+                            </Badge>
+                          </div>
+                          <ScrollArea className="flex-1 p-3">
+                            <div className="space-y-2">
+                              {assetsInColumn.map((asset) => {
+                                const statusIdx = asset.status_id
+                                  ? statusOrderMap.get(asset.status_id) ?? 0
+                                  : 0;
+                                const prevStatus =
+                                  statusIdx > 0 ? sortedStatuses[statusIdx - 1] : null;
+                                const nextStatus =
+                                  statusIdx < sortedStatuses.length - 1
+                                    ? sortedStatuses[statusIdx + 1]
+                                    : null;
+                                const isActionLoading = assetActionId === asset.id;
+
+                                return (
+                                  <Card
+                                    key={asset.id}
+                                    className="p-4 cursor-pointer border-border/70 hover:border-primary transition-colors"
+                                    draggable
+                                    onDragStart={(e) => e.dataTransfer.setData("assetId", asset.id)}
+                                    onClick={() => handleViewAsset(asset)}
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      {assetTypeIcons[asset.asset_type]}
+                                      <span className="font-medium text-sm text-foreground truncate">
+                                        {asset.title}
+                                      </span>
+                                    </div>
+                                    {asset.content && (
+                                      <p className="text-xs text-muted-foreground line-clamp-3">
+                                        {asset.content}
+                                      </p>
+                                    )}
+                                    <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                                      <div className="flex items-center gap-1">
+                                        <Badge variant="outline" className="text-[10px]">
+                                          {asset.asset_type}
+                                        </Badge>
+                                        {asset.source_agent_config_id && (
+                                          <Badge variant="outline" className="text-[10px]">
+                                            AI
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <span>
+                                        {new Date(asset.updated_at).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between">
+                                      <div className="text-xs text-muted-foreground">
+                                        {asset.status_name}
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        {prevStatus && (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            disabled={isActionLoading}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAdvanceAsset(asset, "prev");
+                                            }}
+                                          >
+                                            <ArrowLeft className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewAsset(asset);
+                                          }}
+                                        >
+                                          <Eye className="h-3 w-3" />
+                                        </Button>
+                                        {nextStatus ? (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            disabled={isActionLoading}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAdvanceAsset(asset, "next");
+                                            }}
+                                          >
+                                            <ArrowRight className="h-3 w-3" />
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-emerald-500"
+                                            disabled={isActionLoading}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleApproveAsset(asset);
+                                            }}
+                                          >
+                                            <CheckCircle2 className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </Card>
+                                );
+                              })}
+                              <div
+                                className="h-20 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center text-muted-foreground text-sm"
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                  const assetId = e.dataTransfer.getData("assetId");
+                                  if (assetId) handleAssetDrop(assetId, status.id);
+                                }}
+                              >
+                                Drop assets here
+                              </div>
+                            </div>
+                          </ScrollArea>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -998,6 +1168,64 @@ export default function ProjectDetail() {
         />
       )}
 
+      {/* Asset Detail Dialog */}
+      <Dialog open={assetDetailOpen} onOpenChange={(open) => {
+        setAssetDetailOpen(open);
+        if (!open) setActiveAsset(null);
+      }}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{activeAsset?.title || "Asset Detail"}</DialogTitle>
+          </DialogHeader>
+          {activeAsset ? (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label>Status</Label>
+                  <Select
+                    value={activeAsset.status_id || sortedStatuses[0]?.id || ""}
+                    onValueChange={(value) => handleAssetStatusSelect(activeAsset, value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedStatuses.map((status) => (
+                        <SelectItem key={status.id} value={status.id}>
+                          {status.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Info</Label>
+                  <div className="mt-2 flex flex-col gap-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{activeAsset.asset_type}</Badge>
+                      {activeAsset.source_agent_config_id && (
+                        <Badge variant="outline">AI Generated</Badge>
+                      )}
+                    </div>
+                    <span>Updated {new Date(activeAsset.updated_at).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Content</Label>
+                <ScrollArea className="h-64 border border-border rounded-md">
+                  <div className="p-4 text-sm whitespace-pre-wrap text-foreground">
+                    {activeAsset.content || "No content available."}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Select an asset to view details.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Add Asset Dialog */}
       <Dialog open={addAssetOpen} onOpenChange={setAddAssetOpen}>
         <DialogContent>
@@ -1050,6 +1278,7 @@ export default function ProjectDetail() {
                 try {
                   await createAsset({
                     project_id: projectId,
+                    client_id: project.client_id,
                     title,
                     asset_type: newAssetType as any,
                     content: content || undefined,

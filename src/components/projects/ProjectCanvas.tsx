@@ -479,6 +479,7 @@ export function ProjectCanvas({
     try {
       await saveAgentOutputAsAsset({
         projectId,
+        clientId,
         agentConfigId: node.agent?.id || "manual",
         agentName: node.agent?.display_name || node.title,
         title: `${node.title} - ${new Date().toLocaleDateString()}`,
