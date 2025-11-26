@@ -45,6 +45,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { type KBItem } from "./KnowledgeBaseCard";
 import ReactMarkdown from "react-markdown";
+import { type Database } from "@/integrations/supabase/types";
+
+type KBCategory = Database["public"]["Enums"]["kb_category"];
 
 interface KnowledgeBaseEditModalProps {
   open: boolean;
@@ -86,7 +89,7 @@ export function KnowledgeBaseEditModal({
 }: KnowledgeBaseEditModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("document");
+  const [category, setCategory] = useState<KBCategory>("document");
   const [department, setDepartment] = useState("marketing");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -98,7 +101,7 @@ export function KnowledgeBaseEditModal({
     if (item) {
       setTitle(item.title);
       setDescription(item.description || "");
-      setCategory(item.category);
+      setCategory(item.category as KBCategory);
       setDepartment(item.source_department);
       setTags(item.tags || []);
       setIsPinned(item.is_pinned);
@@ -203,7 +206,7 @@ export function KnowledgeBaseEditModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground">Category</label>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category} onValueChange={(val) => setCategory(val as KBCategory)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
