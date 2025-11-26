@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RotateCw } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { ScheduleManagementModal } from "./ScheduleManagementModal";
 import { RunNowModal } from "./RunNowModal";
 import { StatusChangeModal } from "./StatusChangeModal";
@@ -46,7 +44,6 @@ export const DepartmentDetailCard = ({
   const [n8nRunConfig, setN8nRunConfig] = useState<{ connectionId: string; workflowId: string; webhookUrl?: string } | null>(null);
   const [n8nRunning, setN8nRunning] = useState(false);
   const { toast } = useToast();
-  const [agentSource, setAgentSource] = useState<Record<string, "n8n" | "mastra">>({});
 
   const clientNames: Record<string, string> = {
     "techstart-solutions": "TechStart Solutions",
@@ -56,6 +53,8 @@ export const DepartmentDetailCard = ({
 
   const clientName = clientNames[clientId || ""] || "Client";
 
+  // Group agents by name - agents with same name but different sources are grouped
+  // The configured source (from agent config) determines which one to use
   const groupedAgents = useMemo(() => {
     const groups: Record<string, Agent[]> = {};
     agents.forEach((agent) => {
@@ -67,14 +66,9 @@ export const DepartmentDetailCard = ({
     return Object.values(groups);
   }, [agents]);
 
-  const handleSourceChange = (agentName: string, newSource: "n8n" | "mastra") => {
-    setAgentSource(prev => ({ ...prev, [agentName]: newSource }));
-  };
-
+  // Get the primary agent from a group - uses the first agent (configured source)
   const getAgentFromGroup = (agentGroup: Agent[]) => {
-    if (agentGroup.length === 1) return agentGroup[0];
-    const source = agentSource[agentGroup[0].name] || "n8n";
-    return agentGroup.find(a => a.source === source) || agentGroup[0];
+    return agentGroup[0];
   }
 
   const handleScheduleClick = (agentGroup: Agent[]) => {
@@ -146,7 +140,6 @@ export const DepartmentDetailCard = ({
 
   const agentListContent = groupedAgents.map((agentGroup, index) => {
     const agent = getAgentFromGroup(agentGroup);
-    const hasMultipleSources = agentGroup.length > 1;
 
     return (
       <div
@@ -155,19 +148,17 @@ export const DepartmentDetailCard = ({
       >
         <span className="text-foreground flex-1">{agent.name}</span>
         <div className="flex items-center gap-2 ml-auto">
-          {hasMultipleSources ? (
-             <div className="flex items-center space-x-2">
-               <Label htmlFor={`source-switch-${index}`} className="text-xs text-muted-foreground">External</Label>
-               <Switch
-                 id={`source-switch-${index}`}
-                 checked={(agentSource[agent.name] || 'n8n') === 'mastra'}
-                 onCheckedChange={(checked) => handleSourceChange(agent.name, checked ? 'mastra' : 'n8n')}
-               />
-               <Label htmlFor={`source-switch-${index}`} className="text-xs text-muted-foreground">Internal</Label>
-             </div>
-          ) : (
-            <Badge variant="outline" className="text-xs capitalize">{agent.source || 'n8n'}</Badge>
-          )}
+          {/* Source badge - configured in agent settings, not editable here */}
+          <Badge 
+            variant="outline" 
+            className={`text-xs capitalize ${
+              agent.source === 'mastra' 
+                ? 'border-purple-500/30 text-purple-400' 
+                : 'border-blue-500/30 text-blue-400'
+            }`}
+          >
+            {agent.source === 'mastra' ? 'Mastra' : 'N8n'}
+          </Badge>
 
           {agent.schedule && (
             <Badge
