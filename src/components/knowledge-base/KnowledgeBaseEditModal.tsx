@@ -40,6 +40,7 @@ import {
   Loader2,
   ExternalLink,
   Eye,
+  RefreshCcw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -92,7 +93,9 @@ export function KnowledgeBaseEditModal({
   const [tags, setTags] = useState<string[]>([]);
   const [isPinned, setIsPinned] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [scraping, setScraping] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [scrapedContent, setScrapedContent] = useState<string | null>(null);
 
   useEffect(() => {
     if (item) {
@@ -103,6 +106,12 @@ export function KnowledgeBaseEditModal({
       setTags(item.tags || []);
       setIsPinned(item.is_pinned);
       setActiveTab("details");
+      
+      // Load existing scraped content
+      const existingContent = item.metadata && typeof item.metadata === "object" && "scraped_markdown" in item.metadata
+        ? String(item.metadata.scraped_markdown)
+        : null;
+      setScrapedContent(existingContent);
     }
   }, [item]);
 
@@ -116,6 +125,73 @@ export function KnowledgeBaseEditModal({
 
   const removeTag = (tag: string) => {
     setTags(tags.filter((t) => t !== tag));
+  };
+
+  const handleScrapeAgain = async () => {
+    if (!item?.external_url) return;
+
+    setScraping(true);
+    try {
+      toast.info("Scraping latest content from URL...");
+      
+      const response = await fetch("/functions/v1/scrape-url-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: item.external_url }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to scrape URL");
+      }
+
+      const scrapeData = await response.json();
+      const newMarkdown = scrapeData.markdown || "";
+      const newTitle = scrapeData.title || "";
+      const newDescription = scrapeData.description || "";
+
+      // Update metadata with new scraped content
+      const updatedMetadata = {
+        ...(item.metadata && typeof item.metadata === "object" ? item.metadata : {}),
+        scraped_markdown: newMarkdown,
+        scraped_at: new Date().toISOString(),
+      };
+
+      // Update the item in database
+      const { error } = await supabase
+        .from("knowledge_base_items")
+        .update({
+          metadata: updatedMetadata,
+          // Optionally update title/description if they're empty or user wants to refresh
+          title: !title.trim() ? newTitle : title.trim(),
+          description: !description.trim() ? newDescription : description.trim(),
+        })
+        .eq("id", item.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setScrapedContent(newMarkdown);
+      if (!title.trim()) setTitle(newTitle);
+      if (!description.trim()) setDescription(newDescription);
+      
+      // Update item reference
+      if (item) {
+        item.metadata = updatedMetadata;
+      }
+
+      toast.success("Content scraped and updated successfully");
+      
+      // Switch to content tab to show the new content
+      if (newMarkdown) {
+        setActiveTab("content");
+      }
+    } catch (err) {
+      console.error("Scrape error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to scrape URL");
+    } finally {
+      setScraping(false);
+    }
   };
 
   const handleSave = async () => {
@@ -152,10 +228,6 @@ export function KnowledgeBaseEditModal({
     }
   };
 
-  const scrapedContent = item?.metadata && typeof item.metadata === "object" && "scraped_markdown" in item.metadata
-    ? String(item.metadata.scraped_markdown)
-    : null;
-
   if (!item) return null;
 
   return (
@@ -172,9 +244,14 @@ export function KnowledgeBaseEditModal({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className={`grid w-full ${item.external_url ? "grid-cols-2" : "grid-cols-1"}`}>
             <TabsTrigger value="details">Details</TabsTrigger>
-            {scrapedContent && <TabsTrigger value="content">Scraped Content</TabsTrigger>}
+            {item.external_url && (
+              <TabsTrigger value="content">
+                Scraped Content
+                {scrapedContent && <span className="ml-2 text-xs opacity-70">({Math.ceil(scrapedContent.length / 1000)}k)</span>}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="details" className="flex-1 overflow-auto space-y-4 mt-4">
@@ -241,13 +318,31 @@ export function KnowledgeBaseEditModal({
               <div>
                 <label className="text-sm text-muted-foreground">External URL</label>
                 <div className="flex items-center gap-2">
-                  <Input value={item.external_url} readOnly className="bg-muted" />
+                  <Input value={item.external_url} readOnly className="bg-muted flex-1" />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleScrapeAgain}
+                    disabled={scraping}
+                    title="Scrape latest content from URL"
+                  >
+                    {scraping ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCcw className="h-4 w-4" />
+                    )}
+                  </Button>
                   <Button variant="outline" size="icon" asChild>
-                    <a href={item.external_url} target="_blank" rel="noopener noreferrer">
+                    <a href={item.external_url} target="_blank" rel="noopener noreferrer" title="Open in new tab">
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </Button>
                 </div>
+                {scrapedContent && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Content scraped • Switch to "Scraped Content" tab to view
+                  </p>
+                )}
               </div>
             )}
 
@@ -312,11 +407,65 @@ export function KnowledgeBaseEditModal({
 
           {scrapedContent && (
             <TabsContent value="content" className="flex-1 overflow-auto mt-4">
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="mb-2 text-sm font-medium text-foreground">Scraped Content (Markdown)</div>
-                <div className="prose prose-sm dark:prose-invert max-w-none">
+              <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-foreground">Scraped Content</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Markdown format • {scrapedContent.length.toLocaleString()} characters
+                      {item.metadata && typeof item.metadata === "object" && "scraped_at" in item.metadata && (
+                        <span> • Scraped {new Date(String(item.metadata.scraped_at)).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScrapeAgain}
+                    disabled={scraping}
+                    className="gap-2"
+                  >
+                    {scraping ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Scraping...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="h-3 w-3" />
+                        Scrape Again
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-none border-t border-border pt-4">
                   <ReactMarkdown>{scrapedContent}</ReactMarkdown>
                 </div>
+              </div>
+            </TabsContent>
+          )}
+          
+          {item.external_url && !scrapedContent && (
+            <TabsContent value="content" className="flex-1 overflow-auto mt-4">
+              <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
+                <FileText className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Scraped Content</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This external URL hasn't been scraped yet, or the content was removed.
+                </p>
+                <Button onClick={handleScrapeAgain} disabled={scraping} className="gap-2">
+                  {scraping ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Scraping...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw className="h-4 w-4" />
+                      Scrape Content Now
+                    </>
+                  )}
+                </Button>
               </div>
             </TabsContent>
           )}

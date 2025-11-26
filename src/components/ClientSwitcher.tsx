@@ -51,16 +51,26 @@ export function ClientSwitcher() {
     navigate(`/client/${value}`);
   };
 
+  const selectedClient = clients.find((c) => c.slug === selectedValue);
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Select value={selectedValue} onValueChange={handleChange}>
-            <SelectTrigger className="h-9 w-[220px] bg-background border-border text-sm">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <SelectValue placeholder="Switch client" />
-              </div>
+            <SelectTrigger className="h-9 bg-background border-border text-sm inline-flex items-center gap-2">
+              <Building2 className="h-4 w-4 shrink-0" />
+              <SelectValue placeholder="Switch client">
+                {selectedClient ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="font-medium">{selectedClient.name}</span>
+                    <span className="text-muted-foreground">—</span>
+                    <span className="text-muted-foreground">{selectedClient.type}</span>
+                  </span>
+                ) : (
+                  "Switch client"
+                )}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="bg-popover border-border">
               <SelectItem value="all">All Clients — Overview</SelectItem>
