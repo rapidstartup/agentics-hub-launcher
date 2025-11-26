@@ -24,7 +24,6 @@ import {
   Layers,
   Video,
   BarChart3,
-  Upload,
   Play,
   Bot,
   User,
@@ -61,6 +60,7 @@ import type {
 import { listAgentConfigs, AgentConfig } from "@/integrations/n8n/agents";
 import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
 import { AgentChatWindow } from "@/components/agents/AgentChatWindow";
+import { ProjectCanvas } from "@/components/projects/ProjectCanvas";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -381,8 +381,8 @@ export default function ProjectDetail() {
 
         {/* Content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Toolbar (Canvas/Kanban) */}
-          {(activeTab === "canvas" || activeTab === "kanban") && (
+          {/* Left Toolbar (Kanban only) */}
+          {activeTab === "kanban" && (
             <div className="w-12 border-r border-border bg-card flex flex-col items-center py-4 gap-2">
               {toolbarItems.map((item) => (
                 <Button
@@ -607,85 +607,13 @@ export default function ProjectDetail() {
 
             {/* Canvas Tab */}
             {activeTab === "canvas" && (
-              <div className="h-full p-6 overflow-auto">
-                {(project.assets || []).length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center">
-                    <Layers className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                    <h2 className="text-xl font-semibold text-foreground mb-2">Empty Canvas</h2>
-                    <p className="text-muted-foreground mb-6 max-w-md">
-                      Start building your project by adding assets, running agents, or uploading files.
-                    </p>
-                    <div className="flex gap-3">
-                      <Button
-                        className="gap-2"
-                        onClick={() => {
-                          setNewAssetType("image");
-                          setAddAssetOpen(true);
-                        }}
-                      >
-                        <Upload className="h-4 w-4" />
-                        Upload Image
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="gap-2"
-                        onClick={() => {
-                          setNewAssetType("text");
-                          setAddAssetOpen(true);
-                        }}
-                      >
-                        <Type className="h-4 w-4" />
-                        Add Text
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {(project.assets || []).map((asset) => (
-                      <Card key={asset.id} className="p-4 border border-border hover:border-primary/50 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            {assetTypeIcons[asset.asset_type]}
-                            <span className="font-medium text-foreground">{asset.title}</span>
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {asset.status_name}
-                          </Badge>
-                        </div>
-                        {asset.content && (
-                          <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                            {asset.content}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{new Date(asset.created_at).toLocaleDateString()}</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <MoreVertical className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                View Full
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ProjectCanvas
+                projectId={projectId!}
+                clientId={clientId!}
+                agents={availableAgents}
+                assets={project.assets || []}
+                onAssetCreated={loadProject}
+              />
             )}
 
             {/* Kanban Tab */}
@@ -836,8 +764,8 @@ export default function ProjectDetail() {
             )}
           </div>
 
-          {/* Right Sidebar - Tasks & Agents */}
-          {(activeTab === "canvas" || activeTab === "kanban") && (
+          {/* Right Sidebar - Tasks & Agents (Kanban only) */}
+          {activeTab === "kanban" && (
             <div className="w-72 border-l border-border bg-card flex flex-col">
               {/* Tasks */}
               <div className="p-4 border-b border-border">
