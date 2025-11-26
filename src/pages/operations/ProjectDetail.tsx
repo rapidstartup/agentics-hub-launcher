@@ -234,9 +234,25 @@ export default function ProjectDetail() {
       
       setAvailableAgents(uniqueConfigs);
       
-      // Filter chat-based agents (those with output_behavior === 'chat_stream')
-      const chatBased = uniqueConfigs.filter(c => c.output_behavior === "chat_stream");
-      setChatAgents(chatBased);
+      // Treat every n8n/webhook-enabled agent as chat-capable so it can be triggered from the chat panel.
+      const chatBased = uniqueConfigs.filter((config) => {
+        const isChatBehavior = config.output_behavior === "chat_stream";
+        const hasWebhook = Boolean(config.webhook_url);
+        const hasSchemaFields = Boolean(config.input_schema?.fields?.length) 
+          || Boolean(config.input_mapping?.requiredFields?.length) 
+          || Boolean(config.input_mapping?.fields?.length);
+        const executionMode = config.execution_mode ?? "n8n";
+        const isN8nBased = executionMode !== "internal";
+        return isChatBehavior || (isN8nBased && (hasWebhook || hasSchemaFields));
+      });
+
+      const sortedChatAgents = [...chatBased].sort((a, b) => {
+        const nameA = a.display_name || a.agent_key || "";
+        const nameB = b.display_name || b.agent_key || "";
+        return nameA.localeCompare(nameB);
+      });
+      
+      setChatAgents(sortedChatAgents);
     } catch (e) {
       console.error("Failed to load agents:", e);
     }
