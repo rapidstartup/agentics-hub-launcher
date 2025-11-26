@@ -241,25 +241,23 @@ export async function executeAgentWebhook(params: {
   payload: Record<string, any>;
 }): Promise<{ success: boolean; result: any; error?: string }> {
   try {
-    const response = await fetch(params.webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params.payload),
+    const { data, error } = await supabase.functions.invoke("n8n-run", {
+      body: {
+        webhookUrl: params.webhookUrl,
+        payload: params.payload,
+        waitTillFinished: true,
+      },
     });
 
-    const text = await response.text();
-    let data: any;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = { raw: text };
+    if (error) {
+      return { success: false, result: null, error: error.message || "Failed to invoke webhook" };
     }
 
-    if (!response.ok) {
-      return { success: false, result: null, error: text };
+    if (!data?.success) {
+      return { success: false, result: data?.result ?? null, error: data?.error || "Webhook execution failed" };
     }
 
-    return { success: true, result: data };
+    return { success: true, result: data.result };
   } catch (e: any) {
     return { success: false, result: null, error: e?.message || "Unknown error" };
   }

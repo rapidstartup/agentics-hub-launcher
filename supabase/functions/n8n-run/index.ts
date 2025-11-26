@@ -32,6 +32,31 @@ serve(async (req) => {
     const workflowId = body?.workflowId ?? body?.workflow_id;
     const payload = body?.payload ?? {};
     const waitTillFinished = body?.waitTillFinished ?? true;
+    const webhookUrl = body?.webhookUrl ?? body?.webhook_url;
+
+    // Lightweight proxy mode when a direct webhook URL is supplied.
+    if (webhookUrl) {
+      const runResp = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const text = await runResp.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+      if (!runResp.ok) {
+        return new Response(JSON.stringify({ success: false, error: text || 'Failed to execute webhook' }), {
+          status: runResp.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, result: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (!connectionId || !workflowId) {
       return new Response(JSON.stringify({ error: 'Missing connectionId or workflowId' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -60,27 +85,6 @@ serve(async (req) => {
     // If a webhook URL is provided in the payload or config, use it.
     // Otherwise, attempt the Activation API (v1/workflows/{id}/activate) which simply turns it on,
     // OR specific webhook-based triggering if the user has configured it.
-
-    // CURRENT STRATEGY:
-    // Since n8n Public API does not support arbitrary "Run Now" without a Webhook node,
-    // we will attempt to find a production webhook URL for the workflow if not explicitly provided.
-    // For now, we'll modify this function to support a "webhookUrl" param in the body.
-    
-    const webhookUrl = body?.webhookUrl ?? body?.webhook_url;
-
-    if (webhookUrl) {
-       const runResp = await fetch(webhookUrl, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify(payload) 
-       });
-       
-       const text = await runResp.text();
-       let data;
-       try { data = JSON.parse(text); } catch { data = { raw: text }; }
-       
-       return new Response(JSON.stringify({ success: true, result: data }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
 
     // If no webhook URL, fall back to the internal API attempts (which will likely fail with 401 on Cloud)
     // OR return a helpful error telling the user to configure a webhook.
