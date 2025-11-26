@@ -137,18 +137,20 @@ export function KnowledgeBaseEditModal({
     try {
       toast.info("Scraping latest content from URL...");
       
-      const response = await fetch("/functions/v1/scrape-url-content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: item.external_url }),
-      });
+      const { data: scrapeData, error: scrapeError } = await supabase.functions.invoke(
+        "scrape-url-content",
+        {
+          body: { url: item.external_url },
+        }
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to scrape URL");
+      if (scrapeError) {
+        throw new Error(scrapeError.message || "Failed to scrape URL");
       }
 
-      const scrapeData = await response.json();
+      if (!scrapeData || !scrapeData.success) {
+        throw new Error(scrapeData?.error || "Failed to scrape URL");
+      }
       const newMarkdown = scrapeData.markdown || "";
       const newTitle = scrapeData.title || "";
       const newDescription = scrapeData.description || "";

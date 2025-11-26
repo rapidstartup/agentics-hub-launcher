@@ -198,14 +198,14 @@ export function KnowledgeBaseUploadModal({
       if (mode === "url" && externalUrl.trim()) {
         toast.info("Scraping content from URL...");
         try {
-          const scrapeResponse = await fetch("/functions/v1/scrape-url-content", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: externalUrl.trim() }),
-          });
+          const { data: scrapeData, error: scrapeError } = await supabase.functions.invoke(
+            "scrape-url-content",
+            {
+              body: { url: externalUrl.trim() },
+            }
+          );
 
-          if (scrapeResponse.ok) {
-            const scrapeData = await scrapeResponse.json();
+          if (!scrapeError && scrapeData && scrapeData.success) {
             scrapedContent = scrapeData.markdown || null;
             scrapedTitle = scrapeData.title || null;
             scrapedDescription = scrapeData.description || null;
@@ -217,8 +217,9 @@ export function KnowledgeBaseUploadModal({
             if (!description.trim() && scrapedDescription) {
               setDescription(scrapedDescription);
             }
+            toast.success("URL content scraped successfully!");
           } else {
-            console.warn("Failed to scrape URL content, continuing without it");
+            console.warn("Failed to scrape URL content, continuing without it", scrapeError || scrapeData?.error);
           }
         } catch (scrapeErr) {
           console.warn("Error scraping URL:", scrapeErr);
