@@ -57,33 +57,33 @@ export function ClientSwitcher() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Select value={selectedValue} onValueChange={handleChange}>
-            <SelectTrigger className="h-9 bg-background border-border text-sm inline-flex items-center gap-2">
-              <Building2 className="h-4 w-4 shrink-0" />
-              <SelectValue placeholder="Switch client">
+          <div className="inline-flex items-center">
+            <Select value={selectedValue} onValueChange={handleChange}>
+              <SelectTrigger className="h-9 bg-background border-border text-sm inline-flex items-center gap-2 w-auto min-w-[200px]">
+                <Building2 className="h-4 w-4 shrink-0" />
                 {selectedClient ? (
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1.5 flex-1 text-left">
                     <span className="font-medium">{selectedClient.name}</span>
                     <span className="text-muted-foreground">—</span>
                     <span className="text-muted-foreground">{selectedClient.type}</span>
                   </span>
                 ) : (
-                  "Switch client"
+                  <SelectValue placeholder="Switch client" />
                 )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-popover border-border">
-              <SelectItem value="all">All Clients — Overview</SelectItem>
-              {clients.map((c) => (
-                <SelectItem key={c.slug} value={c.slug}>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{c.name}</span>
-                    <span className="text-xs text-muted-foreground">{c.type}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="all">All Clients — Overview</SelectItem>
+                {clients.map((c) => (
+                  <SelectItem key={c.slug} value={c.slug}>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{c.name}</span>
+                      <span className="text-xs text-muted-foreground">{c.type}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </TooltipTrigger>
         <TooltipContent>
           <p>Admin-only control; auth not enforced yet.</p>
