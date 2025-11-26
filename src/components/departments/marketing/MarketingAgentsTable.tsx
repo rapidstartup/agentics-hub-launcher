@@ -25,6 +25,7 @@ export type MarketingAgentRow = {
   healthPercent: number; // 0-100
   isAI?: boolean;
   email?: string;
+  description?: string;
 };
 
 function StatusPill({ status }: { status: MarketingAgentRow["status"] }) {
