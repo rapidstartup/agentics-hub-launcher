@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, BarChart3, ArrowLeft, Bot, Play, Settings } from "lucide-react";
-import { AgentConfig, listAgentConfigs, listPredefinedAgents } from "@/integrations/n8n/agents";
+import { AgentConfig, listAgentConfigs } from "@/integrations/n8n/agents";
 import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
 import { N8nAgentConfigModal } from "@/components/agents/N8nAgentConfigModal";
 import { useToast } from "@/hooks/use-toast";
@@ -430,17 +430,24 @@ export default function OperationsAgents() {
             agent={selectedAgent.config}
             open={runnerOpen}
             onOpenChange={setRunnerOpen}
+            clientId={clientId}
           />
         )}
 
         {/* Agent Configuration Modal */}
         <N8nAgentConfigModal
           open={configOpen}
-          onOpenChange={setConfigOpen}
+          onOpenChange={(open) => {
+            setConfigOpen(open);
+            if (!open) {
+              setSelectedAgent(null);
+            }
+          }}
           scope="client"
           clientId={clientId}
           area="operations"
           agentKey={selectedAgent?.config?.agent_key}
+          initialConfig={selectedAgent?.config || null}
           title={`Configure ${selectedAgent?.name || "Agent"}`}
           onSaved={loadAiAgents}
         />
@@ -453,6 +460,7 @@ export default function OperationsAgents() {
           clientId={clientId}
           area="operations"
           title="Add Operations Agent"
+          initialConfig={null}
           onSaved={loadAiAgents}
         />
       </main>

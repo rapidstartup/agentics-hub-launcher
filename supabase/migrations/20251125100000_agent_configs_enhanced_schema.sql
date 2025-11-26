@@ -29,8 +29,8 @@ $$;
 -- Add new columns to agent_configs
 alter table if exists public.agent_configs
   add column if not exists input_schema jsonb null,
-  add column if not exists output_behavior text null default 'modal_display',
-  add column if not exists execution_mode text null default 'n8n',
+  add column if not exists output_behavior output_behavior null default 'modal_display',
+  add column if not exists execution_mode execution_mode null default 'n8n',
   add column if not exists is_predefined boolean not null default false,
   add column if not exists avatar_url text null,
   add column if not exists description text null;

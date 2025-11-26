@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Copy, Check, ArrowLeft, Loader2 } from "lucide-react";
 import { RuntimeField, OutputBehavior } from "@/integrations/n8n/agents";
 import ReactMarkdown from "react-markdown";
+import { getResultText } from "@/lib/resultText";
 
 interface RunAgentDynamicModalProps {
   open: boolean;
@@ -170,15 +171,6 @@ export function RunAgentDynamicModal({
     }
   };
 
-  const getResultText = (): string => {
-    if (!result) return "";
-    if (typeof result === "string") return result;
-    if (result.output) return result.output;
-    if (result.result) return typeof result.result === "string" ? result.result : JSON.stringify(result.result, null, 2);
-    if (result.raw) return result.raw;
-    return JSON.stringify(result, null, 2);
-  };
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
@@ -228,7 +220,7 @@ export function RunAgentDynamicModal({
           <>
             <ScrollArea className="flex-1 max-h-[50vh]">
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                <ReactMarkdown>{getResultText()}</ReactMarkdown>
+                <ReactMarkdown>{getResultText(result)}</ReactMarkdown>
               </div>
             </ScrollArea>
 

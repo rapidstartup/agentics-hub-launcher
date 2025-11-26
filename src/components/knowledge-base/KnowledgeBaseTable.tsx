@@ -52,6 +52,7 @@ import {
   Gift,
 } from "lucide-react";
 import { KnowledgeBaseCard, type KBItem } from "./KnowledgeBaseCard";
+import { KnowledgeBaseEditModal } from "./KnowledgeBaseEditModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getKnowledgeBaseFileUrl } from "@/lib/knowledge-base-utils";
@@ -67,6 +68,7 @@ interface KnowledgeBaseTableProps {
   categoryFilter?: string[];
   showUpload?: boolean;
   onUploadClick?: () => void;
+  onEdit?: (item: KBItem) => void;
 }
 
 const categoryOptions = [
@@ -120,6 +122,7 @@ export function KnowledgeBaseTable({
   categoryFilter,
   showUpload = true,
   onUploadClick,
+  onEdit,
 }: KnowledgeBaseTableProps) {
   const [items, setItems] = useState<KBItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +131,8 @@ export function KnowledgeBaseTable({
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [editItem, setEditItem] = useState<KBItem | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   async function fetchItems() {
     setLoading(true);
@@ -239,6 +244,19 @@ export function KnowledgeBaseTable({
     } catch (err) {
       toast.error("Failed to delete");
     }
+  };
+
+  const handleEdit = (item: KBItem) => {
+    if (onEdit) {
+      onEdit(item);
+    } else {
+      setEditItem(item);
+      setEditModalOpen(true);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    fetchItems();
   };
 
   return (
@@ -357,6 +375,7 @@ export function KnowledgeBaseTable({
             <KnowledgeBaseCard
               key={item.id}
               item={item}
+              onEdit={handleEdit}
               onTogglePin={handleTogglePin}
               onArchive={handleArchive}
               onDelete={handleDelete}
@@ -444,6 +463,10 @@ export function KnowledgeBaseTable({
                             <KnowledgeBaseTableDownloadLink filePath={item.file_path} />
                           )}
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleEdit(item)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleTogglePin(item)}>
                             <Pin className="mr-2 h-4 w-4" />
                             {item.is_pinned ? "Unpin" : "Pin"}
@@ -470,6 +493,14 @@ export function KnowledgeBaseTable({
           </Table>
         </div>
       )}
+
+      {/* Edit Modal */}
+      <KnowledgeBaseEditModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        item={editItem}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }

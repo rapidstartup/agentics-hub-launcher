@@ -4,11 +4,14 @@ import { runN8nWorkflow } from "@/integrations/n8n/api";
 import { RunAgentDynamicModal } from "./RunAgentDynamicModal";
 import { AgentChatWindow } from "./AgentChatWindow";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { recordAgentExchange } from "@/lib/agentMessaging";
+import { getResultText } from "@/lib/resultText";
 
 interface UniversalAgentRunnerProps {
   agent: AgentConfig;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  clientId?: string;
 }
 
 /**
@@ -16,7 +19,7 @@ interface UniversalAgentRunnerProps {
  * - Chat interface for chat_stream agents
  * - Form modal for modal_display agents
  */
-export function UniversalAgentRunner({ agent, open, onOpenChange }: UniversalAgentRunnerProps) {
+export function UniversalAgentRunner({ agent, open, onOpenChange, clientId }: UniversalAgentRunnerProps) {
   const [running, setRunning] = useState(false);
 
   const inputFields = getAgentInputFields(agent);
@@ -49,6 +52,16 @@ export function UniversalAgentRunner({ agent, open, onOpenChange }: UniversalAge
         response = result.result;
       }
 
+      const formattedInputs = formatInputs(values);
+      const responseText = getResultText(response);
+
+      await recordAgentExchange({
+        agent,
+        clientId,
+        userText: formattedInputs || "(no inputs)",
+        agentText: responseText,
+      });
+
       return response;
     } finally {
       setRunning(false);
@@ -63,7 +76,7 @@ export function UniversalAgentRunner({ agent, open, onOpenChange }: UniversalAge
           <DialogHeader className="px-4 pt-4 pb-0">
             <DialogTitle className="sr-only">{agent.display_name || agent.agent_key}</DialogTitle>
           </DialogHeader>
-          <AgentChatWindow agent={agent} className="flex-1 border-0 rounded-none" />
+          <AgentChatWindow agent={agent} clientId={clientId} className="flex-1 border-0 rounded-none" />
         </DialogContent>
       </Dialog>
     );
@@ -83,4 +96,13 @@ export function UniversalAgentRunner({ agent, open, onOpenChange }: UniversalAge
     />
   );
 }
+
+const formatInputs = (values: Record<string, any>): string => {
+  if (!values || Object.keys(values).length === 0) {
+    return "";
+  }
+  return Object.entries(values)
+    .map(([key, value]) => `${key}: ${typeof value === "object" ? JSON.stringify(value) : value}`)
+    .join("\n");
+};
 

@@ -190,6 +190,41 @@ export function KnowledgeBaseUploadModal({
       let fileName: string | null = null;
       let fileSize: number | null = null;
       let mimeType: string | null = null;
+      let scrapedContent: string | null = null;
+      let scrapedTitle: string | null = null;
+      let scrapedDescription: string | null = null;
+
+      // Scrape external URL if in URL mode
+      if (mode === "url" && externalUrl.trim()) {
+        toast.info("Scraping content from URL...");
+        try {
+          const scrapeResponse = await fetch("/functions/v1/scrape-url-content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: externalUrl.trim() }),
+          });
+
+          if (scrapeResponse.ok) {
+            const scrapeData = await scrapeResponse.json();
+            scrapedContent = scrapeData.markdown || null;
+            scrapedTitle = scrapeData.title || null;
+            scrapedDescription = scrapeData.description || null;
+            
+            // Auto-fill title/description if empty
+            if (!title.trim() && scrapedTitle) {
+              setTitle(scrapedTitle);
+            }
+            if (!description.trim() && scrapedDescription) {
+              setDescription(scrapedDescription);
+            }
+          } else {
+            console.warn("Failed to scrape URL content, continuing without it");
+          }
+        } catch (scrapeErr) {
+          console.warn("Error scraping URL:", scrapeErr);
+          // Continue without scraped content
+        }
+      }
 
       // Upload file if in upload mode
       if (mode === "upload" && file) {
@@ -209,6 +244,12 @@ export function KnowledgeBaseUploadModal({
       }
 
       // Create database record
+      const metadata: Record<string, unknown> = {};
+      if (scrapedContent) {
+        metadata.scraped_markdown = scrapedContent;
+        metadata.scraped_at = new Date().toISOString();
+      }
+
       const { error: dbError } = await supabase.from("knowledge_base_items").insert({
         user_id: user.id,
         scope,
@@ -216,20 +257,20 @@ export function KnowledgeBaseUploadModal({
         project_id: scope === "project" || scope === "task" ? projectId : null,
         source_department: department,
         category,
-        title: title.trim(),
-        description: description.trim() || null,
+        title: title.trim() || scrapedTitle || externalUrl.trim(),
+        description: description.trim() || scrapedDescription || null,
         tags,
         file_path: filePath,
         external_url: mode === "url" ? externalUrl.trim() : null,
         file_name: fileName,
         file_size: fileSize,
         mime_type: mimeType,
-        metadata: {},
+        metadata,
       } as any);
 
       if (dbError) throw dbError;
 
-      toast.success("Item added to knowledge base");
+      toast.success("Item added to knowledge base" + (scrapedContent ? " (content scraped)" : ""));
       resetForm();
       onOpenChange(false);
       onSuccess?.();

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BrainCircuit, RefreshCcw, Database, FileText, Video, BookOpen, Settings } from "lucide-react";
 import { AgentChatWindow } from "@/components/agents/AgentChatWindow";
-import { AgentConfig, listAgentConfigs, listPredefinedAgents } from "@/integrations/n8n/agents";
+import { AgentConfig, listAgentConfigs } from "@/integrations/n8n/agents";
 import { N8nAgentConfigModal } from "@/components/agents/N8nAgentConfigModal";
 
 const INDEXED_SOURCES = [
@@ -82,7 +82,7 @@ const StrategyCompanyBrain = () => {
                 </div>
               </Card>
             ) : ragAgent ? (
-              <AgentChatWindow agent={ragAgent} className="h-full" />
+              <AgentChatWindow agent={ragAgent} clientId={clientId} className="h-full" />
             ) : (
               <Card className="h-full flex items-center justify-center border border-border bg-card">
                 <div className="text-center max-w-md p-8">
@@ -144,6 +144,7 @@ const StrategyCompanyBrain = () => {
           scope="agency"
           area="strategy"
           agentKey="rag-agent"
+          initialConfig={ragAgent}
           title="Configure RAG Agent"
           onSaved={loadRagAgent}
         />

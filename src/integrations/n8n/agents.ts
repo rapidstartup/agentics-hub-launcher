@@ -88,32 +88,75 @@ export async function upsertAgentConfig(params: {
   agentKey: string;
   displayName?: string;
   displayRole?: string;
-  connectionId: string;
-  workflowId: string;
+  description?: string;
+  avatarUrl?: string;
+  connectionId?: string;
+  workflowId?: string;
   webhookUrl?: string;
+  inputSchema?: InputSchema;
   requiredFields?: RuntimeField[];
+  outputBehavior?: OutputBehavior;
+  executionMode?: ExecutionMode;
 }): Promise<AgentConfig> {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("Not authenticated");
 
+  const targetClientId = params.scope === "client" ? params.clientId ?? null : null;
+
+  // Determine if the current user already has a config for this agent
+  let query = (supabase as any)
+    .from("agent_configs")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("scope", params.scope)
+    .eq("area", params.area)
+    .eq("agent_key", params.agentKey)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (targetClientId) {
+    query = query.eq("client_id", targetClientId);
+  } else {
+    query = query.is("client_id", null);
+  }
+
+  const { data: existing } = await query.maybeSingle();
+
+  const payload = {
+    user_id: userId,
+    scope: params.scope,
+    client_id: targetClientId,
+    area: params.area,
+    agent_key: params.agentKey,
+    display_name: params.displayName ?? params.agentKey,
+    display_role: params.displayRole ?? null,
+    description: params.description ?? null,
+    avatar_url: params.avatarUrl ?? null,
+    connection_id: params.connectionId || "00000000-0000-0000-0000-000000000000",
+    workflow_id: params.workflowId || "webhook",
+    webhook_url: params.webhookUrl ?? null,
+    input_schema: params.inputSchema ?? (params.requiredFields?.length ? { fields: params.requiredFields } : null),
+    input_mapping: params.requiredFields?.length ? { requiredFields: params.requiredFields } : null,
+    output_mapping: null,
+    output_behavior: params.outputBehavior ?? "modal_display",
+    execution_mode: params.executionMode ?? "n8n",
+    updated_at: new Date().toISOString(),
+  };
+
+  if (existing?.id) {
+    const { data, error } = await (supabase as any)
+      .from("agent_configs")
+      .update(payload)
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+    if (error) throw error;
+    return data as unknown as AgentConfig;
+  }
+
   const { data, error } = await (supabase as any)
     .from("agent_configs")
-    .insert({
-      user_id: userId,
-      scope: params.scope,
-      client_id: params.scope === "client" ? params.clientId ?? null : null,
-      area: params.area,
-      agent_key: params.agentKey,
-      display_name: params.displayName ?? params.agentKey,
-      display_role: params.displayRole ?? null,
-      connection_id: params.connectionId,
-      workflow_id: params.workflowId,
-      webhook_url: params.webhookUrl ?? null,
-      input_mapping: params.requiredFields?.length
-        ? { requiredFields: params.requiredFields }
-        : null,
-      output_mapping: null,
-    })
+    .insert(payload)
     .select("*")
     .single();
 

@@ -8,6 +8,7 @@ import { Send, Loader2, Bot, User } from "lucide-react";
 import { AgentConfig, getAgentInputFields, executeAgentWebhook } from "@/integrations/n8n/agents";
 import { runN8nWorkflow } from "@/integrations/n8n/api";
 import ReactMarkdown from "react-markdown";
+import { recordAgentExchange } from "@/lib/agentMessaging";
 
 interface ChatMessage {
   id: string;
@@ -18,10 +19,11 @@ interface ChatMessage {
 
 interface AgentChatWindowProps {
   agent: AgentConfig;
+  clientId?: string;
   className?: string;
 }
 
-export function AgentChatWindow({ agent, className = "" }: AgentChatWindowProps) {
+export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -104,6 +106,13 @@ export function AgentChatWindow({ agent, className = "" }: AgentChatWindowProps)
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      await recordAgentExchange({
+        agent,
+        clientId,
+        userText: trimmed,
+        agentText: content,
+      });
     } catch (error: any) {
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
@@ -181,7 +190,7 @@ export function AgentChatWindow({ agent, className = "" }: AgentChatWindowProps)
                   )}
                 </Avatar>
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
+          className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted"

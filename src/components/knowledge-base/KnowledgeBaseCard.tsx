@@ -316,12 +316,10 @@ export function KnowledgeBaseCard({
                 <KnowledgeBaseDownloadLink filePath={item.file_path} />
               )}
               <DropdownMenuSeparator />
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(item)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => onEdit?.(item)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
               {onTogglePin && (
                 <DropdownMenuItem onClick={() => onTogglePin(item)}>
                   <Pin className="mr-2 h-4 w-4" />

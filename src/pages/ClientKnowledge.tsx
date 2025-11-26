@@ -27,6 +27,7 @@ import { ClientSwitcher } from "@/components/ClientSwitcher";
 import {
   KnowledgeBaseTable,
   KnowledgeBaseUploadModal,
+  KnowledgeBaseEditModal,
   type KBItem,
 } from "@/components/knowledge-base";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +49,8 @@ const ClientKnowledge = () => {
   const [pinnedItems, setPinnedItems] = useState<KBItem[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editItem, setEditItem] = useState<KBItem | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   async function fetchStats() {
     try {
@@ -96,6 +99,16 @@ const ClientKnowledge = () => {
 
   const handleUploadSuccess = () => {
     setRefreshKey((k) => k + 1);
+  };
+
+  const handleEditItem = (item: KBItem) => {
+    setEditItem(item);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setRefreshKey((k) => k + 1);
+    setEditModalOpen(false);
   };
 
   return (
@@ -293,6 +306,7 @@ const ClientKnowledge = () => {
                 clientId={clientId}
                 showUpload
                 onUploadClick={() => setUploadOpen(true)}
+                onEdit={handleEditItem}
               />
             </CardContent>
           </Card>
@@ -305,6 +319,14 @@ const ClientKnowledge = () => {
         onOpenChange={setUploadOpen}
         clientId={clientId}
         onSuccess={handleUploadSuccess}
+      />
+
+      {/* Edit Modal */}
+      <KnowledgeBaseEditModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        item={editItem}
+        onSuccess={handleEditSuccess}
       />
     </div>
   );

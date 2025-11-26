@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { N8nScope, listN8nConnections, listN8nWorkflows } from "@/integrations/n8n/api";
-import { RuntimeField, upsertAgentConfig, ExecutionMode, OutputBehavior, FieldType } from "@/integrations/n8n/agents";
+import { RuntimeField, upsertAgentConfig, ExecutionMode, OutputBehavior, FieldType, AgentConfig } from "@/integrations/n8n/agents";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Settings, Zap } from "lucide-react";
 
@@ -22,6 +22,7 @@ interface N8nAgentConfigModalProps {
   agentKey?: string;
   title?: string;
   onSaved?: () => void;
+  initialConfig?: AgentConfig | null;
 }
 
 export function N8nAgentConfigModal({
@@ -33,6 +34,7 @@ export function N8nAgentConfigModal({
   agentKey,
   title = "Configure Agent",
   onSaved,
+  initialConfig,
 }: N8nAgentConfigModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,7 @@ export function N8nAgentConfigModal({
   const [agentName, setAgentName] = useState<string>(agentKey || "");
   const [role, setRole] = useState<string>("Automation Workflow");
   const [description, setDescription] = useState<string>("");
+  const [avatar, setAvatar] = useState<string>("");
   
   // Execution config
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("n8n");
@@ -110,6 +113,39 @@ export function N8nAgentConfigModal({
     setFields((prev) => prev.map((f, i) => (i === idx ? { ...f, ...updates } : f)));
   };
 
+  useEffect(() => {
+    if (!open) return;
+    if (initialConfig) {
+      setAgentName(initialConfig.display_name || initialConfig.agent_key || agentKey || "");
+      setRole(initialConfig.display_role || "Automation Workflow");
+      setDescription(initialConfig.description || "");
+      setAvatar(initialConfig.avatar_url || "");
+      setExecutionMode(initialConfig.execution_mode || "n8n");
+      setOutputBehavior(initialConfig.output_behavior || "modal_display");
+      setWebhookUrl(initialConfig.webhook_url || "");
+      setSelectedConnectionId(initialConfig.connection_id || "");
+      setSelectedWorkflowId(initialConfig.workflow_id || "");
+      if (initialConfig.input_schema?.fields?.length) {
+        setFields(initialConfig.input_schema.fields);
+      } else if (initialConfig.input_mapping?.requiredFields?.length) {
+        setFields(initialConfig.input_mapping.requiredFields);
+      } else {
+        setFields([]);
+      }
+    } else {
+      setAgentName(agentKey || "");
+      setRole("Automation Workflow");
+      setDescription("");
+      setAvatar("");
+      setExecutionMode("n8n");
+      setOutputBehavior("modal_display");
+      setWebhookUrl("");
+      setSelectedConnectionId("");
+      setSelectedWorkflowId("");
+      setFields([]);
+    }
+  }, [open, initialConfig, agentKey]);
+
   const handleSave = async () => {
     const nameToUse = agentKey || agentName;
     if (!nameToUse) {
@@ -139,10 +175,15 @@ export function N8nAgentConfigModal({
         agentKey: slug,
         displayName: agentName || nameToUse,
         displayRole: role || undefined,
-        connectionId: selectedConnectionId || "00000000-0000-0000-0000-000000000000",
-        workflowId: selectedWorkflowId || "webhook",
+        description,
+        avatarUrl: avatar || undefined,
+        connectionId: selectedConnectionId || undefined,
+        workflowId: selectedWorkflowId || undefined,
         webhookUrl: webhookUrl || undefined,
+        inputSchema: fields.filter((f) => f.key && f.label).length ? { fields: fields.filter((f) => f.key && f.label) } : undefined,
         requiredFields: fields.filter((f) => f.key && f.label),
+        outputBehavior,
+        executionMode,
       });
       toast({ title: "Saved", description: "Agent configuration saved" });
       onOpenChange(false);
@@ -158,11 +199,6 @@ export function N8nAgentConfigModal({
       setLoading(false);
     }
   };
-
-  const connectionLabel = useMemo(() => {
-    const c = connections.find((x) => x.id === selectedConnectionId);
-    return c?.label || c?.base_url || "";
-  }, [connections, selectedConnectionId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -215,6 +251,18 @@ export function N8nAgentConfigModal({
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Avatar URL (optional)</Label>
+                <Input
+                  placeholder="https://example.com/avatar.png"
+                  value={avatar}
+                  onChange={(e) => setAvatar(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Provide a small square image URL to represent this agent in tables and chats.
+                </p>
               </div>
 
               <div className="space-y-2">

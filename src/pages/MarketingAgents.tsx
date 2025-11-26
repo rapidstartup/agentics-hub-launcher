@@ -93,6 +93,7 @@ export default function MarketingAgents() {
   // Modal state
   const [configOpen, setConfigOpen] = useState(false);
   const [configAgentKey, setConfigAgentKey] = useState<string>("");
+  const [configAgentConfig, setConfigAgentConfig] = useState<AgentConfig | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   
   // Runner state
@@ -172,12 +173,14 @@ export default function MarketingAgents() {
     // Fallback: prompt to configure
     const key = row.id?.startsWith("ai-") ? row.id.slice(3) : toAgentKey(row.name);
     setConfigAgentKey(key);
+    setConfigAgentConfig(row.isAI ? row.config ?? null : null);
     setConfigOpen(true);
   }
 
   function handleEdit(row: ExtendedMarketingAgentRow) {
     const key = row.id?.startsWith("ai-") ? row.id.slice(3) : toAgentKey(row.name);
     setConfigAgentKey(key);
+    setConfigAgentConfig(row.isAI ? row.config ?? null : null);
     setConfigOpen(true);
   }
 
@@ -338,17 +341,25 @@ export default function MarketingAgents() {
             agent={selectedAgent}
             open={runnerOpen}
             onOpenChange={setRunnerOpen}
+            clientId={clientId}
           />
         )}
 
         {/* Config modals */}
         <N8nAgentConfigModal
           open={configOpen}
-          onOpenChange={setConfigOpen}
+          onOpenChange={(open) => {
+            setConfigOpen(open);
+            if (!open) {
+              setConfigAgentKey("");
+              setConfigAgentConfig(null);
+            }
+          }}
           scope="client"
           clientId={clientId}
           area="marketing"
           agentKey={configAgentKey}
+          initialConfig={configAgentConfig}
           title="Configure Marketing Agent"
           onSaved={refreshDynamicAgents}
         />
@@ -358,12 +369,16 @@ export default function MarketingAgents() {
           open={addOpen}
           onOpenChange={(open) => {
             setAddOpen(open);
-            if (!open) refreshDynamicAgents();
+            if (!open) {
+              setConfigAgentKey("");
+              setConfigAgentConfig(null);
+            }
           }}
           scope="client"
           clientId={clientId}
           area="marketing"
           title="Add Marketing Agent"
+          initialConfig={null}
           onSaved={refreshDynamicAgents}
         />
       </main>

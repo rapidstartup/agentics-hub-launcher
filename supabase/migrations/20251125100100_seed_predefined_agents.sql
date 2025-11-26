@@ -75,7 +75,7 @@ select seed_predefined_agent(
   'Meeting Agent',
   'Meeting Intelligence',
   'Query your meeting records from Airtable/Fathom. Find calls, attendees, action items, and summaries.',
-  'https://agentix-n8n.app.n8n.cloud/webhook/d1007cb5-fe82-4e98-9905-31c9197c2597',
+  'https://togetherinc.app.n8n.cloud/webhook/d1007cb5-fe82-4e98-9905-31c9197c2597',
   '{
     "fields": [
       {
@@ -101,7 +101,7 @@ select seed_predefined_agent(
   'Personal Assistant',
   'Calendar & Email Concierge',
   'Manage your calendar and draft emails. Book meetings, reschedule events, and compose email drafts.',
-  'https://agentix-n8n.app.n8n.cloud/webhook/e101258b-7388-4da6-a427-82191acef0c3',
+  'https://togetherinc.app.n8n.cloud/webhook/e101258b-7388-4da6-a427-82191acef0c3',
   '{
     "fields": [
       {
@@ -127,7 +127,7 @@ select seed_predefined_agent(
   'Prompt Engineer',
   'LLM Prompt Optimizer',
   'Transform your rough ideas into well-structured, effective LLM prompts. Get better results from AI tools.',
-  'https://agentix-n8n.app.n8n.cloud/webhook/a35caabc-5dd3-4f07-b36e-927b7647d691',
+  'https://togetherinc.app.n8n.cloud/webhook/a35caabc-5dd3-4f07-b36e-927b7647d691',
   '{
     "fields": [
       {
@@ -160,7 +160,7 @@ select seed_predefined_agent(
   'Company Brain',
   'Knowledge Base RAG',
   'Query your vectorized company knowledge - SOPs, training videos, documentation, and more.',
-  'https://agentix-n8n.app.n8n.cloud/webhook/7ddce9e5-57bf-4bf4-b496-87204f235f62',
+  'https://togetherinc.app.n8n.cloud/webhook/7ddce9e5-57bf-4bf4-b496-87204f235f62',
   '{
     "fields": [
       {
@@ -186,7 +186,7 @@ select seed_predefined_agent(
   'Copywriter',
   'AI Copy Generator',
   'Generate high-converting copy for ads, emails, and landing pages based on your offer and target avatar.',
-  'https://agentix-n8n.app.n8n.cloud/webhook/86d7a192-cc8e-4966-aa43-33d61a0d2f9f',
+  'https://togetherinc.app.n8n.cloud/webhook/86d7a192-cc8e-4966-aa43-33d61a0d2f9f',
   '{
     "fields": [
       {
