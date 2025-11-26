@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Download, Filter, Search, Megaphone, Plus, Bot } from "lucide-react";
 import {
   MarketingAgentsTable,
@@ -47,6 +51,8 @@ const humanAgents: MarketingAgentRow[] = [
     campaignsProgressPercent: 60,
     campaignsText: "6/10 Campaigns",
     healthPercent: 95,
+    email: "jane.doe@example.com",
+    description: "Owns the full content calendar and collaborates with AI assistants for research.",
   },
   {
     id: "john-smith",
@@ -60,6 +66,8 @@ const humanAgents: MarketingAgentRow[] = [
     campaignsProgressPercent: 90,
     campaignsText: "9/10 Campaigns",
     healthPercent: 82,
+    email: "john.smith@example.com",
+    description: "Pipeline-focused campaign specialist shipping paid media assets.",
   },
   {
     id: "emily-white",
@@ -73,6 +81,8 @@ const humanAgents: MarketingAgentRow[] = [
     campaignsProgressPercent: 0,
     campaignsText: "0/10 Campaigns",
     healthPercent: 45,
+    email: "emily.white@example.com",
+    description: "SEO specialist currently out. Handles technical audit outputs.",
   },
 ];
 
@@ -99,6 +109,8 @@ export default function MarketingAgents() {
   // Runner state
   const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
   const [runnerOpen, setRunnerOpen] = useState(false);
+  const [viewAgent, setViewAgent] = useState<ExtendedMarketingAgentRow | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
 
   function toAgentKey(name: string): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -119,6 +131,8 @@ export default function MarketingAgents() {
         campaignsText: cfg.output_behavior === "chat_stream" ? "Chat" : "Form",
         healthPercent: 100,
         isAI: true,
+        email: "support@agentix.ai",
+        description: cfg.description || "Predefined automation powered by n8n.",
         config: cfg,
       }));
       setAiAgents(mapped);
@@ -182,6 +196,20 @@ export default function MarketingAgents() {
     setConfigAgentKey(key);
     setConfigAgentConfig(row.isAI ? row.config ?? null : null);
     setConfigOpen(true);
+  }
+
+  function handleView(row: ExtendedMarketingAgentRow) {
+    setViewAgent(row);
+    setViewOpen(true);
+  }
+
+  function handleMessage(row: ExtendedMarketingAgentRow) {
+    const recipient = row.email || "support@agentix.ai";
+    const subject = encodeURIComponent(`${row.name} update`);
+    const body = encodeURIComponent(
+      `Hi ${row.isAI ? "Automation Team" : row.name.split(" ")[0]},\n\nI'd like to follow up on our ${row.role} work.`
+    );
+    window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
   }
 
   function handleExport() {
@@ -331,7 +359,13 @@ export default function MarketingAgents() {
 
           {/* Table */}
           <section>
-            <MarketingAgentsTable rows={filteredRows} onRun={handleRun} onEdit={handleEdit} />
+            <MarketingAgentsTable
+              rows={filteredRows}
+              onRun={handleRun}
+              onEdit={handleEdit}
+              onView={handleView}
+              onMessage={handleMessage}
+            />
           </section>
         </div>
 
@@ -381,6 +415,83 @@ export default function MarketingAgents() {
           initialConfig={null}
           onSaved={refreshDynamicAgents}
         />
+
+        {/* Agent details */}
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogContent className="max-w-xl">
+            {viewAgent ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      {viewAgent.avatarUrl || viewAgent.isAI ? (
+                        <AvatarImage src={viewAgent.avatarUrl || "/n8n.svg"} alt={viewAgent.name} />
+                      ) : null}
+                      <AvatarFallback>
+                        {viewAgent.isAI ? <Bot className="h-4 w-4" /> : viewAgent.name.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {viewAgent.name}
+                  </DialogTitle>
+                  <DialogDescription>{viewAgent.role}</DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <Card className="border border-border p-3 text-sm">
+                      <p className="text-muted-foreground text-xs uppercase">Content creation</p>
+                      <p className="font-semibold">{viewAgent.contentText}</p>
+                    </Card>
+                    <Card className="border border-border p-3 text-sm">
+                      <p className="text-muted-foreground text-xs uppercase">Campaigns</p>
+                      <p className="font-semibold">{viewAgent.campaignsText}</p>
+                    </Card>
+                  </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    {viewAgent.description ||
+                      (viewAgent.isAI
+                        ? "Predefined automation agent."
+                        : "Core team member contributing to campaign delivery.")}
+                  </p>
+
+                  {viewAgent.isAI && viewAgent.config?.input_schema?.fields?.length ? (
+                    <div className="space-y-2">
+                      <Separator />
+                      <p className="text-sm font-semibold text-foreground">Required Inputs</p>
+                      <ScrollArea className="max-h-48">
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          {viewAgent.config.input_schema.fields.map((field) => (
+                            <li key={field.key}>
+                              <span className="font-medium text-foreground">{field.label}</span> — {field.type}
+                            </li>
+                          ))}
+                        </ul>
+                      </ScrollArea>
+                    </div>
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-3 justify-between">
+                    <Button variant="outline" onClick={() => handleMessage(viewAgent)}>
+                      Email {viewAgent.isAI ? "Support" : viewAgent.name.split(" ")[0]}
+                    </Button>
+                    {viewAgent.isAI && viewAgent.config ? (
+                      <Button
+                        onClick={() => {
+                          setViewOpen(false);
+                          setSelectedAgent(viewAgent.config || null);
+                          setRunnerOpen(true);
+                        }}
+                      >
+                        Open Runner
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

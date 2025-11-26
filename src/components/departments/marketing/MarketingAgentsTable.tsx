@@ -10,7 +10,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Mail, RotateCw } from "lucide-react";
+import { Eye, Pencil, Mail, RotateCw, Bot } from "lucide-react";
 
 export type MarketingAgentRow = {
   id: string;
@@ -23,6 +23,8 @@ export type MarketingAgentRow = {
   campaignsProgressPercent: number; // 0-100
   campaignsText: string; // "6/10 Campaigns"
   healthPercent: number; // 0-100
+  isAI?: boolean;
+  email?: string;
 };
 
 function StatusPill({ status }: { status: MarketingAgentRow["status"] }) {
@@ -80,9 +82,11 @@ interface Props {
   rows: MarketingAgentRow[];
   onRun?: (row: MarketingAgentRow) => void;
   onEdit?: (row: MarketingAgentRow) => void;
+  onView?: (row: MarketingAgentRow) => void;
+  onMessage?: (row: MarketingAgentRow) => void;
 }
 
-export const MarketingAgentsTable = ({ rows, onRun, onEdit }: Props) => {
+export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage }: Props) => {
   const data = useMemo(() => rows, [rows]);
 
   return (
@@ -105,8 +109,12 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit }: Props) => {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      {r.avatarUrl ? <AvatarImage src={r.avatarUrl} alt={r.name} /> : null}
-                      <AvatarFallback>{r.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}</AvatarFallback>
+                      {r.avatarUrl || r.isAI ? (
+                        <AvatarImage src={r.avatarUrl || "/n8n.svg"} alt={r.name} />
+                      ) : null}
+                      <AvatarFallback className="text-xs font-medium text-foreground">
+                        {r.isAI ? <Bot className="h-4 w-4" /> : r.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-semibold text-foreground">{r.name}</p>
@@ -144,10 +152,24 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit }: Props) => {
                     <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit" onClick={() => onEdit?.(r)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" title="View">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="View"
+                      disabled={!onView}
+                      onClick={() => onView?.(r)}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Send message"
+                      disabled={!onMessage}
+                      onClick={() => onMessage?.(r)}
+                    >
                       <Mail className="h-4 w-4" />
                     </Button>
                   </div>
