@@ -65,3 +65,6 @@ verify_jwt = true
 
 [functions.generate-copy]
 verify_jwt = true
+
+[functions.scrape-url-content]
+verify_jwt = true

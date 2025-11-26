@@ -449,6 +449,56 @@ export type Database = {
           },
         ]
       }
+      agent_messages: {
+        Row: {
+          agent_config_id: string
+          client_id: string | null
+          content: string
+          created_at: string
+          id: string
+          metadata: Json
+          mirrored_to_chat: boolean
+          mirrored_to_kb: boolean
+          role: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          agent_config_id: string
+          client_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          mirrored_to_chat?: boolean
+          mirrored_to_kb?: boolean
+          role: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          agent_config_id?: string
+          client_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          mirrored_to_chat?: boolean
+          mirrored_to_kb?: boolean
+          role?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_messages_agent_config_id_fkey"
+            columns: ["agent_config_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string
