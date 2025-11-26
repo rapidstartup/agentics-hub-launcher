@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -124,6 +125,7 @@ function CanvasNodeCard({
   onUpdateContent,
   onCopyOutput,
   onSaveAsAsset,
+  onDragStart,
 }: {
   node: CanvasNode;
   onRemove: () => void;
@@ -132,6 +134,7 @@ function CanvasNodeCard({
   onUpdateContent?: (content: string) => void;
   onCopyOutput?: () => void;
   onSaveAsAsset?: () => void;
+  onDragStart?: (event: ReactMouseEvent<HTMLDivElement>) => void;
 }) {
   const getNodeIcon = () => {
     switch (node.type) {
@@ -175,7 +178,10 @@ function CanvasNodeCard({
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 p-3 border-b border-border">
+      <div
+        className="flex items-center gap-2 p-3 border-b border-border cursor-grab active:cursor-grabbing"
+        onMouseDown={onDragStart}
+      >
         <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
         <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
           {getNodeIcon()}
@@ -335,25 +341,43 @@ export function ProjectCanvas({
   const [agentsOpen, setAgentsOpen] = useState(true);
   const [outputsOpen, setOutputsOpen] = useState(true);
   const [inputsOpen, setInputsOpen] = useState(true);
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const canvasViewportRef = useRef<HTMLDivElement>(null);
+  const canvasContentRef = useRef<HTMLDivElement>(null);
+  const nodesRef = useRef<CanvasNode[]>([]);
+  const draggingRef = useRef<{ nodeId: string | null; offsetX: number; offsetY: number }>({
+    nodeId: null,
+    offsetX: 0,
+    offsetY: 0,
+  });
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
 
   // Generate unique ID
   const generateId = () => `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   // Add node to canvas
   const addNode = useCallback((type: NodeType, data: Partial<CanvasNode>) => {
-    const newNode: CanvasNode = {
-      id: generateId(),
-      type,
-      title: data.title || "New Node",
-      content: data.content,
-      position: { x: 50 + nodes.length * 20, y: 50 + nodes.length * 20 },
-      agent: data.agent,
-      assetId: data.assetId,
-      collapsed: false,
-    };
-    setNodes((prev) => [...prev, newNode]);
-  }, [nodes.length]);
+    setNodes((prev) => {
+      const viewport = canvasViewportRef.current;
+      const offset = prev.length * 30;
+      const baseX = viewport ? viewport.scrollLeft + viewport.clientWidth / 2 - 150 : 100;
+      const baseY = viewport ? viewport.scrollTop + viewport.clientHeight / 2 - 80 : 100;
+
+      const newNode: CanvasNode = {
+        id: generateId(),
+        type,
+        title: data.title || "New Node",
+        content: data.content,
+        position: { x: baseX + offset, y: baseY + offset },
+        agent: data.agent,
+        assetId: data.assetId,
+        collapsed: false,
+      };
+      return [...prev, newNode];
+    });
+  }, []);
 
   // Remove node
   const removeNode = useCallback((nodeId: string) => {
@@ -467,6 +491,45 @@ export function ProjectCanvas({
       toast({ title: "Error", description: "Failed to save asset", variant: "destructive" });
     }
   }, [nodes, projectId, toast, onAssetCreated]);
+
+  // Dragging handlers
+  const handleNodeDrag = useCallback((event: MouseEvent) => {
+    const { nodeId, offsetX, offsetY } = draggingRef.current;
+    if (!nodeId || !canvasContentRef.current) return;
+    const bounds = canvasContentRef.current.getBoundingClientRect();
+    const x = event.clientX - bounds.left - offsetX;
+    const y = event.clientY - bounds.top - offsetY;
+    setNodes((prev) =>
+      prev.map((n) => (n.id === nodeId ? { ...n, position: { x, y } } : n))
+    );
+  }, []);
+
+  const handleNodeDragEnd = useCallback(() => {
+    draggingRef.current = { nodeId: null, offsetX: 0, offsetY: 0 };
+    window.removeEventListener("mousemove", handleNodeDrag);
+    window.removeEventListener("mouseup", handleNodeDragEnd);
+  }, [handleNodeDrag]);
+
+  const handleNodeDragStart = useCallback((nodeId: string, event: ReactMouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const node = nodesRef.current.find((n) => n.id === nodeId);
+    if (!node || !canvasContentRef.current) return;
+    const bounds = canvasContentRef.current.getBoundingClientRect();
+    draggingRef.current = {
+      nodeId,
+      offsetX: event.clientX - bounds.left - node.position.x,
+      offsetY: event.clientY - bounds.top - node.position.y,
+    };
+    window.addEventListener("mousemove", handleNodeDrag);
+    window.addEventListener("mouseup", handleNodeDragEnd);
+  }, [handleNodeDrag, handleNodeDragEnd]);
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener("mousemove", handleNodeDrag);
+      window.removeEventListener("mouseup", handleNodeDragEnd);
+    };
+  }, [handleNodeDrag, handleNodeDragEnd]);
 
   return (
     <div className="h-full flex">
@@ -623,52 +686,60 @@ export function ProjectCanvas({
 
       {/* Canvas Area */}
       <div
-        ref={canvasRef}
-        className="flex-1 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] overflow-auto p-6"
+        ref={canvasViewportRef}
+        className="flex-1 bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:20px_20px] overflow-auto"
       >
-        {nodes.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
-              <Zap className="h-10 w-10 text-primary" />
+        <div
+          ref={canvasContentRef}
+          className="relative min-h-[1400px] min-w-[2200px] p-10"
+        >
+          {nodes.length === 0 ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
+                <Zap className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-3">
+                Build Your Project
+              </h2>
+              <p className="text-muted-foreground max-w-md mb-8">
+                Click nodes from the library to add them to your canvas. 
+                Combine agents, knowledge, and inputs to generate marketing outputs.
+              </p>
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => {
+                    if (agents[0]) {
+                      addNode("agent", {
+                        title: agents[0].display_name || agents[0].agent_key,
+                        agent: agents[0],
+                      });
+                    }
+                  }}
+                  className="gap-2 pointer-events-auto"
+                  disabled={agents.length === 0}
+                >
+                  <Bot className="h-4 w-4" />
+                  Add Agent
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => addNode("text", { title: "Project Brief" })}
+                  className="gap-2 pointer-events-auto"
+                >
+                  <Type className="h-4 w-4" />
+                  Add Brief
+                </Button>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-3">
-              Build Your Project
-            </h2>
-            <p className="text-muted-foreground max-w-md mb-8">
-              Click nodes from the library to add them to your canvas. 
-              Combine agents, knowledge, and inputs to generate marketing outputs.
-            </p>
-            <div className="flex gap-4">
-              <Button
-                onClick={() => {
-                  if (agents[0]) {
-                    addNode("agent", {
-                      title: agents[0].display_name || agents[0].agent_key,
-                      agent: agents[0],
-                    });
-                  }
-                }}
-                className="gap-2"
-                disabled={agents.length === 0}
-              >
-                <Bot className="h-4 w-4" />
-                Add Agent
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => addNode("text", { title: "Project Brief" })}
-                className="gap-2"
-              >
-                <Type className="h-4 w-4" />
-                Add Brief
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-4 items-start">
-            {nodes.map((node) => (
+          ) : null}
+
+          {nodes.map((node) => (
+            <div
+              key={node.id}
+              className="absolute"
+              style={{ left: node.position.x, top: node.position.y }}
+            >
               <CanvasNodeCard
-                key={node.id}
                 node={node}
                 onRemove={() => removeNode(node.id)}
                 onRun={node.type === "agent" ? () => runAgentNode(node.id) : undefined}
@@ -676,10 +747,11 @@ export function ProjectCanvas({
                 onUpdateContent={(content) => updateNodeContent(node.id, content)}
                 onCopyOutput={() => copyOutput(node.id)}
                 onSaveAsAsset={() => saveAsAsset(node.id)}
+                onDragStart={(event) => handleNodeDragStart(node.id, event)}
               />
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
