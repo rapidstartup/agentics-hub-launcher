@@ -913,6 +913,365 @@ export type Database = {
         }
         Relationships: []
       }
+      project_agents: {
+        Row: {
+          agent_config_id: string | null
+          agent_name: string
+          agent_role: string | null
+          agent_type: string
+          can_approve: boolean | null
+          can_edit: boolean | null
+          created_at: string
+          id: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          agent_config_id?: string | null
+          agent_name: string
+          agent_role?: string | null
+          agent_type: string
+          can_approve?: boolean | null
+          can_edit?: boolean | null
+          created_at?: string
+          id?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          agent_config_id?: string | null
+          agent_name?: string
+          agent_role?: string | null
+          agent_type?: string
+          can_approve?: boolean | null
+          can_edit?: boolean | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_agents_agent_config_id_fkey"
+            columns: ["agent_config_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_agents_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_asset_statuses: {
+        Row: {
+          client_id: string | null
+          color: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          is_final: boolean
+          name: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_final?: boolean
+          name: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          is_final?: boolean
+          name?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      project_assets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          asset_type: string
+          content: string | null
+          created_at: string
+          file_path: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          owner_id: string | null
+          project_id: string
+          reviewer_id: string | null
+          source_agent_config_id: string | null
+          source_kb_item_id: string | null
+          status_id: string | null
+          status_name: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          asset_type: string
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          owner_id?: string | null
+          project_id: string
+          reviewer_id?: string | null
+          source_agent_config_id?: string | null
+          source_kb_item_id?: string | null
+          status_id?: string | null
+          status_name?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          asset_type?: string
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          owner_id?: string | null
+          project_id?: string
+          reviewer_id?: string | null
+          source_agent_config_id?: string | null
+          source_kb_item_id?: string | null
+          status_id?: string | null
+          status_name?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assets_source_agent_config_id_fkey"
+            columns: ["source_agent_config_id"]
+            isOneToOne: false
+            referencedRelation: "agent_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assets_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "project_asset_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_comments: {
+        Row: {
+          author_name: string | null
+          content: string
+          created_at: string
+          id: string
+          project_id: string
+          related_asset_id: string | null
+          related_task_id: string | null
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          project_id: string
+          related_asset_id?: string | null
+          related_task_id?: string | null
+          user_id: string
+        }
+        Update: {
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          related_asset_id?: string | null
+          related_task_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_related_asset_id_fkey"
+            columns: ["related_asset_id"]
+            isOneToOne: false
+            referencedRelation: "project_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_related_task_id_fkey"
+            columns: ["related_task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tasks: {
+        Row: {
+          assignee: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          project_id: string
+          related_asset_id: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignee?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          project_id: string
+          related_asset_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignee?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          project_id?: string
+          related_asset_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_related_asset_id_fkey"
+            columns: ["related_asset_id"]
+            isOneToOne: false
+            referencedRelation: "project_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          cover_image_url: string | null
+          created_at: string
+          department_id: string
+          description: string | null
+          due_date: string | null
+          id: string
+          metadata: Json | null
+          owner: string | null
+          progress: number
+          started_at: string | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          department_id: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          owner?: string | null
+          progress?: number
+          started_at?: string | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          department_id?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          owner?: string | null
+          progress?: number
+          started_at?: string | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
