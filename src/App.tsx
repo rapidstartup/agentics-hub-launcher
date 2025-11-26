@@ -32,6 +32,7 @@ import OperationsProjects from "./pages/OperationsProjects";
 import OperationsAutomation from "./pages/OperationsAutomation";
 import OperationsResourceOptimization from "./pages/OperationsResourceOptimization";
 import OperationsQualityControl from "./pages/OperationsQualityControl";
+import ProjectDetail from "./pages/operations/ProjectDetail";
 import Financials from "./pages/Financials";
 import FinancialAgents from "./pages/FinancialAgents";
 import FinancialsAnalytics from "./pages/FinancialsAnalytics";
@@ -108,6 +109,7 @@ const App = () => (
           <Route path="/client/:clientId/operations/automation" element={<ProtectedRoute><OperationsAutomation /></ProtectedRoute>} />
           <Route path="/client/:clientId/operations/resource-optimization" element={<ProtectedRoute><OperationsResourceOptimization /></ProtectedRoute>} />
           <Route path="/client/:clientId/operations/quality-control" element={<ProtectedRoute><OperationsQualityControl /></ProtectedRoute>} />
+          <Route path="/client/:clientId/operations/projects/:projectId" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
           {/* Back-compat alias */}
           <Route path="/client/:clientId/operations-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/operations/agents" replace /></ProtectedRoute>} />
           {/* Marketing dedicated area */}

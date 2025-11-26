@@ -1,0 +1,884 @@
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { OperationsSidebar } from "@/components/OperationsSidebar";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  ArrowLeft,
+  MessageSquare,
+  Layout,
+  Columns3,
+  Settings,
+  Plus,
+  Image,
+  FileText,
+  Link2,
+  Type,
+  Layers,
+  Video,
+  BarChart3,
+  Upload,
+  Play,
+  Bot,
+  User,
+  Calendar,
+  CheckCircle2,
+  Circle,
+  Clock,
+  AlertCircle,
+  Send,
+  MoreVertical,
+  Trash2,
+  Edit,
+  ExternalLink,
+} from "lucide-react";
+import {
+  getProjectWithDetails,
+  listAssetStatuses,
+  createAsset,
+  updateAssetStatus,
+  createTask,
+  updateTaskStatus,
+  addComment,
+  saveAgentOutputAsAsset,
+} from "@/integrations/projects/api";
+import type {
+  ProjectWithDetails,
+  ProjectAsset,
+  ProjectAssetStatus,
+  ProjectTask,
+  ProjectAgent,
+  ProjectComment,
+  TaskStatus,
+} from "@/integrations/projects/types";
+import { listAgentConfigs, AgentConfig } from "@/integrations/n8n/agents";
+import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Status display helpers
+function getStatusColor(status: string) {
+  switch (status) {
+    case "complete":
+      return "bg-emerald-500/10 text-emerald-500";
+    case "in_progress":
+      return "bg-blue-500/10 text-blue-500";
+    case "blocked":
+      return "bg-red-500/10 text-red-500";
+    case "review":
+      return "bg-amber-500/10 text-amber-500";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
+}
+
+function getStatusLabel(status: string) {
+  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function getTaskIcon(status: TaskStatus) {
+  switch (status) {
+    case "complete":
+      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+    case "in_progress":
+      return <Clock className="h-4 w-4 text-blue-500" />;
+    case "blocked":
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    case "review":
+      return <Circle className="h-4 w-4 text-amber-500" />;
+    default:
+      return <Circle className="h-4 w-4 text-muted-foreground" />;
+  }
+}
+
+// Asset type icons
+const assetTypeIcons: Record<string, React.ReactNode> = {
+  image: <Image className="h-4 w-4" />,
+  video: <Video className="h-4 w-4" />,
+  document: <FileText className="h-4 w-4" />,
+  text: <Type className="h-4 w-4" />,
+  link: <Link2 className="h-4 w-4" />,
+  audio: <Layers className="h-4 w-4" />,
+  other: <FileText className="h-4 w-4" />,
+};
+
+// Toolbar items
+const toolbarItems = [
+  { id: "image", icon: Image, label: "Image" },
+  { id: "link", icon: Link2, label: "Link" },
+  { id: "document", icon: FileText, label: "Document" },
+  { id: "text", icon: Type, label: "Text" },
+  { id: "layers", icon: Layers, label: "Layers" },
+  { id: "video", icon: Video, label: "Video" },
+  { id: "chart", icon: BarChart3, label: "Chart" },
+];
+
+export default function ProjectDetail() {
+  const { clientId, projectId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // State
+  const [project, setProject] = useState<ProjectWithDetails | null>(null);
+  const [statuses, setStatuses] = useState<ProjectAssetStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("canvas");
+
+  // Agent runner state
+  const [availableAgents, setAvailableAgents] = useState<AgentConfig[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
+  const [runnerOpen, setRunnerOpen] = useState(false);
+
+  // Dialogs
+  const [addAssetOpen, setAddAssetOpen] = useState(false);
+  const [addTaskOpen, setAddTaskOpen] = useState(false);
+  const [newAssetType, setNewAssetType] = useState<string>("text");
+
+  // Chat input
+  const [chatInput, setChatInput] = useState("");
+
+  // Load project data
+  useEffect(() => {
+    loadProject();
+    loadStatuses();
+    loadAgents();
+  }, [projectId, clientId]);
+
+  async function loadProject() {
+    if (!projectId) return;
+    setLoading(true);
+    try {
+      const data = await getProjectWithDetails(projectId);
+      setProject(data);
+    } catch (e) {
+      console.error("Failed to load project:", e);
+      toast({ title: "Error", description: "Failed to load project", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadStatuses() {
+    try {
+      const data = await listAssetStatuses(clientId);
+      setStatuses(data);
+    } catch (e) {
+      console.error("Failed to load statuses:", e);
+    }
+  }
+
+  async function loadAgents() {
+    if (!clientId) return;
+    try {
+      // Load agents that could be used on this project
+      const deptId = project?.department_id || "marketing";
+      const configs = await listAgentConfigs({ area: deptId, clientId, includePredefined: true });
+      setAvailableAgents(configs);
+    } catch (e) {
+      console.error("Failed to load agents:", e);
+    }
+  }
+
+  // Reload agents when project loads
+  useEffect(() => {
+    if (project) loadAgents();
+  }, [project?.department_id]);
+
+  // Asset grouped by status
+  const assetsByStatus = useMemo(() => {
+    const map: Record<string, ProjectAsset[]> = {};
+    for (const status of statuses) {
+      map[status.id] = [];
+    }
+    for (const asset of project?.assets || []) {
+      const key = asset.status_id || "unassigned";
+      if (!map[key]) map[key] = [];
+      map[key].push(asset);
+    }
+    return map;
+  }, [project?.assets, statuses]);
+
+  // Handlers
+  async function handleAddComment() {
+    if (!chatInput.trim() || !projectId) return;
+    try {
+      await addComment({
+        project_id: projectId,
+        content: chatInput,
+        author_name: "User",
+      });
+      setChatInput("");
+      loadProject();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleTaskStatusChange(taskId: string, newStatus: TaskStatus) {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+      loadProject();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleAssetDrop(assetId: string, newStatusId: string) {
+    const status = statuses.find((s) => s.id === newStatusId);
+    if (!status) return;
+    try {
+      await updateAssetStatus(assetId, newStatusId, status.name);
+      loadProject();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function handleRunAgent(agent: AgentConfig) {
+    setSelectedAgent(agent);
+    setRunnerOpen(true);
+  }
+
+  // When agent completes, save output as asset
+  async function handleAgentComplete(agent: AgentConfig, output: any) {
+    if (!projectId) return;
+    try {
+      const content = typeof output === "string" ? output : JSON.stringify(output, null, 2);
+      await saveAgentOutputAsAsset({
+        projectId,
+        agentConfigId: agent.id,
+        agentName: agent.display_name || agent.agent_key,
+        title: `${agent.display_name || agent.agent_key} Output - ${new Date().toLocaleDateString()}`,
+        content,
+        assetType: "text",
+      });
+      toast({ title: "Asset Created", description: "Agent output saved as project asset" });
+      loadProject();
+    } catch (e) {
+      console.error(e);
+    }
+    setRunnerOpen(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full bg-background">
+        <OperationsSidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-muted-foreground">Loading project...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="flex h-screen w-full bg-background">
+        <OperationsSidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Project not found</h2>
+            <Button variant="outline" onClick={() => navigate(`/client/${clientId}/projects`)}>
+              Back to Projects
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen w-full bg-background">
+      <OperationsSidebar />
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="border-b border-border bg-background p-4">
+          <div className="flex items-center gap-4 mb-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(`/client/${clientId}/projects`)}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground">{project.title}</h1>
+              <p className="text-sm text-muted-foreground">{project.description}</p>
+            </div>
+            <Badge className={getStatusColor(project.status)}>
+              {getStatusLabel(project.status)}
+            </Badge>
+          </div>
+
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="chat" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Chat
+              </TabsTrigger>
+              <TabsTrigger value="canvas" className="gap-2">
+                <Layout className="h-4 w-4" />
+                Canvas
+              </TabsTrigger>
+              <TabsTrigger value="kanban" className="gap-2">
+                <Columns3 className="h-4 w-4" />
+                Kanban
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left Toolbar (Canvas/Kanban) */}
+          {(activeTab === "canvas" || activeTab === "kanban") && (
+            <div className="w-12 border-r border-border bg-card flex flex-col items-center py-4 gap-2">
+              {toolbarItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10"
+                  title={item.label}
+                  onClick={() => {
+                    setNewAssetType(item.id);
+                    setAddAssetOpen(true);
+                  }}
+                >
+                  <item.icon className="h-5 w-5" />
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-hidden">
+            {/* Chat Tab */}
+            {activeTab === "chat" && (
+              <div className="h-full flex flex-col">
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-4">
+                    {(project.comments || []).length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No messages yet. Start the conversation!</p>
+                      </div>
+                    ) : (
+                      [...(project.comments || [])].reverse().map((comment) => (
+                        <div key={comment.id} className="flex gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>
+                              <User className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm text-foreground">
+                                {comment.author_name || "User"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(comment.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground mt-1">{comment.content}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+                <div className="border-t border-border p-4">
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Type a message..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      className="min-h-[44px] max-h-32 resize-none"
+                      rows={1}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAddComment();
+                        }
+                      }}
+                    />
+                    <Button onClick={handleAddComment} disabled={!chatInput.trim()}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Canvas Tab */}
+            {activeTab === "canvas" && (
+              <div className="h-full p-6 overflow-auto">
+                {(project.assets || []).length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center">
+                    <Layers className="h-16 w-16 text-muted-foreground/30 mb-4" />
+                    <h2 className="text-xl font-semibold text-foreground mb-2">Empty Canvas</h2>
+                    <p className="text-muted-foreground mb-6 max-w-md">
+                      Start building your project by adding assets, running agents, or uploading files.
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        className="gap-2"
+                        onClick={() => {
+                          setNewAssetType("image");
+                          setAddAssetOpen(true);
+                        }}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload Image
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => {
+                          setNewAssetType("text");
+                          setAddAssetOpen(true);
+                        }}
+                      >
+                        <Type className="h-4 w-4" />
+                        Add Text
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(project.assets || []).map((asset) => (
+                      <Card key={asset.id} className="p-4 border border-border hover:border-primary/50 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            {assetTypeIcons[asset.asset_type]}
+                            <span className="font-medium text-foreground">{asset.title}</span>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {asset.status_name}
+                          </Badge>
+                        </div>
+                        {asset.content && (
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
+                            {asset.content}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{new Date(asset.created_at).toLocaleDateString()}</span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <MoreVertical className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                View Full
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Kanban Tab */}
+            {activeTab === "kanban" && (
+              <div className="h-full p-4 overflow-x-auto">
+                <div className="flex gap-4 h-full min-w-max">
+                  {statuses.map((status) => (
+                    <div
+                      key={status.id}
+                      className="w-80 flex-shrink-0 flex flex-col bg-muted/30 rounded-lg"
+                    >
+                      <div
+                        className="px-4 py-3 border-b border-border flex items-center justify-between"
+                        style={{ borderTopColor: status.color, borderTopWidth: 3 }}
+                      >
+                        <span className="font-semibold text-foreground">{status.name}</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {assetsByStatus[status.id]?.length || 0}
+                        </Badge>
+                      </div>
+                      <ScrollArea className="flex-1 p-2">
+                        <div className="space-y-2">
+                          {(assetsByStatus[status.id] || []).map((asset) => (
+                            <Card
+                              key={asset.id}
+                              className="p-3 cursor-move hover:border-primary/50 transition-colors"
+                              draggable
+                              onDragStart={(e) => e.dataTransfer.setData("assetId", asset.id)}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={(e) => {
+                                const assetId = e.dataTransfer.getData("assetId");
+                                if (assetId) handleAssetDrop(assetId, status.id);
+                              }}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                {assetTypeIcons[asset.asset_type]}
+                                <span className="font-medium text-sm text-foreground truncate">
+                                  {asset.title}
+                                </span>
+                              </div>
+                              {asset.content && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {asset.content}
+                                </p>
+                              )}
+                            </Card>
+                          ))}
+                          {/* Drop zone */}
+                          <div
+                            className="h-20 border-2 border-dashed border-muted-foreground/20 rounded-lg flex items-center justify-center text-muted-foreground text-sm"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              const assetId = e.dataTransfer.getData("assetId");
+                              if (assetId) handleAssetDrop(assetId, status.id);
+                            }}
+                          >
+                            Drop here
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === "settings" && (
+              <div className="h-full p-6 overflow-auto">
+                <div className="max-w-2xl space-y-6">
+                  <Card className="p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Project Details</h3>
+                    <div className="grid gap-4">
+                      <div>
+                        <Label>Title</Label>
+                        <Input value={project.title} readOnly className="mt-1" />
+                      </div>
+                      <div>
+                        <Label>Description</Label>
+                        <Textarea value={project.description || ""} readOnly className="mt-1" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Owner</Label>
+                          <Input value={project.owner || ""} readOnly className="mt-1" />
+                        </div>
+                        <div>
+                          <Label>Due Date</Label>
+                          <Input value={project.due_date || ""} readOnly className="mt-1" />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Progress</Label>
+                        <div className="mt-2">
+                          <Progress value={project.progress} />
+                          <p className="text-sm text-muted-foreground mt-1">{project.progress}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Assigned Agents</h3>
+                    <div className="space-y-3">
+                      {(project.agents || []).map((agent) => (
+                        <div key={agent.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              {agent.agent_type === "automation" ? (
+                                <AvatarImage src="/n8n.svg" />
+                              ) : null}
+                              <AvatarFallback>
+                                {agent.agent_type === "automation" ? (
+                                  <Bot className="h-4 w-4" />
+                                ) : (
+                                  <User className="h-4 w-4" />
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-foreground">{agent.agent_name}</p>
+                              <p className="text-xs text-muted-foreground">{agent.agent_role || agent.agent_type}</p>
+                            </div>
+                          </div>
+                          {agent.agent_type === "automation" && agent.agent_config_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-2"
+                              onClick={() => {
+                                const config = availableAgents.find((a) => a.id === agent.agent_config_id);
+                                if (config) handleRunAgent(config);
+                              }}
+                            >
+                              <Play className="h-3 w-3" />
+                              Run
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      {(project.agents || []).length === 0 && (
+                        <p className="text-sm text-muted-foreground">No agents assigned to this project.</p>
+                      )}
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Sidebar - Tasks & Agents */}
+          {(activeTab === "canvas" || activeTab === "kanban") && (
+            <div className="w-72 border-l border-border bg-card flex flex-col">
+              {/* Tasks */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-foreground">Tasks</h3>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setAddTaskOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <ScrollArea className="h-40">
+                  <div className="space-y-2">
+                    {(project.tasks || []).map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-start gap-2 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                        onClick={() => handleTaskStatusChange(task.id, task.status === "complete" ? "pending" : "complete")}
+                      >
+                        {getTaskIcon(task.status)}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm truncate ${task.status === "complete" ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {task.title}
+                          </p>
+                          {task.due_date && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {task.due_date}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Available Agents */}
+              <div className="p-4 flex-1">
+                <h3 className="font-semibold text-foreground mb-3">Run Agent</h3>
+                <ScrollArea className="h-48">
+                  <div className="space-y-2">
+                    {availableAgents.slice(0, 5).map((agent) => (
+                      <div
+                        key={agent.id}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                        onClick={() => handleRunAgent(agent)}
+                      >
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src="/n8n.svg" />
+                          <AvatarFallback>
+                            <Bot className="h-3 w-3" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {agent.display_name || agent.agent_key}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {agent.display_role || "AI Agent"}
+                          </p>
+                        </div>
+                        <Play className="h-3 w-3 text-muted-foreground" />
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Agent Runner Modal */}
+      {selectedAgent && (
+        <UniversalAgentRunner
+          agent={selectedAgent}
+          open={runnerOpen}
+          onOpenChange={setRunnerOpen}
+          clientId={clientId}
+        />
+      )}
+
+      {/* Add Asset Dialog */}
+      <Dialog open={addAssetOpen} onOpenChange={setAddAssetOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Asset</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Asset Type</Label>
+              <Select value={newAssetType} onValueChange={setNewAssetType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="text">Text</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                  <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="link">Link</SelectItem>
+                  <SelectItem value="video">Video</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Title</Label>
+              <Input id="asset-title" placeholder="Asset title..." />
+            </div>
+            {newAssetType === "text" && (
+              <div className="space-y-2">
+                <Label>Content</Label>
+                <Textarea id="asset-content" placeholder="Enter text content..." rows={4} />
+              </div>
+            )}
+            {(newAssetType === "link" || newAssetType === "image" || newAssetType === "video") && (
+              <div className="space-y-2">
+                <Label>URL</Label>
+                <Input id="asset-url" placeholder="https://..." />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddAssetOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const title = (document.getElementById("asset-title") as HTMLInputElement)?.value;
+                const content = (document.getElementById("asset-content") as HTMLTextAreaElement)?.value;
+                const url = (document.getElementById("asset-url") as HTMLInputElement)?.value;
+                if (!title || !projectId) return;
+                try {
+                  await createAsset({
+                    project_id: projectId,
+                    title,
+                    asset_type: newAssetType as any,
+                    content: content || undefined,
+                    file_url: url || undefined,
+                  });
+                  setAddAssetOpen(false);
+                  loadProject();
+                  toast({ title: "Asset Added", description: "New asset created successfully" });
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Add Asset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Task Dialog */}
+      <Dialog open={addTaskOpen} onOpenChange={setAddTaskOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Title</Label>
+              <Input id="task-title" placeholder="Task title..." />
+            </div>
+            <div className="space-y-2">
+              <Label>Assignee</Label>
+              <Input id="task-assignee" placeholder="Who should do this?" />
+            </div>
+            <div className="space-y-2">
+              <Label>Due Date</Label>
+              <Input id="task-due" type="date" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddTaskOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const title = (document.getElementById("task-title") as HTMLInputElement)?.value;
+                const assignee = (document.getElementById("task-assignee") as HTMLInputElement)?.value;
+                const dueDate = (document.getElementById("task-due") as HTMLInputElement)?.value;
+                if (!title || !projectId) return;
+                try {
+                  await createTask({
+                    project_id: projectId,
+                    title,
+                    assignee: assignee || undefined,
+                    due_date: dueDate || undefined,
+                  });
+                  setAddTaskOpen(false);
+                  loadProject();
+                  toast({ title: "Task Added", description: "New task created successfully" });
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Add Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+

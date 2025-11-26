@@ -257,33 +257,33 @@ export default function OperationsAgents() {
               {/* Human Team Section */}
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-muted-foreground">Team Members</h3>
-                <div className="-mx-2 flex flex-col gap-2 overflow-y-auto pr-2">
+              <div className="-mx-2 flex flex-col gap-2 overflow-y-auto pr-2">
                   {HUMAN_AGENTS.map((a) => (
-                    <div
-                      key={a.id}
-                      className={`flex cursor-pointer items-center gap-4 rounded-lg p-2 ${
+                  <div
+                    key={a.id}
+                    className={`flex cursor-pointer items-center gap-4 rounded-lg p-2 ${
                         selectedAgent?.id === a.id ? "bg-primary/10" : "hover:bg-muted"
-                      }`}
+                    }`}
                       onClick={() => setSelectedAgent(a)}
-                    >
-                      <div className="relative">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={a.avatar} alt={a.name} />
-                          <AvatarFallback>{a.name.slice(0, 2)}</AvatarFallback>
-                        </Avatar>
-                        <span
-                          className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card ${presenceDotColor(
-                            a.presence,
-                          )}`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-foreground">{a.name}</p>
-                        <p className="text-xs text-muted-foreground">{a.role}</p>
-                      </div>
-                      <span className="text-primary">›</span>
+                  >
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={a.avatar} alt={a.name} />
+                        <AvatarFallback>{a.name.slice(0, 2)}</AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-card ${presenceDotColor(
+                          a.presence,
+                        )}`}
+                      />
                     </div>
-                  ))}
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground">{a.name}</p>
+                      <p className="text-xs text-muted-foreground">{a.role}</p>
+                    </div>
+                    <span className="text-primary">›</span>
+                  </div>
+                ))}
                 </div>
               </div>
             </Card>
