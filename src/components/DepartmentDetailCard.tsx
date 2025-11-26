@@ -151,13 +151,23 @@ export const DepartmentDetailCard = ({
           {/* Source badge - configured in agent settings, not editable here */}
           <Badge 
             variant="outline" 
-            className={`text-xs capitalize ${
+            className={`text-xs capitalize flex items-center gap-1.5 ${
               agent.source === 'mastra' 
                 ? 'border-purple-500/30 text-purple-400' 
                 : 'border-blue-500/30 text-blue-400'
             }`}
           >
-            {agent.source === 'mastra' ? 'Mastra' : 'N8n'}
+            {agent.source === 'mastra' ? (
+              <>
+                <img src="/mastra.svg" alt="" className="h-3.5 w-3.5 brightness-0 invert" />
+                Mastra
+              </>
+            ) : (
+              <>
+                <img src="/n8n.svg" alt="" className="h-3 w-auto" />
+                N8n
+              </>
+            )}
           </Badge>
 
           {agent.schedule && (
