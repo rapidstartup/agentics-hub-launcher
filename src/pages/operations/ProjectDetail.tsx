@@ -37,6 +37,7 @@ import {
   Trash2,
   Edit,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import {
   getProjectWithDetails,
@@ -62,12 +63,14 @@ import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
 import { AgentChatWindow } from "@/components/agents/AgentChatWindow";
 import { ProjectCanvas } from "@/components/projects/ProjectCanvas";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ReactMarkdown from "react-markdown";
 import {
   Dialog,
   DialogContent,
@@ -166,6 +169,9 @@ export default function ProjectDetail() {
 
   // Chat input
   const [chatInput, setChatInput] = useState("");
+  const [teamChatMode, setTeamChatMode] = useState<"comments" | "gemini">("comments");
+  const [geminiMessages, setGeminiMessages] = useState<Array<{ role: "user" | "assistant"; content: string; timestamp: Date }>>([]);
+  const [geminiLoading, setGeminiLoading] = useState(false);
 
   // Load project data
   useEffect(() => {
@@ -246,16 +252,57 @@ export default function ProjectDetail() {
   // Handlers
   async function handleAddComment() {
     if (!chatInput.trim() || !projectId) return;
-    try {
-      await addComment({
-        project_id: projectId,
-        content: chatInput,
-        author_name: "User",
-      });
+    
+    if (teamChatMode === "gemini") {
+      // Use Gemini chat
+      const userMessage = chatInput.trim();
+      setGeminiMessages((prev) => [...prev, { role: "user", content: userMessage, timestamp: new Date() }]);
       setChatInput("");
-      loadProject();
-    } catch (e) {
-      console.error(e);
+      setGeminiLoading(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke("gemini-chat", {
+          body: {
+            prompt: `Project Context: ${project?.title}\n${project?.description ? `Description: ${project.description}\n` : ""}User Question: ${userMessage}`,
+            responseFormat: "text",
+            temperature: 0.7,
+          },
+        });
+
+        if (error) throw error;
+
+        const assistantMessage = {
+          role: "assistant" as const,
+          content: data?.response || "No response received",
+          timestamp: new Date(),
+        };
+        setGeminiMessages((prev) => [...prev, assistantMessage]);
+      } catch (e: any) {
+        console.error("Gemini chat error:", e);
+        setGeminiMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `Error: ${e?.message || "Failed to get response"}`,
+            timestamp: new Date(),
+          },
+        ]);
+      } finally {
+        setGeminiLoading(false);
+      }
+    } else {
+      // Add project comment
+      try {
+        await addComment({
+          project_id: projectId,
+          content: chatInput,
+          author_name: "User",
+        });
+        setChatInput("");
+        loadProject();
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
@@ -548,41 +595,137 @@ export default function ProjectDetail() {
                   ) : (
                     /* Team Chat */
                     <>
+                      {/* Chat Mode Toggle */}
+                      <div className="border-b border-border p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-foreground">Chat Mode:</span>
+                          <div className="flex gap-1 bg-muted rounded-md p-1">
+                            <Button
+                              variant={teamChatMode === "comments" ? "default" : "ghost"}
+                              size="sm"
+                              className="h-7 px-3 text-xs"
+                              onClick={() => setTeamChatMode("comments")}
+                            >
+                              <User className="h-3 w-3 mr-1" />
+                              Team
+                            </Button>
+                            <Button
+                              variant={teamChatMode === "gemini" ? "default" : "ghost"}
+                              size="sm"
+                              className="h-7 px-3 text-xs"
+                              onClick={() => setTeamChatMode("gemini")}
+                            >
+                              <Bot className="h-3 w-3 mr-1" />
+                              AI Assistant
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
                       <ScrollArea className="flex-1 p-4">
                         <div className="space-y-4">
-                          {(project.comments || []).length === 0 ? (
-                            <div className="text-center py-12 text-muted-foreground">
-                              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                              <p>No messages yet. Start the conversation!</p>
-                            </div>
-                          ) : (
-                            [...(project.comments || [])].reverse().map((comment) => (
-                              <div key={comment.id} className="flex gap-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback>
-                                    <User className="h-4 w-4" />
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-sm text-foreground">
-                                      {comment.author_name || "User"}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {new Date(comment.created_at).toLocaleString()}
-                                    </span>
+                          {teamChatMode === "comments" ? (
+                            /* Project Comments */
+                            (project.comments || []).length === 0 ? (
+                              <div className="text-center py-12 text-muted-foreground">
+                                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                <p>No messages yet. Start the conversation!</p>
+                              </div>
+                            ) : (
+                              [...(project.comments || [])].reverse().map((comment) => (
+                                <div key={comment.id} className="flex gap-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>
+                                      <User className="h-4 w-4" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold text-sm text-foreground">
+                                        {comment.author_name || "User"}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {new Date(comment.created_at).toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-foreground mt-1">{comment.content}</p>
                                   </div>
-                                  <p className="text-sm text-foreground mt-1">{comment.content}</p>
+                                </div>
+                              ))
+                            )
+                          ) : (
+                            /* Gemini AI Chat */
+                            geminiMessages.length === 0 ? (
+                              <div className="text-center py-12 text-muted-foreground">
+                                <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                <p>Chat with AI Assistant</p>
+                                <p className="text-xs mt-2">Ask questions about this project or get help with your work.</p>
+                              </div>
+                            ) : (
+                              geminiMessages.map((msg, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                                >
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>
+                                      {msg.role === "assistant" ? (
+                                        <Bot className="h-4 w-4" />
+                                      ) : (
+                                        <User className="h-4 w-4" />
+                                      )}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div
+                                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                      msg.role === "user"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted"
+                                    }`}
+                                  >
+                                    {msg.role === "assistant" ? (
+                                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                    )}
+                                    <p className="text-xs mt-1 opacity-60">
+                                      {msg.timestamp.toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                            )
+                          )}
+                          {geminiLoading && (
+                            <div className="flex gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback>
+                                  <Bot className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="bg-muted rounded-lg px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span className="text-sm text-muted-foreground">Thinking...</span>
                                 </div>
                               </div>
-                            ))
+                            </div>
                           )}
                         </div>
                       </ScrollArea>
                       <div className="border-t border-border p-4">
                         <div className="flex gap-2">
                           <Textarea
-                            placeholder="Type a message..."
+                            placeholder={
+                              teamChatMode === "gemini"
+                                ? "Ask AI Assistant anything..."
+                                : "Type a message..."
+                            }
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             className="min-h-[44px] max-h-32 resize-none"
@@ -593,9 +736,17 @@ export default function ProjectDetail() {
                                 handleAddComment();
                               }
                             }}
+                            disabled={geminiLoading}
                           />
-                          <Button onClick={handleAddComment} disabled={!chatInput.trim()}>
-                            <Send className="h-4 w-4" />
+                          <Button
+                            onClick={handleAddComment}
+                            disabled={!chatInput.trim() || geminiLoading}
+                          >
+                            {geminiLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
                           </Button>
                         </div>
                       </div>
