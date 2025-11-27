@@ -10,6 +10,8 @@ type ChatInput = {
   prompt: string;
   responseFormat?: 'json' | 'text';
   temperature?: number;
+  clientId?: string; // Context for RAG
+  scope?: 'agency' | 'client'; // Context for RAG
 };
 
 serve(async (req) => {
@@ -39,7 +41,7 @@ serve(async (req) => {
     }
 
     const body = (await req.json()) as ChatInput;
-    const { prompt, responseFormat = 'text', temperature = 0.7 } = body;
+    const { prompt, responseFormat = 'text', temperature = 0.7, clientId, scope } = body;
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { 
@@ -55,12 +57,56 @@ serve(async (req) => {
     const geminiKey = Deno.env.get('GEMINI_API_KEY');
 
     let response = '';
+    let fileSearchTool: any = null;
+
+    // RAG Logic: Find relevant Google File Store
+    if (geminiKey) {
+        try {
+            // Determine which store to query based on context
+            // Priority: Client Store -> Agency Store
+            // If clientId is provided, look for Client store.
+            // If not, look for Agency store (or both? for now singular).
+            
+            let query = supabase
+                .from('knowledge_base_items')
+                .select('google_store_id')
+                .neq('google_store_id', null) // Only items that are indexed
+                .eq('user_id', user.id) // Ensure access
+                .limit(1);
+
+            if (clientId) {
+                query = query.eq('client_id', clientId);
+            } else {
+                // Default to agency if no client specified, or maybe general scope
+                // If scope is 'agency' or undefined
+                query = query.eq('scope', 'agency');
+            }
+
+            const { data: items } = await query;
+            const storeId = items?.[0]?.google_store_id;
+
+            if (storeId) {
+                console.log(`[RAG] Using Store ID: ${storeId}`);
+                fileSearchTool = {
+                    fileSearch: {
+                        fileSearchStoreNames: [storeId]
+                    }
+                };
+            } else {
+                console.log('[RAG] No store found for context');
+            }
+        } catch (e) {
+            console.error('[RAG] Error resolving store:', e);
+        }
+    }
 
     const systemPrompt = responseFormat === 'json' 
       ? 'You are a helpful assistant. You must respond with valid JSON only, no markdown formatting or extra text.'
       : 'You are a helpful assistant.';
 
     if (lovableKey) {
+      // Lovable currently might not support 'tools' param for Google File Search via their Gateway 
+      // unless specified. For now keeping as is.
       const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -80,17 +126,28 @@ serve(async (req) => {
       console.log(JSON.stringify({ event: 'gemini-chat:lovable:response', requestId, hasChoices: !!data?.choices }));
       response = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.message?.text ?? '';
     } else if (geminiKey) {
+      // Prepare tools
+      const tools = fileSearchTool ? [fileSearchTool] : undefined;
+
       const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${prompt}` }] }],
-          generationConfig: { temperature }
+          generationConfig: { temperature },
+          tools: tools
         })
       });
       const data = await resp.json();
+      
+      // Log full response for debugging RAG
+      // console.log(JSON.stringify(data)); 
+
       console.log(JSON.stringify({ event: 'gemini-chat:gemini:response', requestId, status: 'ok' }));
       response = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      
+      // Check for citations (grounding metadata)
+      // const citation = data?.candidates?.[0]?.groundingMetadata;
     } else {
       // Fallback mock for development
       response = responseFormat === 'json' 
@@ -110,4 +167,3 @@ serve(async (req) => {
     );
   }
 });
-
