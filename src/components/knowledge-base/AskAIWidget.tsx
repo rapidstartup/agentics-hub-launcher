@@ -24,7 +24,8 @@ import {
   Sparkles,
   ExternalLink,
   Calendar,
-  Tag
+  Tag,
+  Search
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -52,6 +53,7 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<KnowledgeBaseItem[]>(preselectedItems);
   const [showItemSelector, setShowItemSelector] = useState(false);
+  const [itemSearch, setItemSearch] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch all knowledge base items for selection
@@ -180,6 +182,16 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
     setSelectedItems([]);
   };
 
+  // Filter items based on search
+  const filteredItems = allItems.filter(item => {
+    const searchLower = itemSearch.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(searchLower) ||
+      item.category.toLowerCase().includes(searchLower) ||
+      (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+    );
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col bg-slate-900 border-slate-700">
@@ -262,9 +274,18 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
 
         {/* Item Selector */}
         {showItemSelector && (
-          <Card className="flex-shrink-0 bg-slate-800 border-slate-700 p-4 max-h-48 overflow-y-auto">
-            <div className="space-y-2">
-              {allItems.map(item => {
+          <Card className="flex-shrink-0 bg-slate-800 border-slate-700 p-4 max-h-64 flex flex-col">
+             <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  value={itemSearch}
+                  onChange={(e) => setItemSearch(e.target.value)}
+                  placeholder="Search documents..."
+                  className="pl-9 bg-slate-900 border-slate-700 text-white h-9"
+                />
+              </div>
+            <div className="overflow-y-auto space-y-2 pr-2">
+              {filteredItems.map(item => {
                 const isSelected = selectedItems.find(i => i.id === item.id);
                 return (
                   <div
@@ -284,9 +305,9 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
                   </div>
                 );
               })}
-              {allItems.length === 0 && (
+              {filteredItems.length === 0 && (
                 <p className="text-sm text-slate-400 text-center py-4">
-                  No indexed documents available
+                  {itemSearch ? "No documents match your search" : "No indexed documents available"}
                 </p>
               )}
             </div>

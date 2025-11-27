@@ -11,14 +11,11 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Gemini API Key
-const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
-
 interface WebhookPayload {
   type: "INSERT" | "UPDATE" | "DELETE";
   table: string;
-  record: Record<string, unknown>;
-  old_record: Record<string, unknown>;
+  record: any;
+  old_record: any;
   schema: string;
 }
 
@@ -35,7 +32,8 @@ serve(async (req: Request) => {
     console.log(`[RAG-Indexing] Processing ${type} for KB item ${record?.id || old_record?.id}`);
 
     // Only process if we have a file_path or it's a delete
-    if (type !== "DELETE" && !record.file_path) {
+    // Use safe navigation for record since it might be null/undefined on DELETE
+    if (type !== "DELETE" && (!record || !record.file_path)) {
       console.log("[RAG-Indexing] No file path, skipping");
       return new Response(JSON.stringify({ message: "No file path, skipping" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -44,6 +42,16 @@ serve(async (req: Request) => {
 
     // Determine which record to use
     const item = type === "DELETE" ? old_record : record;
+    
+    // Validate item exists
+    if (!item) {
+        console.error("[RAG-Indexing] Error: Item record is missing");
+        return new Response(JSON.stringify({ error: "Item record is missing" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+
     const itemId = item.id as string;
 
     // Handle DELETE - just log for now
@@ -109,7 +117,7 @@ serve(async (req: Request) => {
       console.log(`[RAG-Indexing] Successfully processed item ${itemId}`);
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      const errorMessage = err instanceof Error ? err.message : "Unknown Error";
       console.error("[RAG-Indexing] Indexing failed:", errorMessage);
       await updateStatus(itemId, 'failed', undefined, undefined, errorMessage);
       return new Response(JSON.stringify({ error: errorMessage }), {
@@ -133,24 +141,19 @@ serve(async (req: Request) => {
 });
 
 // Helper: Determine Store Name from Record
-function getStoreName(record: Record<string, unknown>): string {
+function getStoreName(record: any): string {
   if (record.scope === 'agency') {
     return "Agency Knowledge Base";
   } else if (record.scope === 'client' && record.client_id) {
     return `Client ${record.client_id} Knowledge Base`;
-  } else if (record.project_id) {
-    return record.client_id 
-      ? `Client ${record.client_id} Knowledge Base` 
-      : "General Knowledge Base";
   }
   return "General Knowledge Base";
 }
 
-// Helper: Get a unique store key
-function getStoreKey(record: Record<string, unknown>): string {
+function getStoreKey(record: any): string {
   if (record.scope === 'agency') {
     return "agency";
-  } else if (record.client_id) {
+  } else if (record.scope === 'client' && record.client_id) {
     return `client-${record.client_id}`;
   }
   return "general";
@@ -164,7 +167,7 @@ async function updateStatus(
   googleStoreId?: string, 
   errorMsg?: string
 ) {
-  const updatePayload: Record<string, unknown> = { indexing_status: status };
+  const updatePayload: any = { indexing_status: status };
   if (googleFileName) updatePayload.google_file_name = googleFileName;
   if (googleStoreId) updatePayload.google_store_id = googleStoreId;
   if (errorMsg) updatePayload.google_error = errorMsg;
