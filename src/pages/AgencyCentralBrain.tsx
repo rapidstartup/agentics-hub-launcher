@@ -427,17 +427,10 @@ export default function AgencyCentralBrain() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {clientsLoading || agencyLoading ? (
-                    <div className="text-center text-muted-foreground py-12">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      Loading...
-                    </div>
-                  ) : (
-                    <KnowledgeBaseTable
-                      items={selectedClient === "agency" ? agencyItems : selectedClient === "all" ? allItems : clientItems}
-                      onUpdate={refetchAgency}
-                    />
-                  )}
+                  <KnowledgeBaseTable
+                    scope={selectedClient === "agency" ? "agency" : selectedClient === "all" ? undefined : "client"}
+                    clientId={selectedClient !== "agency" && selectedClient !== "all" ? selectedClient : undefined}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
