@@ -50,6 +50,7 @@ serve(async (req) => {
     }
 
     // Get Composio base URL (should be https://backend.composio.dev)
+    // Fix: Use backend.composio.dev instead of potentially deprecated hermes.composio.dev
     const composioBase = Deno.env.get('COMPOSIO_BASE_URL') || 'https://backend.composio.dev';
 
     // Get auth config ID for this toolkit
@@ -81,8 +82,18 @@ serve(async (req) => {
 
     // Construct the OAuth initiation URL
     // Format: https://backend.composio.dev/api/v1/auth-apps/add?authConfigId=ac_xxx&redirectUri=your_callback&state=...
-    const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
-    const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
+    // Note: If composioBase is accidentally set to hermes.composio.dev in .env, this will still fail.
+    // We should check if the env var is set to the faulty domain and override it if necessary,
+    // or just strictly use backend.composio.dev if the env var looks wrong.
+    
+    let baseUrlToUse = composioBase;
+    if (baseUrlToUse.includes("hermes.composio.dev")) {
+        console.warn("Detected deprecated 'hermes.composio.dev' in COMPOSIO_BASE_URL. Switching to 'https://backend.composio.dev'");
+        baseUrlToUse = "https://backend.composio.dev";
+    }
+
+    const redirectUri = encodeURIComponent(`${baseUrlToUse}/api/v1/auth-apps/add`);
+    const redirect_url = `${baseUrlToUse}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
 
     // Optional: Check connection status from Composio API
     // For now, return a generic status
@@ -112,5 +123,3 @@ serve(async (req) => {
     );
   }
 });
-
-
