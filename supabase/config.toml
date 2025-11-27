@@ -68,3 +68,6 @@ verify_jwt = true
 
 [functions.scrape-url-content]
 verify_jwt = true
+
+[functions.rag-indexing]
+verify_jwt = false

@@ -812,7 +812,13 @@ export type Database = {
           file_name: string | null
           file_path: string | null
           file_size: number | null
+          google_error: string | null
+          google_file_name: string | null
+          google_store_id: string | null
           id: string
+          indexing_status:
+            | Database["public"]["Enums"]["kb_indexing_status"]
+            | null
           is_archived: boolean
           is_pinned: boolean
           metadata: Json
@@ -835,7 +841,13 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           file_size?: number | null
+          google_error?: string | null
+          google_file_name?: string | null
+          google_store_id?: string | null
           id?: string
+          indexing_status?:
+            | Database["public"]["Enums"]["kb_indexing_status"]
+            | null
           is_archived?: boolean
           is_pinned?: boolean
           metadata?: Json
@@ -858,7 +870,13 @@ export type Database = {
           file_name?: string | null
           file_path?: string | null
           file_size?: number | null
+          google_error?: string | null
+          google_file_name?: string | null
+          google_store_id?: string | null
           id?: string
+          indexing_status?:
+            | Database["public"]["Enums"]["kb_indexing_status"]
+            | null
           is_archived?: boolean
           is_pinned?: boolean
           metadata?: Json
@@ -1349,6 +1367,7 @@ export type Database = {
         | "playbook"
         | "faq"
         | "offer"
+      kb_indexing_status: "pending" | "processing" | "indexed" | "failed"
       kb_scope: "agency" | "client" | "project" | "task"
       n8n_scope: "agency" | "client"
       output_behavior: "chat_stream" | "modal_display" | "field_populate"
@@ -1494,6 +1513,7 @@ export const Constants = {
         "faq",
         "offer",
       ],
+      kb_indexing_status: ["pending", "processing", "indexed", "failed"],
       kb_scope: ["agency", "client", "project", "task"],
       n8n_scope: ["agency", "client"],
       output_behavior: ["chat_stream", "modal_display", "field_populate"],
