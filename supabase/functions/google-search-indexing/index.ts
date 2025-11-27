@@ -43,13 +43,6 @@ interface GoogleSearchDocument {
  *
  * This function indexes knowledge base items into Google's Custom Search API
  * for enhanced search and retrieval capabilities.
- *
- * Features:
- * - Full-text indexing of documents
- * - Metadata preservation (categories, tags, dates)
- * - Scope-based organization (Agency vs Client)
- * - Incremental updates
- * - Support for both files and URLs
  */
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -60,18 +53,43 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // These are optional now if we are just mocking or using a different backend
     const googleSearchApiKey = Deno.env.get("GOOGLE_SEARCH_API_KEY");
     const googleSearchEngineId = Deno.env.get("GOOGLE_SEARCH_ENGINE_ID");
 
-    if (!googleSearchApiKey || !googleSearchEngineId) {
-      throw new Error("Google Search API credentials not configured");
-    }
+    // NOTE: Removing strict check for now to allow partial functionality without keys
+    // if (!googleSearchApiKey || !googleSearchEngineId) {
+    //   throw new Error("Google Search API credentials not configured");
+    // }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, itemId, scope } = await req.json();
+    // Parse request body safely
+    let body;
+    try {
+        body = await req.json();
+    } catch (e) {
+        return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+    }
+
+    const { action, itemId, scope } = body;
+
+    if (!action) {
+        return new Response(JSON.stringify({ error: "Missing 'action' parameter" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+    }
 
     if (action === "index") {
+      if (!itemId) {
+          return new Response(JSON.stringify({ error: "Missing 'itemId' for index action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       // Index a single item
       const { data: item, error: fetchError } = await supabase
         .from("knowledge_base_items")
@@ -80,6 +98,7 @@ serve(async (req) => {
         .single();
 
       if (fetchError) throw fetchError;
+      if (!item) throw new Error("Item not found");
 
       const document = await prepareDocument(item, supabase);
       await indexDocument(document, googleSearchApiKey, googleSearchEngineId);
@@ -100,7 +119,15 @@ serve(async (req) => {
       );
     } else if (action === "search") {
       // Perform a search query
-      const { query, filters, limit = 10 } = await req.json();
+      const { query, filters, limit = 10 } = body;
+
+      if (!googleSearchApiKey || !googleSearchEngineId) {
+           // Fallback for missing keys
+           return new Response(
+            JSON.stringify({ success: true, results: [], warning: "Google Search not configured" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+      }
 
       const results = await searchDocuments(
         query,
@@ -170,11 +197,11 @@ serve(async (req) => {
       );
     }
 
-    throw new Error("Invalid action");
+    throw new Error(`Invalid action: ${action}`);
   } catch (error: any) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Internal Server Error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
@@ -225,25 +252,22 @@ async function prepareDocument(
 
 async function indexDocument(
   document: GoogleSearchDocument,
-  apiKey: string,
-  engineId: string
+  apiKey: string | undefined,
+  engineId: string | undefined
 ): Promise<void> {
   // Note: Google Custom Search API doesn't support direct indexing
   // This is a placeholder for integration with Google Cloud Search API
   // or Google Indexing API
-
-  // For production, you would use:
-  // 1. Google Cloud Search API - for enterprise search
-  // 2. Google Indexing API - for web content
-  // 3. Or build a custom search index using Google Cloud Storage + BigQuery
 
   console.log("Document prepared for indexing:", {
     id: document.id,
     title: document.structData.title,
   });
 
-  // Store search metadata in the document itself
-  // This can be used for client-side filtering and search
+  // If no keys, just log and return (mock success)
+  if (!apiKey || !engineId) return;
+
+  // TODO: Implement actual API call if using Google Cloud Search
 }
 
 async function searchDocuments(
@@ -284,8 +308,8 @@ async function searchDocuments(
 
 async function deleteDocument(
   itemId: string,
-  apiKey: string,
-  engineId: string
+  apiKey: string | undefined,
+  engineId: string | undefined
 ): Promise<void> {
   // Placeholder for delete operation
   console.log("Document removed from index:", itemId);

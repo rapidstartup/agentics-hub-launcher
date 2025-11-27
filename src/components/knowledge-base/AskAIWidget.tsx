@@ -66,7 +66,7 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
         .select("*")
         .eq("user_id", user.id)
         .eq("is_archived", false)
-        .eq("indexing_status", "indexed")
+        .in("indexing_status", ["indexed", "processing"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;

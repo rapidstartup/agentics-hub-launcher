@@ -62,6 +62,7 @@ export default function AgencyCentralBrain() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<string>("all");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch all agency-level knowledge base items
   const { data: agencyItems = [], isLoading: agencyLoading, refetch: refetchAgency } = useQuery({
@@ -215,7 +216,7 @@ export default function AgencyCentralBrain() {
 
         <div className="p-6">
           {/* Tabs */}
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="bg-sidebar border-border mb-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="knowledge-bases">Knowledge Bases</TabsTrigger>
@@ -232,7 +233,10 @@ export default function AgencyCentralBrain() {
                 <h2 className="text-lg font-semibold text-foreground mb-4">Quick access to all Central Brain sections</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Knowledge Bases Card */}
-                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                  <Card
+                    className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab("knowledge-bases")}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-lg">
@@ -252,7 +256,10 @@ export default function AgencyCentralBrain() {
                   </Card>
 
                   {/* Strategy Card */}
-                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                  <Card
+                    className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab("strategy")}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="p-3 bg-emerald-500/10 rounded-lg">
@@ -272,7 +279,10 @@ export default function AgencyCentralBrain() {
                   </Card>
 
                   {/* Asset Library Card */}
-                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                  <Card
+                    className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab("asset-library")}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="p-3 bg-purple-500/10 rounded-lg">
@@ -292,7 +302,10 @@ export default function AgencyCentralBrain() {
                   </Card>
 
                   {/* Tools Card */}
-                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                  <Card
+                    className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab("tools")}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="p-3 bg-cyan-500/10 rounded-lg">
@@ -312,7 +325,10 @@ export default function AgencyCentralBrain() {
                   </Card>
 
                   {/* Swipe Files Card */}
-                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                  <Card
+                    className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab("swipe-files")}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="p-3 bg-amber-500/10 rounded-lg">
@@ -332,7 +348,10 @@ export default function AgencyCentralBrain() {
                   </Card>
 
                   {/* Integrations Card */}
-                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                  <Card
+                    className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer"
+                    onClick={() => setActiveTab("integrations")}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="p-3 bg-rose-500/10 rounded-lg">
