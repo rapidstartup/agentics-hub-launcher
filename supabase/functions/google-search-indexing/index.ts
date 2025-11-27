@@ -20,6 +20,7 @@ interface KnowledgeBaseItem {
   user_id: string;
   client_id: string | null;
   scope: string;
+  mime_type: string | null;
 }
 
 interface GoogleSearchDocument {
