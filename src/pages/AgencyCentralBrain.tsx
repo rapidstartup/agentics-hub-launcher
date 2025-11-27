@@ -352,11 +352,7 @@ export default function AgencyCentralBrain() {
                   Agency-level resources, templates, and documentation
                 </p>
               </div>
-              {agencyLoading ? (
-                <div className="text-center text-slate-400 py-12">Loading...</div>
-              ) : (
-                <KnowledgeBaseTable items={agencyItems} onUpdate={refetchAgency} />
-              )}
+              <KnowledgeBaseTable scope="agency" />
             </Card>
           </TabsContent>
 
@@ -383,11 +379,10 @@ export default function AgencyCentralBrain() {
                   </SelectContent>
                 </Select>
               </div>
-              {clientsLoading ? (
-                <div className="text-center text-slate-400 py-12">Loading...</div>
-              ) : (
-                <KnowledgeBaseTable items={clientItems} onUpdate={refetchAgency} />
-              )}
+              <KnowledgeBaseTable 
+                scope="client" 
+                clientId={selectedClient !== "all" ? selectedClient : undefined} 
+              />
             </Card>
           </TabsContent>
 

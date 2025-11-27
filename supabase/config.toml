@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.rag-indexing]
 verify_jwt = false
+
+[functions.google-search-indexing]
+verify_jwt = true

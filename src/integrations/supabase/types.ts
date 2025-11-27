@@ -814,6 +814,8 @@ export type Database = {
           file_size: number | null
           google_error: string | null
           google_file_name: string | null
+          google_search_indexed: boolean | null
+          google_search_indexed_at: string | null
           google_store_id: string | null
           id: string
           indexing_status:
@@ -843,6 +845,8 @@ export type Database = {
           file_size?: number | null
           google_error?: string | null
           google_file_name?: string | null
+          google_search_indexed?: boolean | null
+          google_search_indexed_at?: string | null
           google_store_id?: string | null
           id?: string
           indexing_status?:
@@ -872,6 +876,8 @@ export type Database = {
           file_size?: number | null
           google_error?: string | null
           google_file_name?: string | null
+          google_search_indexed?: boolean | null
+          google_search_indexed_at?: string | null
           google_store_id?: string | null
           id?: string
           indexing_status?:
