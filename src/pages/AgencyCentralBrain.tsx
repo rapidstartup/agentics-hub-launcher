@@ -18,9 +18,16 @@ import {
   AlertCircle,
   Loader2,
   ChevronRight,
+  Target,
+  Image as ImageIcon,
+  Video,
+  Settings as SettingsIcon,
+  Upload,
 } from "lucide-react";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { KnowledgeBaseTable } from "@/components/knowledge-base/KnowledgeBaseTable";
+import { KnowledgeBaseUploadModal } from "@/components/knowledge-base/KnowledgeBaseUploadModal";
+import { FloatingAskAI } from "@/components/knowledge-base/FloatingAskAI";
 import type { Database as DB } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import {
@@ -34,10 +41,27 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 type KnowledgeBaseItem = DB["public"]["Tables"]["knowledge_base_items"]["Row"];
+type KBCategory = DB["public"]["Enums"]["kb_category"];
+
+const categoryIcons: Record<string, any> = {
+  document: FileText,
+  image: ImageIcon,
+  video: Video,
+  audio: Video,
+  template: FileText,
+  script: FileText,
+  brand_asset: ImageIcon,
+  winning_ad: Target,
+  research: Search,
+  playbook: Target,
+  faq: FileText,
+  offer: Target,
+};
 
 export default function AgencyCentralBrain() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<string>("all");
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   // Fetch all agency-level knowledge base items
   const { data: agencyItems = [], isLoading: agencyLoading, refetch: refetchAgency } = useQuery({
@@ -124,6 +148,13 @@ export default function AgencyCentralBrain() {
     failed: agencyStats.failed + clientStats.failed,
   };
 
+  // Get category statistics
+  const allItems = [...agencyItems, ...clientItems];
+  const categoryStats = allItems.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   // Get client-specific statistics
   const clientBreakdown = clients.map(client => {
     const items = clientItems.filter(item => item.client_id === client.id);
@@ -170,270 +201,280 @@ export default function AgencyCentralBrain() {
         {/* Header */}
         <div className="border-b border-border bg-background">
           <div className="p-6">
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold text-foreground">Agency Central Brain</h1>
-              <p className="text-sm text-muted-foreground">
-                Admin-level knowledge base across all clients and agency resources
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search knowledge base..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-sidebar border-border"
-                />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
+                <Brain className="h-5 w-5 text-primary" />
               </div>
-              <Button
-                variant="outline"
-                onClick={handleReindexAll}
-                className="gap-2 border-border"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Reindex All
-              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Central Brain</h1>
+                <p className="text-sm text-muted-foreground">Your AI's memory and learning space</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Global Statistics */}
-          <section>
-            <h2 className="text-lg font-semibold text-foreground mb-4">At a Glance</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-border bg-card">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <Database className="h-5 w-5 text-muted-foreground" />
-                    <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">{totalStats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Documents</p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Agency: {agencyStats.total} | Clients: {clientStats.total}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border bg-card">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
-                    <span className="text-xs text-emerald-500 font-medium">
-                      {totalStats.total > 0
-                        ? Math.round((totalStats.indexed / totalStats.total) * 100)
-                        : 0}%
-                    </span>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">{totalStats.indexed}</p>
-                  <p className="text-sm text-muted-foreground">Indexed</p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Agency: {agencyStats.indexed} | Clients: {clientStats.indexed}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border bg-card">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <Loader2 className="h-5 w-5 text-amber-500" />
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">{totalStats.processing}</p>
-                  <p className="text-sm text-muted-foreground">Processing</p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Agency: {agencyStats.processing} | Clients: {clientStats.processing}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-border bg-card">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <AlertCircle className="h-5 w-5 text-rose-500" />
-                    <span className="text-xs text-muted-foreground">{clients.length} clients</span>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground">{totalStats.failed}</p>
-                  <p className="text-sm text-muted-foreground">Failed</p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Agency: {agencyStats.failed} | Clients: {clientStats.failed}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
+        <div className="p-6">
           {/* Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="bg-sidebar border-border">
+            <TabsList className="bg-sidebar border-border mb-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="agency">Agency Knowledge</TabsTrigger>
-              <TabsTrigger value="clients">Client Knowledge</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="knowledge-bases">Knowledge Bases</TabsTrigger>
+              <TabsTrigger value="strategy">Strategy</TabsTrigger>
+              <TabsTrigger value="asset-library">Asset Library</TabsTrigger>
+              <TabsTrigger value="tools">Tools</TabsTrigger>
+              <TabsTrigger value="swipe-files">Swipe Files</TabsTrigger>
+              <TabsTrigger value="integrations">Integrations</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6 mt-6">
-              {/* Client Breakdown */}
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-foreground">
-                    <Users className="h-5 w-5" />
-                    Client Knowledge Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {clientBreakdown.map((client) => (
-                      <div
-                        key={client.client_id}
-                        className="flex items-center justify-between p-4 bg-sidebar rounded-lg border border-border"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{client.client_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {client.indexed_items} of {client.total_items} indexed
-                          </p>
+            <TabsContent value="overview" className="space-y-6">
+              {/* Quick Access Section */}
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-4">Quick access to all Central Brain sections</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Knowledge Bases Card */}
+                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-blue-500/10 rounded-lg">
+                          <FileText className="w-6 h-6 text-blue-400" />
                         </div>
-                        <div className="flex gap-4 text-sm">
-                          {Object.entries(client.categories).map(([category, count]) => (
-                            <div key={category} className="text-center">
-                              <p className="text-foreground font-medium">{count}</p>
-                              <p className="text-muted-foreground text-xs capitalize">{category}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground ml-4" />
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
                       </div>
-                    ))}
-                    {clientBreakdown.length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">No client data available</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Knowledge Bases</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Information library</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">
+                          {categoryStats.document || 0}
+                        </span>
+                        <span className="text-sm text-muted-foreground">items</span>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Recent Activity */}
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-foreground">
-                    <Clock className="h-5 w-5" />
-                    Recent Activity
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {[...agencyItems, ...clientItems]
-                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                      .slice(0, 10)
-                      .map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between p-3 bg-sidebar rounded-lg border border-border hover:bg-sidebar-accent transition-colors"
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-foreground font-medium truncate">{item.title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.scope === "agency" ? "Agency" : "Client"} • {item.category}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <Badge
-                              variant={
-                                item.indexing_status === "indexed"
-                                  ? "default"
-                                  : item.indexing_status === "processing"
-                                  ? "secondary"
-                                  : "destructive"
-                              }
-                              className="text-xs"
-                            >
-                              {item.indexing_status || "pending"}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(item.created_at), "MMM d, h:mm a")}
-                            </span>
-                          </div>
+                  {/* Strategy Card */}
+                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-emerald-500/10 rounded-lg">
+                          <Target className="w-6 h-6 text-emerald-400" />
                         </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Strategy</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Brand, research, funnels & offers</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">
+                          {(categoryStats.playbook || 0) + (categoryStats.research || 0) + (categoryStats.offer || 0)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">items</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Asset Library Card */}
+                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-purple-500/10 rounded-lg">
+                          <ImageIcon className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Asset Library</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Media & files</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">
+                          {(categoryStats.image || 0) + (categoryStats.video || 0) + (categoryStats.audio || 0)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">items</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Tools Card */}
+                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-cyan-500/10 rounded-lg">
+                          <SettingsIcon className="w-6 h-6 text-cyan-400" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Tools</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Internal, external & prompts</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">
+                          {(categoryStats.template || 0) + (categoryStats.script || 0)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">items</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Swipe Files Card */}
+                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-amber-500/10 rounded-lg">
+                          <Target className="w-6 h-6 text-amber-400" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Swipe Files</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Saved ad inspirations</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">
+                          {categoryStats.winning_ad || 0}
+                        </span>
+                        <span className="text-sm text-muted-foreground">items</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Integrations Card */}
+                  <Card className="bg-card border-border hover:bg-card/80 transition-colors cursor-pointer">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-rose-500/10 rounded-lg">
+                          <SettingsIcon className="w-6 h-6 text-rose-400" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Integrations</h3>
+                      <p className="text-sm text-muted-foreground mb-4">Connected platforms</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">0</span>
+                        <span className="text-sm text-muted-foreground">connected</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </TabsContent>
 
-            <TabsContent value="agency" className="mt-6">
+            <TabsContent value="knowledge-bases" className="space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search knowledge base..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-sidebar border-border"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleReindexAll}
+                    className="gap-2 border-border"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Reindex
+                  </Button>
+                  <Button
+                    onClick={() => setUploadModalOpen(true)}
+                    className="gap-2 bg-primary"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload
+                  </Button>
+                </div>
+              </div>
+
               <Card className="border-border bg-card">
                 <CardHeader>
-                  <CardTitle className="text-foreground">Agency Knowledge Base</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Agency-level resources, templates, and documentation
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {agencyLoading ? (
-                    <div className="text-center text-muted-foreground py-12">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      Loading...
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-foreground">All Knowledge Base Items</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {totalStats.indexed} of {totalStats.total} indexed
+                      </p>
                     </div>
-                  ) : (
-                    <KnowledgeBaseTable items={agencyItems} onUpdate={refetchAgency} />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="clients" className="mt-6">
-              <Card className="border-border bg-card">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="text-foreground">Client Knowledge Bases</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      All client-specific documents and resources
-                    </p>
+                    <Select value={selectedClient} onValueChange={setSelectedClient}>
+                      <SelectTrigger className="w-64 bg-sidebar border-border">
+                        <SelectValue placeholder="Filter by scope" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border">
+                        <SelectItem value="all">All Items</SelectItem>
+                        <SelectItem value="agency">Agency Only</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select value={selectedClient} onValueChange={setSelectedClient}>
-                    <SelectTrigger className="w-64 bg-sidebar border-border">
-                      <SelectValue placeholder="Filter by client" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border">
-                      <SelectItem value="all">All Clients</SelectItem>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </CardHeader>
                 <CardContent>
-                  {clientsLoading ? (
+                  {clientsLoading || agencyLoading ? (
                     <div className="text-center text-muted-foreground py-12">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                       Loading...
                     </div>
                   ) : (
-                    <KnowledgeBaseTable items={clientItems} onUpdate={refetchAgency} />
+                    <KnowledgeBaseTable
+                      items={selectedClient === "agency" ? agencyItems : selectedClient === "all" ? allItems : clientItems}
+                      onUpdate={refetchAgency}
+                    />
                   )}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="analytics" className="mt-6">
-              <Card className="border-border bg-card">
-                <CardContent className="p-12 text-center">
-                  <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Analytics Dashboard</h3>
-                  <p className="text-muted-foreground">Coming soon - Usage stats, trends, and insights</p>
-                </CardContent>
+            <TabsContent value="strategy">
+              <Card className="border-border bg-card p-8 text-center">
+                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">Strategy</h3>
+                <p className="text-muted-foreground">Brand, research, funnels & offers</p>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="asset-library">
+              <Card className="border-border bg-card p-8 text-center">
+                <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">Asset Library</h3>
+                <p className="text-muted-foreground">Media & files</p>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="tools">
+              <Card className="border-border bg-card p-8 text-center">
+                <SettingsIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">Tools</h3>
+                <p className="text-muted-foreground">Internal, external & prompts</p>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="swipe-files">
+              <Card className="border-border bg-card p-8 text-center">
+                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">Swipe Files</h3>
+                <p className="text-muted-foreground">Saved ad inspirations</p>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="integrations">
+              <Card className="border-border bg-card p-8 text-center">
+                <SettingsIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">Integrations</h3>
+                <p className="text-muted-foreground">Connected platforms - Coming soon</p>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
       </main>
+
+      {/* Upload Modal */}
+      <KnowledgeBaseUploadModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        onSuccess={refetchAgency}
+      />
+
+      {/* Floating Ask AI */}
+      <FloatingAskAI />
     </div>
   );
 }
