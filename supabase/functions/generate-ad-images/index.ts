@@ -72,7 +72,7 @@ Style: Modern, eye-catching, professional ad creative. High quality visuals that
 ${body.existingImageUrl ? `\n\nThis is a retry - create a different variation from previous attempts.` : ''}
 `.trim();
 
-    const modelId = "gemini-3-pro-image-previewini model with image generation
+    const modelId = "gemini-2.0-flash-exp"; // Gemini model with image generation
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:streamGenerateContent?key=${geminiApiKey}`;
 
     const requestBody = {
