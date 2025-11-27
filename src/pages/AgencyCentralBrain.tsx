@@ -2,15 +2,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Building2,
+  Brain,
   FileText,
   Search,
   RefreshCw,
-  MessageSquare,
   Users,
   Database,
   TrendingUp,
@@ -18,8 +17,9 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
-import { AskAIWidget } from "@/components/knowledge-base/AskAIWidget";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import { KnowledgeBaseTable } from "@/components/knowledge-base/KnowledgeBaseTable";
 import type { Database as DB } from "@/integrations/supabase/types";
 import { format } from "date-fns";
@@ -30,19 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 type KnowledgeBaseItem = DB["public"]["Tables"]["knowledge_base_items"]["Row"];
 
-interface ClientStats {
-  client_id: string;
-  client_name: string;
-  total_items: number;
-  indexed_items: number;
-  categories: Record<string, number>;
-}
-
 export default function AgencyCentralBrain() {
-  const [askAIOpen, setAskAIOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<string>("all");
 
@@ -148,6 +141,8 @@ export default function AgencyCentralBrain() {
 
   const handleReindexAll = async () => {
     try {
+      toast.info("Reindexing all documents...");
+
       // Trigger reindexing for agency scope
       await supabase.functions.invoke("google-search-indexing", {
         body: { action: "reindex", scope: "agency" },
@@ -158,246 +153,287 @@ export default function AgencyCentralBrain() {
         body: { action: "reindex", scope: "client" },
       });
 
-      refetchAgency();
+      setTimeout(() => {
+        refetchAgency();
+        toast.success("Reindexing complete");
+      }, 2000);
     } catch (error) {
       console.error("Reindex error:", error);
+      toast.error("Failed to reindex");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="flex min-h-screen bg-background">
+      <AdminSidebar />
+      <main className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/10 rounded-lg">
-              <Building2 className="w-8 h-8 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Agency Central Brain</h1>
-              <p className="text-slate-400">
+        <div className="border-b border-border bg-background">
+          <div className="p-6">
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold text-foreground">Agency Central Brain</h1>
+              <p className="text-sm text-muted-foreground">
                 Admin-level knowledge base across all clients and agency resources
               </p>
             </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={handleReindexAll}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Reindex All
-            </Button>
-            <Button
-              onClick={() => setAskAIOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Ask AI
-            </Button>
-          </div>
-        </div>
-
-        {/* Global Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-800/50 border-slate-700 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Database className="w-5 h-5 text-slate-400" />
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
-            </div>
-            <p className="text-3xl font-bold text-white">{totalStats.total}</p>
-            <p className="text-sm text-slate-400">Total Documents</p>
-            <div className="mt-2 text-xs text-slate-500">
-              Agency: {agencyStats.total} | Clients: {clientStats.total}
-            </div>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="w-5 h-5 text-emerald-400" />
-              <span className="text-xs text-emerald-400 font-medium">
-                {totalStats.total > 0
-                  ? Math.round((totalStats.indexed / totalStats.total) * 100)
-                  : 0}%
-              </span>
-            </div>
-            <p className="text-3xl font-bold text-emerald-400">{totalStats.indexed}</p>
-            <p className="text-sm text-slate-400">Indexed</p>
-            <div className="mt-2 text-xs text-slate-500">
-              Agency: {agencyStats.indexed} | Clients: {clientStats.indexed}
-            </div>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Loader2 className="w-5 h-5 text-amber-400" />
-              <Clock className="w-4 h-4 text-slate-400" />
-            </div>
-            <p className="text-3xl font-bold text-amber-400">{totalStats.processing}</p>
-            <p className="text-sm text-slate-400">Processing</p>
-            <div className="mt-2 text-xs text-slate-500">
-              Agency: {agencyStats.processing} | Clients: {clientStats.processing}
-            </div>
-          </Card>
-
-          <Card className="bg-slate-800/50 border-slate-700 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <AlertCircle className="w-5 h-5 text-rose-400" />
-              <span className="text-xs text-slate-400">{clients.length} clients</span>
-            </div>
-            <p className="text-3xl font-bold text-rose-400">{totalStats.failed}</p>
-            <p className="text-sm text-slate-400">Failed</p>
-            <div className="mt-2 text-xs text-slate-500">
-              Agency: {agencyStats.failed} | Clients: {clientStats.failed}
-            </div>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="bg-slate-800 border-slate-700">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="agency">Agency Knowledge</TabsTrigger>
-            <TabsTrigger value="clients">Client Knowledge</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {/* Client Breakdown */}
-            <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Client Knowledge Breakdown
-              </h2>
-              <div className="space-y-3">
-                {clientBreakdown.map((client) => (
-                  <div
-                    key={client.client_id}
-                    className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{client.client_name}</p>
-                      <p className="text-sm text-slate-400">
-                        {client.indexed_items} of {client.total_items} indexed
-                      </p>
-                    </div>
-                    <div className="flex gap-4 text-sm">
-                      {Object.entries(client.categories).map(([category, count]) => (
-                        <div key={category} className="text-center">
-                          <p className="text-white font-medium">{count}</p>
-                          <p className="text-slate-500 text-xs capitalize">{category}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {clientBreakdown.length === 0 && (
-                  <p className="text-center text-slate-400 py-8">No client data available</p>
-                )}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search knowledge base..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-sidebar border-border"
+                />
               </div>
-            </Card>
+              <Button
+                variant="outline"
+                onClick={handleReindexAll}
+                className="gap-2 border-border"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reindex All
+              </Button>
+            </div>
+          </div>
+        </div>
 
-            {/* Recent Activity */}
-            <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Recent Activity
-              </h2>
-              <div className="space-y-2">
-                {[...agencyItems, ...clientItems]
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                  .slice(0, 10)
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg hover:bg-slate-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-white font-medium truncate">{item.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {item.scope === "agency" ? "Agency" : "Client"} • {item.category}
+        <div className="p-6 space-y-6">
+          {/* Global Statistics */}
+          <section>
+            <h2 className="text-lg font-semibold text-foreground mb-4">At a Glance</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-border bg-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Database className="h-5 w-5 text-muted-foreground" />
+                    <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">{totalStats.total}</p>
+                  <p className="text-sm text-muted-foreground">Total Documents</p>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Agency: {agencyStats.total} | Clients: {clientStats.total}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <CheckCircle className="h-5 w-5 text-emerald-500" />
+                    <span className="text-xs text-emerald-500 font-medium">
+                      {totalStats.total > 0
+                        ? Math.round((totalStats.indexed / totalStats.total) * 100)
+                        : 0}%
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">{totalStats.indexed}</p>
+                  <p className="text-sm text-muted-foreground">Indexed</p>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Agency: {agencyStats.indexed} | Clients: {clientStats.indexed}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Loader2 className="h-5 w-5 text-amber-500" />
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">{totalStats.processing}</p>
+                  <p className="text-sm text-muted-foreground">Processing</p>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Agency: {agencyStats.processing} | Clients: {clientStats.processing}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <AlertCircle className="h-5 w-5 text-rose-500" />
+                    <span className="text-xs text-muted-foreground">{clients.length} clients</span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">{totalStats.failed}</p>
+                  <p className="text-sm text-muted-foreground">Failed</p>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Agency: {agencyStats.failed} | Clients: {clientStats.failed}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
+          {/* Tabs */}
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="bg-sidebar border-border">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="agency">Agency Knowledge</TabsTrigger>
+              <TabsTrigger value="clients">Client Knowledge</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6 mt-6">
+              {/* Client Breakdown */}
+              <Card className="border-border bg-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <Users className="h-5 w-5" />
+                    Client Knowledge Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {clientBreakdown.map((client) => (
+                      <div
+                        key={client.client_id}
+                        className="flex items-center justify-between p-4 bg-sidebar rounded-lg border border-border"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-foreground">{client.client_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {client.indexed_items} of {client.total_items} indexed
                           </p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            item.indexing_status === "indexed"
-                              ? "bg-emerald-500/10 text-emerald-400"
-                              : item.indexing_status === "processing"
-                              ? "bg-amber-500/10 text-amber-400"
-                              : "bg-rose-500/10 text-rose-400"
-                          }`}
-                        >
-                          {item.indexing_status || "pending"}
+                        <div className="flex gap-4 text-sm">
+                          {Object.entries(client.categories).map(([category, count]) => (
+                            <div key={category} className="text-center">
+                              <p className="text-foreground font-medium">{count}</p>
+                              <p className="text-muted-foreground text-xs capitalize">{category}</p>
+                            </div>
+                          ))}
                         </div>
-                        <span className="text-xs text-slate-500">
-                          {format(new Date(item.created_at), "MMM d, h:mm a")}
-                        </span>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground ml-4" />
                       </div>
-                    </div>
-                  ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="agency">
-            <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-white mb-2">Agency Knowledge Base</h2>
-                <p className="text-sm text-slate-400">
-                  Agency-level resources, templates, and documentation
-                </p>
-              </div>
-              <KnowledgeBaseTable scope="agency" />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="clients">
-            <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-2">Client Knowledge Bases</h2>
-                  <p className="text-sm text-slate-400">
-                    All client-specific documents and resources
-                  </p>
-                </div>
-                <Select value={selectedClient} onValueChange={setSelectedClient}>
-                  <SelectTrigger className="w-64 bg-slate-800 border-slate-700 text-white">
-                    <SelectValue placeholder="Filter by client" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all">All Clients</SelectItem>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <KnowledgeBaseTable 
-                scope="client" 
-                clientId={selectedClient !== "all" ? selectedClient : undefined} 
-              />
-            </Card>
-          </TabsContent>
+                    {clientBreakdown.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">No client data available</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-          <TabsContent value="analytics">
-            <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-              <TrendingUp className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Analytics Dashboard</h3>
-              <p className="text-slate-400">Coming soon - Usage stats, trends, and insights</p>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+              {/* Recent Activity */}
+              <Card className="border-border bg-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <Clock className="h-5 w-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[...agencyItems, ...clientItems]
+                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                      .slice(0, 10)
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-3 bg-sidebar rounded-lg border border-border hover:bg-sidebar-accent transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-foreground font-medium truncate">{item.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.scope === "agency" ? "Agency" : "Client"} • {item.category}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <Badge
+                              variant={
+                                item.indexing_status === "indexed"
+                                  ? "default"
+                                  : item.indexing_status === "processing"
+                                  ? "secondary"
+                                  : "destructive"
+                              }
+                              className="text-xs"
+                            >
+                              {item.indexing_status || "pending"}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(item.created_at), "MMM d, h:mm a")}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-      {/* Ask AI Widget */}
-      <AskAIWidget open={askAIOpen} onOpenChange={setAskAIOpen} />
+            <TabsContent value="agency" className="mt-6">
+              <Card className="border-border bg-card">
+                <CardHeader>
+                  <CardTitle className="text-foreground">Agency Knowledge Base</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Agency-level resources, templates, and documentation
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {agencyLoading ? (
+                    <div className="text-center text-muted-foreground py-12">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      Loading...
+                    </div>
+                  ) : (
+                    <KnowledgeBaseTable items={agencyItems} onUpdate={refetchAgency} />
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="clients" className="mt-6">
+              <Card className="border-border bg-card">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-foreground">Client Knowledge Bases</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      All client-specific documents and resources
+                    </p>
+                  </div>
+                  <Select value={selectedClient} onValueChange={setSelectedClient}>
+                    <SelectTrigger className="w-64 bg-sidebar border-border">
+                      <SelectValue placeholder="Filter by client" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">All Clients</SelectItem>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardHeader>
+                <CardContent>
+                  {clientsLoading ? (
+                    <div className="text-center text-muted-foreground py-12">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      Loading...
+                    </div>
+                  ) : (
+                    <KnowledgeBaseTable items={clientItems} onUpdate={refetchAgency} />
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-6">
+              <Card className="border-border bg-card">
+                <CardContent className="p-12 text-center">
+                  <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Analytics Dashboard</h3>
+                  <p className="text-muted-foreground">Coming soon - Usage stats, trends, and insights</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
   );
 }

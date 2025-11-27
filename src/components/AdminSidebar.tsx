@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { 
+import {
   Hexagon,
   Gauge,
-  Users, 
-  CheckSquare, 
-  DollarSign, 
+  Users,
+  CheckSquare,
+  DollarSign,
   Activity,
   UserCog,
   Layers,
@@ -15,7 +15,8 @@ import {
   ArrowLeftRight,
   ChevronDown,
   Building2,
-  Loader2
+  Loader2,
+  Brain
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -40,6 +41,7 @@ const navigationItems = [
 ];
 
 const quickAccessItems = [
+  { id: "central-brain", title: "Knowledge Base", icon: Brain, path: "/admin/central-brain" },
   { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
   { id: "calendar", title: "Calendar", icon: Calendar, path: "/admin/calendar" },
   { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },

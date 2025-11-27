@@ -29,9 +29,9 @@ import {
   KnowledgeBaseTable,
   KnowledgeBaseUploadModal,
   KnowledgeBaseEditModal,
+  FloatingAskAI,
   type KBItem,
 } from "@/components/knowledge-base";
-import { AskAIWidget } from "@/components/knowledge-base/AskAIWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -53,7 +53,6 @@ const ClientKnowledge = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [editItem, setEditItem] = useState<KBItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [askAIOpen, setAskAIOpen] = useState(false);
   const [indexedCount, setIndexedCount] = useState(0);
   const [processingCount, setProcessingCount] = useState(0);
 
@@ -177,10 +176,6 @@ const ClientKnowledge = () => {
               <Button variant="outline" className="gap-2" onClick={handleRefresh}>
                 <RefreshCcw className="h-4 w-4" />
                 Refresh
-              </Button>
-              <Button variant="outline" className="gap-2" onClick={() => setAskAIOpen(true)}>
-                <MessageSquare className="h-4 w-4" />
-                Ask AI
               </Button>
               <Button className="gap-2" onClick={() => setUploadOpen(true)}>
                 <Upload className="h-4 w-4" />
@@ -399,8 +394,8 @@ const ClientKnowledge = () => {
         onSuccess={handleEditSuccess}
       />
 
-      {/* Ask AI Widget */}
-      <AskAIWidget open={askAIOpen} onOpenChange={setAskAIOpen} />
+      {/* Floating Ask AI */}
+      <FloatingAskAI />
     </div>
   );
 };
