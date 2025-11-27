@@ -49,32 +49,57 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Optional: Your backend can store per-user connection state in a table.
-    // For now, we surface a generic status and a redirect_url constructed from env.
-    const base = Deno.env.get('COMPOSIO_AUTH_BASE'); // e.g. https://api.composio.dev/auth/new or with query params
-    const state = encodeURIComponent(JSON.stringify({ uid: user?.id ?? null, toolkit, clientId }));
+    // Get Composio base URL (should be https://backend.composio.dev)
+    const composioBase = Deno.env.get('COMPOSIO_BASE_URL') || 'https://backend.composio.dev';
 
-    // Optional per-provider or global managed auth config ids
+    // Get auth config ID for this toolkit
     const globalAuthCfg = Deno.env.get('COMPOSIO_AUTH_CONFIG_ID') ?? undefined;
     const perToolkitAuthCfg = Deno.env.get(`COMPOSIO_AUTH_CONFIG_ID_${toolkit.toUpperCase()}`) ?? undefined;
-    const authCfg = perToolkitAuthCfg ?? globalAuthCfg;
+    const authConfigId = perToolkitAuthCfg ?? globalAuthCfg;
 
-    // Assemble URL with correct delimiter whether base already contains `?` or not
-    const params: string[] = [
-      `toolkit=${encodeURIComponent(toolkit)}`,
-      `state=${state}`
-    ];
-    if (authCfg) params.push(`auth_config_id=${encodeURIComponent(authCfg)}`);
+    if (!authConfigId) {
+      console.warn(`No auth config ID found for toolkit: ${toolkit}`);
+      return new Response(
+        JSON.stringify({
+          status: 'not_configured',
+          error: `No COMPOSIO_AUTH_CONFIG_ID_${toolkit.toUpperCase()} environment variable set`,
+          redirect_url: null
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    const redirect_url = base
-      ? `${base}${base.includes('?') ? '&' : '?'}${params.join('&')}`
-      : null;
+    // Build the redirect URL using Composio v3 API format
+    // The user will be redirected to: https://backend.composio.dev/api/v1/auth-apps/add
+    // with query params for the auth config
+    const state = encodeURIComponent(JSON.stringify({
+      uid: user?.id ?? null,
+      toolkit,
+      clientId,
+      timestamp: Date.now()
+    }));
 
-    // Placeholder connection status. You can wire this to a persistent store later.
+    // Construct the OAuth initiation URL
+    // Format: https://backend.composio.dev/api/v1/auth-apps/add?authConfigId=ac_xxx&redirectUri=your_callback&state=...
+    const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
+    const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
+
+    // Optional: Check connection status from Composio API
+    // For now, return a generic status
     const status = user ? 'disconnected' : 'anonymous';
 
     const requestId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`;
-    console.log(JSON.stringify({ event: 'composio-manage-connection', requestId, userId: user?.id ?? null, toolkit, clientId, hasRedirect: !!redirect_url }));
+    console.log(JSON.stringify({
+      event: 'composio-manage-connection',
+      requestId,
+      userId: user?.id ?? null,
+      toolkit,
+      clientId,
+      authConfigId,
+      hasRedirect: !!redirect_url,
+      redirectUrl: redirect_url
+    }));
+
     return new Response(
       JSON.stringify({ status, redirect_url, requestId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
