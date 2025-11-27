@@ -22,6 +22,7 @@ import {
   Plus,
   Brain,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { ClientSwitcher } from "@/components/ClientSwitcher";
 import {
@@ -30,6 +31,7 @@ import {
   KnowledgeBaseEditModal,
   type KBItem,
 } from "@/components/knowledge-base";
+import { AskAIWidget } from "@/components/knowledge-base/AskAIWidget";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -51,23 +53,34 @@ const ClientKnowledge = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [editItem, setEditItem] = useState<KBItem | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [askAIOpen, setAskAIOpen] = useState(false);
+  const [indexedCount, setIndexedCount] = useState(0);
+  const [processingCount, setProcessingCount] = useState(0);
 
   async function fetchStats() {
     try {
       // Fetch category counts
       const { data: items } = await supabase
         .from("knowledge_base_items")
-        .select("category, is_pinned")
+        .select("category, is_pinned, indexing_status")
         .or(`client_id.eq.${clientId},scope.eq.agency`)
         .eq("is_archived", false);
 
       if (items) {
         const counts: Record<string, number> = {};
-        items.forEach((item: { category: string }) => {
+        let indexed = 0;
+        let processing = 0;
+
+        items.forEach((item: { category: string; indexing_status?: string }) => {
           counts[item.category] = (counts[item.category] || 0) + 1;
+          if (item.indexing_status === "indexed") indexed++;
+          if (item.indexing_status === "processing") processing++;
         });
+
         setCategoryCounts(counts);
         setTotalItems(items.length);
+        setIndexedCount(indexed);
+        setProcessingCount(processing);
       }
 
       // Fetch pinned items
@@ -94,7 +107,39 @@ const ClientKnowledge = () => {
 
   const handleRefresh = () => {
     setRefreshKey((k) => k + 1);
+    fetchStats();
     toast.success("Knowledge base refreshed");
+  };
+
+  const handleReindex = async () => {
+    try {
+      toast.info("Reindexing knowledge base...");
+
+      await supabase.functions.invoke("google-search-indexing", {
+        body: {
+          action: "reindex",
+          scope: "client",
+          clientId
+        },
+      });
+
+      // Also trigger RAG reindexing
+      await supabase.functions.invoke("rag-indexing", {
+        body: {
+          action: "reindex",
+          scope: "client",
+          clientId
+        },
+      });
+
+      setTimeout(() => {
+        fetchStats();
+        toast.success("Reindexing complete");
+      }, 2000);
+    } catch (error) {
+      console.error("Reindex error:", error);
+      toast.error("Failed to reindex");
+    }
   };
 
   const handleUploadSuccess = () => {
@@ -132,6 +177,10 @@ const ClientKnowledge = () => {
               <Button variant="outline" className="gap-2" onClick={handleRefresh}>
                 <RefreshCcw className="h-4 w-4" />
                 Refresh
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={() => setAskAIOpen(true)}>
+                <MessageSquare className="h-4 w-4" />
+                Ask AI
               </Button>
               <Button className="gap-2" onClick={() => setUploadOpen(true)}>
                 <Upload className="h-4 w-4" />
@@ -206,7 +255,7 @@ const ClientKnowledge = () => {
                     <Brain className="h-5 w-5 text-primary" />
                     Company Brain Status
                   </CardTitle>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={handleReindex}>
                     <Sparkles className="h-4 w-4" />
                     Reindex
                   </Button>
@@ -219,20 +268,43 @@ const ClientKnowledge = () => {
                       <p className="text-2xl font-bold text-foreground">{totalItems}</p>
                       <p className="text-xs text-muted-foreground">Total Items</p>
                     </div>
-                    <div className="rounded-lg bg-secondary/50 p-4">
-                      <p className="text-2xl font-bold text-foreground">{pinnedItems.length}</p>
-                      <p className="text-xs text-muted-foreground">Pinned</p>
+                    <div className="rounded-lg bg-emerald-500/10 p-4">
+                      <p className="text-2xl font-bold text-emerald-500">{indexedCount}</p>
+                      <p className="text-xs text-muted-foreground">Indexed</p>
                     </div>
-                    <div className="rounded-lg bg-secondary/50 p-4">
-                      <p className="text-2xl font-bold text-foreground">
-                        {Object.keys(categoryCounts).length}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Categories</p>
+                    <div className="rounded-lg bg-amber-500/10 p-4">
+                      <p className="text-2xl font-bold text-amber-500">{processingCount}</p>
+                      <p className="text-xs text-muted-foreground">Processing</p>
                     </div>
-                    <div className="rounded-lg bg-green-500/10 p-4">
+                    <div className={`rounded-lg p-4 ${
+                      indexedCount === totalItems && totalItems > 0
+                        ? "bg-green-500/10"
+                        : processingCount > 0
+                        ? "bg-amber-500/10"
+                        : "bg-secondary/50"
+                    }`}>
                       <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <p className="text-sm font-medium text-green-500">Ready</p>
+                        <div className={`h-2 w-2 rounded-full ${
+                          indexedCount === totalItems && totalItems > 0
+                            ? "bg-green-500 animate-pulse"
+                            : processingCount > 0
+                            ? "bg-amber-500 animate-pulse"
+                            : "bg-gray-500"
+                        }`} />
+                        <p className={`text-sm font-medium ${
+                          indexedCount === totalItems && totalItems > 0
+                            ? "text-green-500"
+                            : processingCount > 0
+                            ? "text-amber-500"
+                            : "text-gray-500"
+                        }`}>
+                          {indexedCount === totalItems && totalItems > 0
+                            ? "Ready"
+                            : processingCount > 0
+                            ? "Indexing"
+                            : "Idle"
+                          }
+                        </p>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">RAG Status</p>
                     </div>
@@ -326,6 +398,9 @@ const ClientKnowledge = () => {
         item={editItem}
         onSuccess={handleEditSuccess}
       />
+
+      {/* Ask AI Widget */}
+      <AskAIWidget open={askAIOpen} onOpenChange={setAskAIOpen} />
     </div>
   );
 };

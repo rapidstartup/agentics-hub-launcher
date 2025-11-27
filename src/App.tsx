@@ -50,6 +50,8 @@ import StrategyAgents from "./pages/StrategyAgents";
 import StrategyMarketPositioning from "./pages/StrategyMarketPositioning";
 import StrategyKnowledgeBases from "./pages/StrategyKnowledgeBases";
 import StrategyCompanyBrain from "./pages/StrategyCompanyBrain";
+import KnowledgeBaseBrowser from "./pages/KnowledgeBaseBrowser";
+import AgencyCentralBrain from "./pages/AgencyCentralBrain";
 import ClientSettings from "./pages/ClientSettings";
 import ClientProjects from "./pages/ClientProjects";
 import ClientKnowledge from "./pages/ClientKnowledge";
@@ -94,6 +96,7 @@ const App = () => (
           <Route path="/client/:clientId/strategy/market-positioning" element={<ProtectedRoute><StrategyMarketPositioning /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/knowledge-bases" element={<ProtectedRoute><StrategyKnowledgeBases /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/company-brain" element={<ProtectedRoute><StrategyCompanyBrain /></ProtectedRoute>} />
+          <Route path="/client/:clientId/knowledge-browser" element={<ProtectedRoute><KnowledgeBaseBrowser /></ProtectedRoute>} />
           {/* Sales dedicated area */}
           <Route path="/client/:clientId/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/analytics" element={<ProtectedRoute><SalesAnalytics /></ProtectedRoute>} />
@@ -135,6 +138,7 @@ const App = () => (
           <Route path="/client/:clientId/:departmentId" element={<ProtectedRoute><Department /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/clients" element={<ProtectedRoute><AdminClients /></ProtectedRoute>} />
+          <Route path="/admin/central-brain" element={<ProtectedRoute><AgencyCentralBrain /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
           <Route path="/admin/calendar" element={<ProtectedRoute><AdminCalendar /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
