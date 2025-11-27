@@ -77,16 +77,24 @@ export function ConnectionsButtons() {
 
 function ConnectionItem({ label, data }: { label: string; data: any }) {
   const connected = data?.status === 'connected' || data?.status === 'active';
+  const hasError = data?.status === 'error';
+
   return (
     <div className="border border-border rounded-lg p-4">
       <div className="mb-2 font-semibold">{label}</div>
-      <div className="mb-3 text-sm text-muted-foreground">{connected ? 'Connected' : 'Not connected'}</div>
+      <div className="mb-3 text-sm text-muted-foreground">
+        {connected ? 'Connected' : hasError ? 'Connection error' : 'Not connected'}
+      </div>
       {data?.redirect_url ? (
-        <a href={data.redirect_url}>
-          <Button variant={connected ? "outline" : "default"}>{connected ? 'Reconnect' : 'Connect'}</Button>
+        <a href={data.redirect_url} target="_blank" rel="noopener noreferrer">
+          <Button variant={connected ? "outline" : "default"}>
+            {connected ? 'Reconnect' : 'Connect'}
+          </Button>
         </a>
       ) : (
-        <Button disabled variant="outline">Configure server</Button>
+        <Button disabled variant="outline" title="Please configure Composio in environment variables">
+          {hasError ? 'Configuration needed' : 'Configure server'}
+        </Button>
       )}
     </div>
   );

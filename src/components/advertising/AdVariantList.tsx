@@ -16,7 +16,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Check, Pencil, Archive, Trash2, Wand2, AlertTriangle, Image as ImageIcon } from "lucide-react";
+import { Check, Pencil, Archive, Trash2, Wand2, AlertTriangle, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import type { Variant } from "./AdKanbanBoard";
 
@@ -24,10 +24,12 @@ export function AdVariantList({
   variants,
   onChange,
   onAskAIUpdate,
+  onRetryImage,
 }: {
   variants: Variant[];
   onChange: (v: Variant[]) => void;
   onAskAIUpdate?: (v: Variant, instruction: string) => Promise<Variant | null>;
+  onRetryImage?: (v: Variant) => Promise<string | null>;
 }) {
   function mutate(target: Variant, patch: Partial<Variant>) {
     const idx = variants.indexOf(target);
@@ -49,7 +51,7 @@ export function AdVariantList({
   return (
     <div className="space-y-4">
       {variants.map((v, i) => (
-        <Row key={i} v={v} onMutate={mutate} onRemove={remove} onAskAIUpdate={onAskAIUpdate} />
+        <Row key={i} v={v} onMutate={mutate} onRemove={remove} onAskAIUpdate={onAskAIUpdate} onRetryImage={onRetryImage} />
       ))}
     </div>
   );
@@ -60,11 +62,13 @@ function Row({
   onMutate,
   onRemove,
   onAskAIUpdate,
+  onRetryImage,
 }: {
   v: Variant;
   onMutate: (v: Variant, patch: Partial<Variant>) => void;
   onRemove: (v: Variant) => void;
   onAskAIUpdate?: (v: Variant, instruction: string) => Promise<Variant | null>;
+  onRetryImage?: (v: Variant) => Promise<string | null>;
 }) {
   const [openEdit, setOpenEdit] = useState(false);
   const [tmp, setTmp] = useState<Variant>(v);
@@ -73,6 +77,7 @@ function Row({
   const [loadingAsk, setLoadingAsk] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [openArchive, setOpenArchive] = useState(false);
+  const [retryingImage, setRetryingImage] = useState(false);
 
   const statusColor: Record<string, string> = {
     review: "bg-zinc-700",
@@ -84,8 +89,30 @@ function Row({
   return (
     <Card>
       <CardContent className="p-0">
-        {/* Full-width media */}
-        <img src={v.imageUrl || `https://placehold.co/800x450?text=Ad`} alt="ad" className="w-full object-cover rounded-t-md border-b border-border aspect-video" />
+        {/* Full-width media with retry button */}
+        <div className="relative group">
+          <img src={v.imageUrl || `https://placehold.co/800x450?text=Ad`} alt="ad" className="w-full object-cover rounded-t-md border-b border-border aspect-video" />
+          {onRetryImage && (
+            <button
+              onClick={async () => {
+                setRetryingImage(true);
+                try {
+                  const newImageUrl = await onRetryImage(v);
+                  if (newImageUrl) {
+                    onMutate(v, { imageUrl: newImageUrl });
+                  }
+                } finally {
+                  setRetryingImage(false);
+                }
+              }}
+              disabled={retryingImage}
+              className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+              title="Regenerate image"
+            >
+              <RefreshCw className={`h-4 w-4 ${retryingImage ? 'animate-spin' : ''}`} />
+            </button>
+          )}
+        </div>
         {/* Body */}
         <div className="p-4 space-y-2">
           <div className="flex items-center gap-2">

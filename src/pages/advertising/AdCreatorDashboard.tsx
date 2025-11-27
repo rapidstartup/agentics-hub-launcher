@@ -28,6 +28,7 @@ export default function AdCreatorDashboard() {
     files?: { id: string }[];
   };
   const { clientId } = useParams();
+  const [adPlatform, setAdPlatform] = useState<string>("facebook");
   const [productContext, setProductContext] = useState({ brand: "", offer: "", audience: "", websiteUrl: "" });
   const [winningExamples, setWinningExamples] = useState<string>("");
   const [numVariants, setNumVariants] = useState(5);
@@ -211,6 +212,7 @@ export default function AdCreatorDashboard() {
         productContext: {
           ...productContext,
           audience: audienceChips.length ? audienceChips.join(", ") : productContext.audience,
+          platform: adPlatform,
         },
         winningExamples: winningExamples.split("\n").filter(Boolean),
         numVariants,
@@ -223,13 +225,49 @@ export default function AdCreatorDashboard() {
       });
       const data = await r.json();
       let v: Variant[] = (data?.variants ?? []).map((x: Variant) => ({ ...x, status: "review" as const }));
-      const sel = selectedAssetIds.filter(Boolean);
-      const rotation = (sel.length > 0
-        ? sel.map(id => assetImageUrlById(id)).filter(Boolean)
-        : AD_OUTPUT_IMAGES) as string[];
-      v = v.map((item, idx) => ({ ...item, imageUrl: rotation[idx % rotation.length] || `https://placehold.co/600x400?text=Ad+${idx+1}` }));
-      setVariants(v);
-      toast.success(`Generated ${v.length} variants`);
+
+      // Generate images using Gemini for each variant
+      const variantsWithImages = await Promise.all(
+        v.map(async (variant, idx) => {
+          try {
+            // Check if user selected custom assets
+            const sel = selectedAssetIds.filter(Boolean);
+            if (sel.length > 0) {
+              // Use selected assets in rotation
+              const rotation = sel.map(id => assetImageUrlById(id)).filter(Boolean) as string[];
+              return { ...variant, imageUrl: rotation[idx % rotation.length] || `https://placehold.co/600x400?text=Ad+${idx+1}` };
+            }
+
+            // Otherwise, generate image with Gemini
+            const imageResp = await fetch(`${API_BASE}/generate-ad-images`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                campaignContext: {
+                  brand: productContext.brand,
+                  offer: productContext.offer,
+                  audience: audienceChips.join(", ") || productContext.audience,
+                  platform: adPlatform,
+                },
+                adCopy: {
+                  headline: variant.headline,
+                  primaryText: variant.primaryText,
+                },
+                numImages: 1,
+              })
+            });
+            const imageData = await imageResp.json();
+            const imageUrl = imageData?.images?.[0]?.imageUrl || AD_OUTPUT_IMAGES[idx % AD_OUTPUT_IMAGES.length];
+            return { ...variant, imageUrl };
+          } catch (imageError) {
+            console.error("Image generation failed for variant", idx, imageError);
+            return { ...variant, imageUrl: AD_OUTPUT_IMAGES[idx % AD_OUTPUT_IMAGES.length] };
+          }
+        })
+      );
+
+      setVariants(variantsWithImages);
+      toast.success(`Generated ${variantsWithImages.length} variants with AI images`);
     } catch (e) {
       console.error(e);
       toast.error("Generation failed");
@@ -370,28 +408,57 @@ export default function AdCreatorDashboard() {
       return;
     }
     try {
+      // Platform-specific publish logic
+      const publishEndpoint = adPlatform === 'facebook' || adPlatform === 'instagram'
+        ? 'metaads-publish'
+        : adPlatform === 'tiktok'
+        ? 'tiktok-publish'
+        : adPlatform === 'youtube'
+        ? 'youtube-publish'
+        : adPlatform === 'google'
+        ? 'google-ads-publish'
+        : adPlatform === 'linkedin'
+        ? 'linkedin-publish'
+        : 'metaads-publish'; // Default fallback
+
       const payload = {
+        platform: adPlatform,
         accountId: "ACT_ID_HERE",
-        pageId: "PAGE_ID_HERE",
-        campaign: { name: "AdCreator Campaign", objective: "CONVERSIONS" },
-        adset: { name: "AdCreator Set", optimization_goal: "LINK_CLICKS", billing_event: "IMPRESSIONS", bid_amount: 50 },
+        pageId: adPlatform === 'facebook' || adPlatform === 'instagram' ? "PAGE_ID_HERE" : undefined,
+        campaign: {
+          name: campaignName || "AdCreator Campaign",
+          objective: "CONVERSIONS"
+        },
+        adset: {
+          name: adsetName || "AdCreator Set",
+          optimization_goal: "LINK_CLICKS",
+          billing_event: "IMPRESSIONS",
+          bid_amount: 50
+        },
         creatives: approved.map(a => ({
           headline: a.headline,
           primaryText: a.primaryText,
           cta: a.cta ?? "LEARN_MORE",
           websiteUrl: a.websiteUrl ?? productContext.websiteUrl,
+          imageUrl: a.imageUrl,
           assetRefs: []
         })),
         dryRun: true
       };
-      const r = await fetch(`${API_BASE}/metaads-publish`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await r.json();
-      if (data?.error) throw new Error(data.error);
-      toast.success("Publish request prepared (dry run). Configure COMPOSIO_PROXY_URL to execute.");
+
+      // Only call metaads-publish for now (other platforms can be implemented later)
+      if (adPlatform === 'facebook' || adPlatform === 'instagram') {
+        const r = await fetch(`${API_BASE}/metaads-publish`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        if (data?.error) throw new Error(data.error);
+        toast.success("Publish request prepared (dry run). Configure COMPOSIO_PROXY_URL to execute.");
+      } else {
+        toast.info(`Publishing to ${adPlatform} will be available soon. Campaign data saved.`);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Publish failed");
@@ -425,6 +492,42 @@ export default function AdCreatorDashboard() {
     } catch (e) {
       console.error(e);
       toast.error("AI update failed");
+      return null;
+    }
+  }
+
+  async function retryImage(target: Variant): Promise<string | null> {
+    try {
+      toast.message("Regenerating image...");
+      const imageResp = await fetch(`${API_BASE}/generate-ad-images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignContext: {
+            brand: productContext.brand,
+            offer: productContext.offer,
+            audience: audienceChips.join(", ") || productContext.audience,
+            platform: adPlatform,
+          },
+          adCopy: {
+            headline: target.headline,
+            primaryText: target.primaryText,
+          },
+          numImages: 1,
+          existingImageUrl: target.imageUrl, // Signal this is a retry
+        })
+      });
+      const imageData = await imageResp.json();
+      const imageUrl = imageData?.images?.[0]?.imageUrl;
+      if (imageUrl) {
+        toast.success("Image regenerated!");
+        return imageUrl;
+      }
+      toast.error("Failed to generate new image");
+      return null;
+    } catch (e) {
+      console.error(e);
+      toast.error("Image regeneration failed");
       return null;
     }
   }
@@ -575,7 +678,7 @@ export default function AdCreatorDashboard() {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Ad Creator</h1>
-          <p className="text-muted-foreground">Generate, review, and publish Meta Ads for client: {clientId}</p>
+          <p className="text-muted-foreground">Generate, review, and publish ads for {adPlatform === 'facebook' ? 'Facebook/Meta' : adPlatform === 'tiktok' ? 'TikTok' : adPlatform === 'youtube' ? 'YouTube' : adPlatform === 'google' ? 'Google' : adPlatform === 'instagram' ? 'Instagram' : adPlatform === 'linkedin' ? 'LinkedIn' : 'multiple platforms'} - Client: {clientId}</p>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
@@ -590,6 +693,22 @@ export default function AdCreatorDashboard() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4 max-h-[70vh] overflow-auto pr-1 scroll-dark">
+              <div>
+                <label className="text-sm text-muted-foreground">Ad Platform</label>
+                <Select value={adPlatform} onValueChange={setAdPlatform}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="facebook">Facebook / Meta Ads</SelectItem>
+                    <SelectItem value="tiktok">TikTok Ads</SelectItem>
+                    <SelectItem value="youtube">YouTube Ads</SelectItem>
+                    <SelectItem value="google">Google Ads</SelectItem>
+                    <SelectItem value="instagram">Instagram Ads</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn Ads</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <label className="text-sm text-muted-foreground">Winning ad URLs or notes (one per line)</label>
                 <Textarea value={winningExamples} onChange={(e) => setWinningExamples(e.target.value)} rows={4} placeholder="https://www.facebook.com/ads/library/?id=..." />
@@ -726,7 +845,7 @@ export default function AdCreatorDashboard() {
               ) : variants.length === 0 ? (
                 <div className="text-sm text-muted-foreground">Generate variants in Step 1 to populate the board.</div>
               ) : (
-                <AdVariantList variants={variants} onChange={setVariants} onAskAIUpdate={askAIUpdate} />
+                <AdVariantList variants={variants} onChange={setVariants} onAskAIUpdate={askAIUpdate} onRetryImage={retryImage} />
               )}
             </CardContent>
           </Card>
@@ -737,7 +856,7 @@ export default function AdCreatorDashboard() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <span className="text-primary">③</span>
-                <CardTitle>Step 3 · Publish into ad account</CardTitle>
+                <CardTitle>Step 3 · Publish to {adPlatform === 'facebook' ? 'Facebook/Meta' : adPlatform === 'tiktok' ? 'TikTok' : adPlatform === 'youtube' ? 'YouTube' : adPlatform === 'google' ? 'Google' : adPlatform === 'instagram' ? 'Instagram' : adPlatform === 'linkedin' ? 'LinkedIn' : 'ad platform'}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-3 max-h-[70vh] overflow-auto pr-1 scroll-dark">

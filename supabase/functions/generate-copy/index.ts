@@ -55,7 +55,43 @@ ${JSON.stringify(body.winningExamples ?? [], null, 2)}
 
     let variants: Array<Record<string, unknown>> = [];
 
-    if (lovableKey) {
+    if (geminiKey) {
+      // Use Gemini 2.5 Flash directly for ad copy generation
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.8,
+            responseMimeType: 'application/json'
+          }
+        })
+      });
+      const data = await resp.json();
+      console.log(JSON.stringify({ event: 'generate-copy:gemini-2.5-flash:response', requestId, status: 'ok' }));
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      try {
+        const parsed = JSON.parse(text);
+        variants = Array.isArray(parsed?.variants) ? parsed.variants : [];
+      } catch {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (match) {
+          try {
+            const parsed = JSON.parse(match[0]);
+            variants = Array.isArray(parsed?.variants) ? parsed.variants : [];
+          } catch {
+            variants = [];
+          }
+        }
+      }
+    } else if (lovableKey) {
+      // Fallback to Lovable Gateway
       const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -79,32 +115,6 @@ ${JSON.stringify(body.winningExamples ?? [], null, 2)}
         variants = Array.isArray(parsed?.variants) ? parsed.variants : [];
       } catch {
         // Try to extract JSON substring
-        const match = text.match(/\{[\s\S]*\}/);
-        if (match) {
-          try {
-            const parsed = JSON.parse(match[0]);
-            variants = Array.isArray(parsed?.variants) ? parsed.variants : [];
-          } catch {
-            variants = [];
-          }
-        }
-      }
-    } else if (geminiKey) {
-      // Minimal Gemini generateContent call
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        })
-      });
-      const data = await resp.json();
-      console.log(JSON.stringify({ event: 'generate-copy:gemini:response', requestId, status: 'ok' }));
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-      try {
-        const parsed = JSON.parse(text);
-        variants = Array.isArray(parsed?.variants) ? parsed.variants : [];
-      } catch {
         const match = text.match(/\{[\s\S]*\}/);
         if (match) {
           try {
