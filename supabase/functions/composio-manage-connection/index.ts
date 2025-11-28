@@ -49,13 +49,6 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Force correct base URL - Debugging why hermes persists
-    const composioBaseEnv = Deno.env.get('COMPOSIO_BASE_URL');
-    console.log(`[DEBUG] COMPOSIO_BASE_URL from env: ${composioBaseEnv}`);
-    
-    // HARDCODED OVERRIDE to ensure hermes is impossible if this code runs
-    const composioBase = 'https://backend.composio.dev';
-
     // Get auth config ID for this toolkit
     const globalAuthCfg = Deno.env.get('COMPOSIO_AUTH_CONFIG_ID') ?? undefined;
     const perToolkitAuthCfg = Deno.env.get(`COMPOSIO_AUTH_CONFIG_ID_${toolkit.toUpperCase()}`) ?? undefined;
@@ -81,6 +74,26 @@ serve(async (req) => {
       timestamp: Date.now()
     }));
 
+    // Using backend.composio.dev for API actions, but for user interaction we might need app.composio.dev or similar
+    // However, if backend.composio.dev redirects to hermes which is down, we have a problem.
+    // The user provided: "https://backend.composio.dev/api/v1/auth-apps/add"
+    
+    // Let's try using the backend URL, but logging it heavily.
+    // If backend.composio.dev itself responds with a 302 to hermes, that's on Composio side.
+    // In that case, we might try "https://app.composio.dev/component/auth" if that's an alternative.
+    
+    // NOTE: Recent Composio docs suggest using `https://app.composio.dev/auth/apps` or similar for frontend flow?
+    // But their API docs say `POST /api/v1/auth-apps`.
+    
+    // Let's stick to `https://backend.composio.dev` as we hardcoded before, but I'll double check if we can use `api.composio.dev` which might be stable.
+    // Or actually, `https://app.composio.dev/api`?
+    
+    // If the user says it redirects to hermes, it means the Composio backend is doing that redirect.
+    // We can try `https://api.composio.dev` instead of `backend`.
+    
+    const composioBase = 'https://backend.composio.dev';
+    // const composioBase = 'https://api.composio.dev'; // Alternative to try if backend redirects to hermes
+    
     const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
     const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
 
