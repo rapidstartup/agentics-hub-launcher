@@ -74,28 +74,16 @@ serve(async (req) => {
       timestamp: Date.now()
     }));
 
-    // Using backend.composio.dev for API actions, but for user interaction we might need app.composio.dev or similar
-    // However, if backend.composio.dev redirects to hermes which is down, we have a problem.
-    // The user provided: "https://backend.composio.dev/api/v1/auth-apps/add"
+    // ISSUE: backend.composio.dev is issuing 302 redirects to hermes.composio.dev which is down.
+    // FIX: Switch to the explicit API endpoint that might bypass this: api.composio.dev
+    // OR: Use the hardcoded 'https://api.composio.dev' as base
     
-    // Let's try using the backend URL, but logging it heavily.
-    // If backend.composio.dev itself responds with a 302 to hermes, that's on Composio side.
-    // In that case, we might try "https://app.composio.dev/component/auth" if that's an alternative.
+    // Let's try using `api.composio.dev` this time.
+    const composioBase = 'https://api.composio.dev';
     
-    // NOTE: Recent Composio docs suggest using `https://app.composio.dev/auth/apps` or similar for frontend flow?
-    // But their API docs say `POST /api/v1/auth-apps`.
-    
-    // Let's stick to `https://backend.composio.dev` as we hardcoded before, but I'll double check if we can use `api.composio.dev` which might be stable.
-    // Or actually, `https://app.composio.dev/api`?
-    
-    // If the user says it redirects to hermes, it means the Composio backend is doing that redirect.
-    // We can try `https://api.composio.dev` instead of `backend`.
-    
-    const composioBase = 'https://backend.composio.dev';
-    // const composioBase = 'https://api.composio.dev'; // Alternative to try if backend redirects to hermes
-    
-    const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
-    const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
+    // NOTE: The endpoint might be /v1/auth-apps/add on the API domain.
+    const redirectUri = encodeURIComponent(`${composioBase}/v1/auth-apps/add`);
+    const redirect_url = `${composioBase}/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
 
     console.log(`[DEBUG] Generated redirect_url: ${redirect_url}`);
 
