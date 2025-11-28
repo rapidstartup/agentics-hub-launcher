@@ -49,9 +49,12 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Get Composio base URL (should be https://backend.composio.dev)
-    // Fix: Use backend.composio.dev instead of potentially deprecated hermes.composio.dev
-    const composioBase = Deno.env.get('COMPOSIO_BASE_URL') || 'https://backend.composio.dev';
+    // Force correct base URL - Debugging why hermes persists
+    const composioBaseEnv = Deno.env.get('COMPOSIO_BASE_URL');
+    console.log(`[DEBUG] COMPOSIO_BASE_URL from env: ${composioBaseEnv}`);
+    
+    // HARDCODED OVERRIDE to ensure hermes is impossible if this code runs
+    const composioBase = 'https://backend.composio.dev';
 
     // Get auth config ID for this toolkit
     const globalAuthCfg = Deno.env.get('COMPOSIO_AUTH_CONFIG_ID') ?? undefined;
@@ -71,8 +74,6 @@ serve(async (req) => {
     }
 
     // Build the redirect URL using Composio v3 API format
-    // The user will be redirected to: https://backend.composio.dev/api/v1/auth-apps/add
-    // with query params for the auth config
     const state = encodeURIComponent(JSON.stringify({
       uid: user?.id ?? null,
       toolkit,
@@ -80,36 +81,13 @@ serve(async (req) => {
       timestamp: Date.now()
     }));
 
-    // Construct the OAuth initiation URL
-    // Format: https://backend.composio.dev/api/v1/auth-apps/add?authConfigId=ac_xxx&redirectUri=your_callback&state=...
-    // Note: If composioBase is accidentally set to hermes.composio.dev in .env, this will still fail.
-    // We should check if the env var is set to the faulty domain and override it if necessary,
-    // or just strictly use backend.composio.dev if the env var looks wrong.
-    
-    let baseUrlToUse = composioBase;
-    if (baseUrlToUse.includes("hermes.composio.dev") || baseUrlToUse.includes("api.composio.dev")) {
-        console.warn(`Detected deprecated domain '${baseUrlToUse}' in COMPOSIO_BASE_URL. Switching to 'https://backend.composio.dev'`);
-        baseUrlToUse = "https://backend.composio.dev";
-    }
+    const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
+    const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
 
-    const redirectUri = encodeURIComponent(`${baseUrlToUse}/api/v1/auth-apps/add`);
-    const redirect_url = `${baseUrlToUse}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
+    console.log(`[DEBUG] Generated redirect_url: ${redirect_url}`);
 
-    // Optional: Check connection status from Composio API
-    // For now, return a generic status
     const status = user ? 'disconnected' : 'anonymous';
-
     const requestId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`;
-    console.log(JSON.stringify({
-      event: 'composio-manage-connection',
-      requestId,
-      userId: user?.id ?? null,
-      toolkit,
-      clientId,
-      authConfigId,
-      hasRedirect: !!redirect_url,
-      redirectUrl: redirect_url
-    }));
 
     return new Response(
       JSON.stringify({ status, redirect_url, requestId }),
