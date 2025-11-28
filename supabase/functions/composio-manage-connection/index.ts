@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Composio } from "https://esm.sh/@composio/core@0.2.47";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -82,39 +81,60 @@ serve(async (req) => {
       );
     }
 
-    const composio = new Composio({ apiKey });
+    const composioBaseUrl = 'https://backend.composio.dev';
 
-    // Check if connected
+    // Check if connected via Composio API
     try {
-        const connections = await composio.connectedAccounts.list({
-            userIds: [user.id],
-            authConfigIds: [authConfigId],
-            statuses: ['ACTIVE']
-        });
-        
-        if (connections.items && connections.items.length > 0) {
-             return new Response(
-                JSON.stringify({ status: 'connected' }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
+      const connectionsResp = await fetch(
+        `${composioBaseUrl}/api/v1/connectedAccounts?userIds=${user.id}&authConfigIds=${authConfigId}&statuses=ACTIVE`,
+        {
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+          }
         }
+      );
+      
+      if (connectionsResp.ok) {
+        const connections = await connectionsResp.json();
+        if (connections.items && connections.items.length > 0) {
+          return new Response(
+            JSON.stringify({ status: 'connected' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
     } catch (error) {
-        console.error('Error listing connections:', error);
-        // Continue to generate link if check fails? Or return error?
-        // Maybe the user doesn't exist in Composio yet, so we proceed to initiate.
+      console.error('Error listing connections:', error);
+      // Continue to generate link if check fails
     }
 
-    // Generate connection link
-    const callbackUrl = req.headers.get('referer') || req.headers.get('origin');
+    // Generate connection link via Composio API
+    const callbackUrl = req.headers.get('referer') || req.headers.get('origin') || '';
     
-    const connectionRequest = await composio.connectedAccounts.initiate(
-        user.id,
-        authConfigId,
-        {
-            callbackUrl: callbackUrl || undefined
-        }
-    );
+    const initiateResp = await fetch(`${composioBaseUrl}/api/v1/connectedAccounts`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        integrationId: authConfigId,
+        userUuid: user.id,
+        redirectUri: callbackUrl || undefined
+      })
+    });
 
+    if (!initiateResp.ok) {
+      const errorText = await initiateResp.text();
+      console.error('Composio initiate error:', initiateResp.status, errorText);
+      return new Response(
+        JSON.stringify({ error: `Failed to initiate connection: ${initiateResp.status}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const connectionRequest = await initiateResp.json();
     const redirect_url = connectionRequest.redirectUrl;
     const requestId = connectionRequest.id;
 
