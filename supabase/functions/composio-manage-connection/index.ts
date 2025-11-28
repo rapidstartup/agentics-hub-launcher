@@ -82,6 +82,7 @@ serve(async (req) => {
     }
 
     const composioBaseUrl = 'https://backend.composio.dev';
+    let isConnected = false;
 
     // Check if connected via Composio API
     try {
@@ -98,10 +99,8 @@ serve(async (req) => {
       if (connectionsResp.ok) {
         const connections = await connectionsResp.json();
         if (connections.items && connections.items.length > 0) {
-          return new Response(
-            JSON.stringify({ status: 'connected' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          isConnected = true;
+          console.log(`User ${user.id} is already connected to ${toolkit}`);
         }
       }
     } catch (error) {
@@ -141,7 +140,11 @@ serve(async (req) => {
     console.log(`[DEBUG] Generated redirect_url: ${redirect_url}`);
 
     return new Response(
-      JSON.stringify({ status: 'disconnected', redirect_url, requestId }),
+      JSON.stringify({ 
+        status: isConnected ? 'connected' : 'disconnected', 
+        redirect_url, 
+        requestId 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
