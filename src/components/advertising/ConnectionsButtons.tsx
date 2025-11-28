@@ -10,8 +10,9 @@ type Toolkit = 'metaads' | 'googledrive' | 'googlesheets';
 
 async function getConnection(toolkit: Toolkit, clientId?: string) {
   // Use supabase-js so the Edge Function receives the proper headers/session (if any).
+  // Add a timestamp query param to bust any potential caching
   const { data, error } = await supabase.functions.invoke(
-    `composio-manage-connection`,
+    `composio-manage-connection?t=${Date.now()}`,
     { body: { toolkit, clientId } }
   );
   if (error) throw error;
@@ -99,5 +100,3 @@ function ConnectionItem({ label, data }: { label: string; data: any }) {
     </div>
   );
 }
-
-

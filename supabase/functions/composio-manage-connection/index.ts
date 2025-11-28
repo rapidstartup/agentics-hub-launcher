@@ -87,8 +87,8 @@ serve(async (req) => {
     // or just strictly use backend.composio.dev if the env var looks wrong.
     
     let baseUrlToUse = composioBase;
-    if (baseUrlToUse.includes("hermes.composio.dev")) {
-        console.warn("Detected deprecated 'hermes.composio.dev' in COMPOSIO_BASE_URL. Switching to 'https://backend.composio.dev'");
+    if (baseUrlToUse.includes("hermes.composio.dev") || baseUrlToUse.includes("api.composio.dev")) {
+        console.warn(`Detected deprecated domain '${baseUrlToUse}' in COMPOSIO_BASE_URL. Switching to 'https://backend.composio.dev'`);
         baseUrlToUse = "https://backend.composio.dev";
     }
 
