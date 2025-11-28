@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { Composio } from "https://esm.sh/@composio/core@0.2.47";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,7 +33,7 @@ serve(async (req) => {
     let toolkit = url.searchParams.get('toolkit') ?? '';
     let clientId = url.searchParams.get('clientId') ?? undefined;
 
-    // Also accept toolkit/clientId via JSON body (when invoked through supabase-js)
+    // Also accept toolkit/clientId via JSON body
     if (!toolkit && req.headers.get('content-type')?.includes('application/json')) {
       try {
         const body = await req.json();
@@ -43,25 +44,25 @@ serve(async (req) => {
       }
     }
 
-    const user = await getUserFromAuthHeader(req);
-
     if (!toolkit) {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Force correct base URL - Debugging why hermes persists
-    let composioBase = Deno.env.get('COMPOSIO_BASE_URL');
-    console.log(`[DEBUG] COMPOSIO_BASE_URL from env: ${composioBase}`);
-
-    // Fallback if env is missing or invalid
-    if (!composioBase || composioBase.includes("hermes.composio.dev")) {
-        // Try using api.composio.dev which might be more stable than backend.composio.dev regarding redirects
-        composioBase = 'https://backend.composio.dev';
+    const user = await getUserFromAuthHeader(req);
+    if (!user) {
+       return new Response(
+        JSON.stringify({ status: 'anonymous', redirect_url: null }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Remove trailing slash if present
-    if (composioBase.endsWith('/')) {
-        composioBase = composioBase.slice(0, -1);
+    const apiKey = Deno.env.get('COMPOSIO_API_KEY');
+    if (!apiKey) {
+      console.error('Missing COMPOSIO_API_KEY');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing API Key' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Get auth config ID for this toolkit
@@ -81,26 +82,49 @@ serve(async (req) => {
       );
     }
 
-    // Build the redirect URL using Composio v3 API format
-    const state = encodeURIComponent(JSON.stringify({
-      uid: user?.id ?? null,
-      toolkit,
-      clientId,
-      timestamp: Date.now()
-    }));
+    const composio = new Composio({ apiKey });
 
-    const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
-    const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
+    // Check if connected
+    try {
+        const connections = await composio.connectedAccounts.list({
+            userIds: [user.id],
+            authConfigIds: [authConfigId],
+            statuses: ['ACTIVE']
+        });
+        
+        if (connections.items && connections.items.length > 0) {
+             return new Response(
+                JSON.stringify({ status: 'connected' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+    } catch (error) {
+        console.error('Error listing connections:', error);
+        // Continue to generate link if check fails? Or return error?
+        // Maybe the user doesn't exist in Composio yet, so we proceed to initiate.
+    }
+
+    // Generate connection link
+    const callbackUrl = req.headers.get('referer') || req.headers.get('origin');
+    
+    const connectionRequest = await composio.connectedAccounts.initiate(
+        user.id,
+        authConfigId,
+        {
+            callbackUrl: callbackUrl || undefined
+        }
+    );
+
+    const redirect_url = connectionRequest.redirectUrl;
+    const requestId = connectionRequest.id;
 
     console.log(`[DEBUG] Generated redirect_url: ${redirect_url}`);
 
-    const status = user ? 'disconnected' : 'anonymous';
-    const requestId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`;
-
     return new Response(
-      JSON.stringify({ status, redirect_url, requestId }),
+      JSON.stringify({ status: 'disconnected', redirect_url, requestId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (err) {
     console.error('composio-manage-connection error', err);
     return new Response(
