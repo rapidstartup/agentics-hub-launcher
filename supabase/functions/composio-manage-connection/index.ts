@@ -86,6 +86,7 @@ serve(async (req) => {
 
     // Check if connected via Composio API
     try {
+      console.log(`Checking connections for user ${user.id} and config ${authConfigId}`);
       const connectionsResp = await fetch(
         `${composioBaseUrl}/api/v1/connectedAccounts?userIds=${user.id}&authConfigIds=${authConfigId}&statuses=ACTIVE`,
         {
@@ -102,6 +103,8 @@ serve(async (req) => {
           isConnected = true;
           console.log(`User ${user.id} is already connected to ${toolkit}`);
         }
+      } else {
+         console.warn(`Check connection failed: ${connectionsResp.status} ${await connectionsResp.text()}`);
       }
     } catch (error) {
       console.error('Error listing connections:', error);
@@ -111,24 +114,29 @@ serve(async (req) => {
     // Generate connection link via Composio API
     const callbackUrl = req.headers.get('referer') || req.headers.get('origin') || '';
     
+    const payload = {
+        integrationId: authConfigId,
+        userUuid: user.id,
+        redirectUri: callbackUrl || undefined,
+        data: {}
+    };
+
+    console.log(`Initiating connection with payload:`, JSON.stringify(payload));
+
     const initiateResp = await fetch(`${composioBaseUrl}/api/v1/connectedAccounts`, {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        integrationId: authConfigId,
-        userUuid: user.id,
-        redirectUri: callbackUrl || undefined
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!initiateResp.ok) {
       const errorText = await initiateResp.text();
       console.error('Composio initiate error:', initiateResp.status, errorText);
       return new Response(
-        JSON.stringify({ error: `Failed to initiate connection: ${initiateResp.status}` }),
+        JSON.stringify({ error: `Failed to initiate connection: ${initiateResp.status}`, details: errorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
