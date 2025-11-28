@@ -84,11 +84,11 @@ serve(async (req) => {
     const composioBaseUrl = 'https://backend.composio.dev';
     let isConnected = false;
 
-    // Check if connected via Composio v1 API (with v3 compatible query params)
+    // Check if connected via Composio API
     try {
       console.log(`Checking connections for user ${user.id} and config ${authConfigId}`);
       const connectionsResp = await fetch(
-        `${composioBaseUrl}/v1/connected-accounts?user_ids=${user.id}&auth_config_ids=${authConfigId}&statuses=ACTIVE`,
+        `${composioBaseUrl}/api/v1/connected-accounts?user_ids=${user.id}&auth_config_ids=${authConfigId}&statuses=ACTIVE`,
         {
           headers: {
             'x-api-key': apiKey,
@@ -111,10 +111,10 @@ serve(async (req) => {
       // Continue to generate link if check fails
     }
 
-    // Generate connection link via Composio v1 API with v3 body format
+    // Generate connection link via Composio API with v3 body format
     const callbackUrl = req.headers.get('referer') || req.headers.get('origin') || '';
     
-    // V3 API request body format
+    // V3 API request body format (for /api/v1/connected-accounts endpoint)
     const payload = {
         auth_config: {
           id: authConfigId
@@ -127,7 +127,7 @@ serve(async (req) => {
 
     console.log(`Initiating connection with payload:`, JSON.stringify(payload));
 
-    const initiateResp = await fetch(`${composioBaseUrl}/v1/connected-accounts`, {
+    const initiateResp = await fetch(`${composioBaseUrl}/api/v1/connected-accounts`, {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -146,7 +146,7 @@ serve(async (req) => {
     }
 
     const connectionRequest = await initiateResp.json();
-    // V3 API response format
+    // Response can have redirect_url in different locations
     const redirect_url = connectionRequest.deprecated?.redirect_url || connectionRequest.redirect_url || connectionRequest.connectionData?.redirect_url;
     const requestId = connectionRequest.id;
 
