@@ -49,6 +49,21 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing `toolkit` query param' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Force correct base URL - Debugging why hermes persists
+    let composioBase = Deno.env.get('COMPOSIO_BASE_URL');
+    console.log(`[DEBUG] COMPOSIO_BASE_URL from env: ${composioBase}`);
+
+    // Fallback if env is missing or invalid
+    if (!composioBase || composioBase.includes("hermes.composio.dev")) {
+        // Try using api.composio.dev which might be more stable than backend.composio.dev regarding redirects
+        composioBase = 'https://backend.composio.dev';
+    }
+
+    // Remove trailing slash if present
+    if (composioBase.endsWith('/')) {
+        composioBase = composioBase.slice(0, -1);
+    }
+
     // Get auth config ID for this toolkit
     const globalAuthCfg = Deno.env.get('COMPOSIO_AUTH_CONFIG_ID') ?? undefined;
     const perToolkitAuthCfg = Deno.env.get(`COMPOSIO_AUTH_CONFIG_ID_${toolkit.toUpperCase()}`) ?? undefined;
@@ -74,16 +89,8 @@ serve(async (req) => {
       timestamp: Date.now()
     }));
 
-    // ISSUE: backend.composio.dev is issuing 302 redirects to hermes.composio.dev which is down.
-    // FIX: Switch to the explicit API endpoint that might bypass this: api.composio.dev
-    // OR: Use the hardcoded 'https://api.composio.dev' as base
-    
-    // Let's try using `api.composio.dev` this time.
-    const composioBase = 'https://api.composio.dev';
-    
-    // NOTE: The endpoint might be /v1/auth-apps/add on the API domain.
-    const redirectUri = encodeURIComponent(`${composioBase}/v1/auth-apps/add`);
-    const redirect_url = `${composioBase}/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
+    const redirectUri = encodeURIComponent(`${composioBase}/api/v1/auth-apps/add`);
+    const redirect_url = `${composioBase}/api/v1/auth-apps/add?authConfigId=${authConfigId}&state=${state}`;
 
     console.log(`[DEBUG] Generated redirect_url: ${redirect_url}`);
 
