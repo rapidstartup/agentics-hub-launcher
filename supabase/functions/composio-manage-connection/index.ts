@@ -84,11 +84,11 @@ serve(async (req) => {
     const composioBaseUrl = 'https://backend.composio.dev';
     let isConnected = false;
 
-    // Check if connected via Composio API
+    // Check if connected via Composio v3 API
     try {
       console.log(`Checking connections for user ${user.id} and config ${authConfigId}`);
       const connectionsResp = await fetch(
-        `${composioBaseUrl}/api/v1/connectedAccounts?userIds=${user.id}&authConfigIds=${authConfigId}&statuses=ACTIVE`,
+        `${composioBaseUrl}/api/v3/connected-accounts?user_ids=${user.id}&auth_config_ids=${authConfigId}&statuses=ACTIVE`,
         {
           headers: {
             'x-api-key': apiKey,
@@ -111,19 +111,23 @@ serve(async (req) => {
       // Continue to generate link if check fails
     }
 
-    // Generate connection link via Composio API
+    // Generate connection link via Composio v3 API
     const callbackUrl = req.headers.get('referer') || req.headers.get('origin') || '';
     
+    // V3 API request body format
     const payload = {
-        integrationId: authConfigId,
-        userUuid: user.id,
-        redirectUri: callbackUrl || undefined,
-        data: {}
+        auth_config: {
+          id: authConfigId
+        },
+        connection: {
+          user_id: user.id,
+          redirect_url: callbackUrl || undefined
+        }
     };
 
-    console.log(`Initiating connection with payload:`, JSON.stringify(payload));
+    console.log(`Initiating connection with v3 payload:`, JSON.stringify(payload));
 
-    const initiateResp = await fetch(`${composioBaseUrl}/api/v1/connectedAccounts`, {
+    const initiateResp = await fetch(`${composioBaseUrl}/api/v3/connected-accounts`, {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -134,7 +138,7 @@ serve(async (req) => {
 
     if (!initiateResp.ok) {
       const errorText = await initiateResp.text();
-      console.error('Composio initiate error:', initiateResp.status, errorText);
+      console.error('Composio v3 initiate error:', initiateResp.status, errorText);
       return new Response(
         JSON.stringify({ error: `Failed to initiate connection: ${initiateResp.status}`, details: errorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -142,7 +146,8 @@ serve(async (req) => {
     }
 
     const connectionRequest = await initiateResp.json();
-    const redirect_url = connectionRequest.redirectUrl;
+    // V3 API response uses deprecated.redirect_url or connectionData
+    const redirect_url = connectionRequest.deprecated?.redirect_url || connectionRequest.redirect_url || connectionRequest.connectionData?.redirect_url;
     const requestId = connectionRequest.id;
 
     console.log(`[DEBUG] Generated redirect_url: ${redirect_url}`);
