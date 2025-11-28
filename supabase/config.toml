@@ -1,7 +1,7 @@
 project_id = "pooeaxqkysmngpnpnswn"
 
 [functions.gemini-chat]
-verify_jwt = true
+verify_jwt = false
 
 [functions.knowledge-base]
 verify_jwt = true
@@ -40,7 +40,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.composio-manage-connection]
-verify_jwt = true
+verify_jwt = false
 
 [functions.drive-list]
 verify_jwt = true
@@ -76,4 +76,4 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.google-search-indexing]
-verify_jwt = true
+verify_jwt = false
