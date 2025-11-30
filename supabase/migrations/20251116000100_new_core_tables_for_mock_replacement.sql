@@ -149,3 +149,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.department_agents;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.department_kpis;
 
 
+
+
+
