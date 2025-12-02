@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(supabase --version:*)",
-      "Bash(supabase migration repair:*)"
+      "Bash(supabase migration repair:*)",
+      "Bash(cat:*)",
+      "Bash(npx supabase --version)",
+      "Bash(npx supabase:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []
