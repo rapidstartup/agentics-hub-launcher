@@ -1,0 +1,68 @@
+[
+  {
+    "id": "72d829b1-882d-4be9-9154-b31987815366",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "client_id": null,
+    "name": "Draft",
+    "color": "#6366f1",
+    "sort_order": 0,
+    "is_default": true,
+    "is_final": false,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  },
+  {
+    "id": "d79fd32c-918f-4ecb-9a5b-f8419eedb369",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "client_id": null,
+    "name": "Client Review",
+    "color": "#f59e0b",
+    "sort_order": 1,
+    "is_default": false,
+    "is_final": false,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  },
+  {
+    "id": "ca31c198-613e-41a8-abbb-878ff71b005f",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "client_id": null,
+    "name": "Approved",
+    "color": "#10b981",
+    "sort_order": 2,
+    "is_default": false,
+    "is_final": true,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  },
+  {
+    "id": "29f91b26-20a6-48e7-8774-b1233e8d1ad4",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "client_id": "techstart-solutions",
+    "name": "Draft",
+    "color": "#6366f1",
+    "sort_order": 0,
+    "is_default": true,
+    "is_final": false,
+    "created_at": "2025-11-26T16:57:38.449883+00:00"
+  },
+  {
+    "id": "0f9a8e8e-6be8-45a3-821b-b5326fa9e807",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "client_id": "techstart-solutions",
+    "name": "Client Review",
+    "color": "#f59e0b",
+    "sort_order": 1,
+    "is_default": false,
+    "is_final": false,
+    "created_at": "2025-11-26T16:57:39.777968+00:00"
+  },
+  {
+    "id": "b02a2edb-3c3f-4382-87ff-2a3991648a35",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "client_id": "techstart-solutions",
+    "name": "Approved",
+    "color": "#10b981",
+    "sort_order": 2,
+    "is_default": false,
+    "is_final": true,
+    "created_at": "2025-11-26T16:57:40.53203+00:00"
+  }
+]
