@@ -43,7 +43,7 @@ begin
       is_predefined,
       avatar_url
     ) values (
-      '00000000-0000-0000-0000-000000000000'::uuid, -- System user placeholder
+      null, -- Predefined agents have no user_id (system-level)
       'agency',
       null,
       p_area,
@@ -51,7 +51,7 @@ begin
       p_display_name,
       p_display_role,
       p_description,
-      '00000000-0000-0000-0000-000000000000'::uuid, -- Placeholder connection (webhook-only)
+      null, -- Predefined agents use webhooks, not connections
       'webhook', -- Indicates webhook-based execution
       p_webhook_url,
       p_input_schema,

@@ -1,7 +1,17 @@
 -- =============================================================================
 -- RLS POLICIES UPDATE
 -- =============================================================================
-drop policy if exists clients_select_own on public.clients;
+-- Only drop policy if the clients table exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'clients'
+  ) THEN
+    DROP POLICY IF EXISTS clients_select_own ON public.clients;
+  END IF;
+END
+$$;
 
 -- =============================================================================
 -- SEED CLIENTS DATA

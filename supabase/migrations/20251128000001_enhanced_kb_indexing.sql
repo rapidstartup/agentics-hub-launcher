@@ -204,14 +204,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create full-text search index on knowledge base items
-CREATE INDEX IF NOT EXISTS idx_kb_fulltext_search
+-- Create an immutable wrapper function for the full-text search index
+-- This is needed because to_tsvector with a config parameter is not marked as IMMUTABLE
+CREATE OR REPLACE FUNCTION kb_search_vector(title TEXT, description TEXT, tags TEXT[])
+RETURNS tsvector
+LANGUAGE SQL
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT to_tsvector('english',
+    COALESCE(title, '') || ' ' ||
+    COALESCE(description, '') || ' ' ||
+    COALESCE(array_to_string(tags, ' '), '')
+  );
+$$;
+
+-- Create full-text search index on knowledge base items using the immutable function
+DROP INDEX IF EXISTS idx_kb_fulltext_search;
+CREATE INDEX idx_kb_fulltext_search
 ON knowledge_base_items
-USING gin(to_tsvector('english',
-  COALESCE(title, '') || ' ' ||
-  COALESCE(description, '') || ' ' ||
-  COALESCE(array_to_string(tags, ' '), '')
-));
+USING gin(kb_search_vector(title, description, tags));
 
 -- Add comments for documentation
 COMMENT ON COLUMN knowledge_base_items.google_search_indexed IS 'Whether the item has been indexed in Google Search API';

@@ -7,13 +7,8 @@ create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
 
 -- Scope constraint: only allow 'agency' or 'client'
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'n8n_scope') then
-    create type n8n_scope as enum ('agency', 'client');
-  end if;
-end
-$$;
+-- n8n_scope type already created in earlier migration, skip if exists
+-- This migration uses TEXT instead of the enum type to avoid dependency issues
 
 -- Connections to n8n instances (agency or client scoped)
 create table if not exists public.n8n_connections (

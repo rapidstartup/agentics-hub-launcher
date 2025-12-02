@@ -84,7 +84,18 @@ create trigger trigger_clients_updated_at
   for each row execute function public.update_clients_updated_at();
 
 -- Enable realtime
-alter publication supabase_realtime add table public.clients;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+    and schemaname = 'public'
+    and tablename = 'clients'
+  ) then
+    alter publication supabase_realtime add table public.clients;
+  end if;
+end
+$$;
 
 comment on table public.clients is 'Client/company records managed by the agency';
 

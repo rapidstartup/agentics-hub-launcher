@@ -8,29 +8,11 @@
 --  - is_predefined: System-level agents that can't be deleted by users
 --  - avatar_url: Custom avatar for agent display in tables
 
--- Add execution_mode enum
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'execution_mode') then
-    create type execution_mode as enum ('n8n', 'internal');
-  end if;
-end
-$$;
-
--- Add output_behavior enum
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'output_behavior') then
-    create type output_behavior as enum ('chat_stream', 'modal_display', 'field_populate');
-  end if;
-end
-$$;
-
--- Add new columns to agent_configs
+-- Add new columns to agent_configs (using TEXT with CHECK constraints instead of enums)
 alter table if exists public.agent_configs
   add column if not exists input_schema jsonb null,
-  add column if not exists output_behavior output_behavior null default 'modal_display',
-  add column if not exists execution_mode execution_mode null default 'n8n',
+  add column if not exists output_behavior text null default 'modal_display',
+  add column if not exists execution_mode text null default 'n8n',
   add column if not exists is_predefined boolean not null default false,
   add column if not exists avatar_url text null,
   add column if not exists description text null;

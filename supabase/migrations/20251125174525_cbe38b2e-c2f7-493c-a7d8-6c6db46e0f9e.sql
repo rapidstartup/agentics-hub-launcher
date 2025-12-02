@@ -80,7 +80,19 @@ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
 DROP TRIGGER IF EXISTS trigger_kb_items_updated_at ON public.knowledge_base_items;
 CREATE TRIGGER trigger_kb_items_updated_at BEFORE UPDATE ON public.knowledge_base_items FOR EACH ROW EXECUTE FUNCTION public.update_kb_items_updated_at();
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.knowledge_base_items;
+-- Add to realtime publication if not already added
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
+    AND tablename = 'knowledge_base_items'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.knowledge_base_items;
+  END IF;
+END
+$$;
 
 -- KB Collections
 CREATE TABLE IF NOT EXISTS public.knowledge_base_collections (

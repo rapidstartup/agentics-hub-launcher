@@ -1,29 +1,11 @@
 -- Enhanced agent_configs for Phase 1 n8n Agent Integration
 -- Adds input_schema, output_behavior, execution_mode, is_predefined, avatar_url, description
 
--- Add execution_mode enum
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'execution_mode') then
-    create type execution_mode as enum ('n8n', 'internal');
-  end if;
-end
-$$;
-
--- Add output_behavior enum
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'output_behavior') then
-    create type output_behavior as enum ('chat_stream', 'modal_display', 'field_populate');
-  end if;
-end
-$$;
-
--- Add new columns to agent_configs
+-- Add new columns to agent_configs (columns should already exist from earlier migration)
 alter table if exists public.agent_configs
   add column if not exists input_schema jsonb null,
-  add column if not exists output_behavior output_behavior null default 'modal_display',
-  add column if not exists execution_mode execution_mode null default 'n8n',
+  add column if not exists output_behavior text null default 'modal_display',
+  add column if not exists execution_mode text null default 'n8n',
   add column if not exists is_predefined boolean not null default false,
   add column if not exists avatar_url text null,
   add column if not exists description text null;
@@ -73,7 +55,7 @@ begin
       is_predefined,
       avatar_url
     ) values (
-      '00000000-0000-0000-0000-000000000000'::uuid,
+      null, -- Predefined agents have no user_id (system-level)
       'agency',
       null,
       p_area,
@@ -81,7 +63,7 @@ begin
       p_display_name,
       p_display_role,
       p_description,
-      '00000000-0000-0000-0000-000000000000'::uuid,
+      null, -- Predefined agents use webhooks, not connections
       'webhook',
       p_webhook_url,
       p_input_schema,

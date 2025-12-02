@@ -19,19 +19,23 @@ CREATE TABLE IF NOT EXISTS public.admin_tasks (
 ALTER TABLE public.admin_tasks ENABLE ROW LEVEL SECURITY;
 
 -- CRUD limited to row owner
-CREATE POLICY IF NOT EXISTS "Users can view their own admin tasks"
+DROP POLICY IF EXISTS "Users can view their own admin tasks" ON public.admin_tasks;
+CREATE POLICY "Users can view their own admin tasks"
   ON public.admin_tasks FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can create their own admin tasks"
+DROP POLICY IF EXISTS "Users can create their own admin tasks" ON public.admin_tasks;
+CREATE POLICY "Users can create their own admin tasks"
   ON public.admin_tasks FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own admin tasks"
+DROP POLICY IF EXISTS "Users can update their own admin tasks" ON public.admin_tasks;
+CREATE POLICY "Users can update their own admin tasks"
   ON public.admin_tasks FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can delete their own admin tasks"
+DROP POLICY IF EXISTS "Users can delete their own admin tasks" ON public.admin_tasks;
+CREATE POLICY "Users can delete their own admin tasks"
   ON public.admin_tasks FOR DELETE
   USING (auth.uid() = user_id);
 
@@ -56,19 +60,23 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
 
 ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users can view their own campaigns"
+DROP POLICY IF EXISTS "Users can view their own campaigns" ON public.campaigns;
+CREATE POLICY "Users can view their own campaigns"
   ON public.campaigns FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can create their own campaigns"
+DROP POLICY IF EXISTS "Users can create their own campaigns" ON public.campaigns;
+CREATE POLICY "Users can create their own campaigns"
   ON public.campaigns FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own campaigns"
+DROP POLICY IF EXISTS "Users can update their own campaigns" ON public.campaigns;
+CREATE POLICY "Users can update their own campaigns"
   ON public.campaigns FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can delete their own campaigns"
+DROP POLICY IF EXISTS "Users can delete their own campaigns" ON public.campaigns;
+CREATE POLICY "Users can delete their own campaigns"
   ON public.campaigns FOR DELETE
   USING (auth.uid() = user_id);
 
@@ -91,19 +99,23 @@ CREATE TABLE IF NOT EXISTS public.department_agents (
 
 ALTER TABLE public.department_agents ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users can view their own department agents"
+DROP POLICY IF EXISTS "Users can view their own department agents" ON public.department_agents;
+CREATE POLICY "Users can view their own department agents"
   ON public.department_agents FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can create their own department agents"
+DROP POLICY IF EXISTS "Users can create their own department agents" ON public.department_agents;
+CREATE POLICY "Users can create their own department agents"
   ON public.department_agents FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own department agents"
+DROP POLICY IF EXISTS "Users can update their own department agents" ON public.department_agents;
+CREATE POLICY "Users can update their own department agents"
   ON public.department_agents FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can delete their own department agents"
+DROP POLICY IF EXISTS "Users can delete their own department agents" ON public.department_agents;
+CREATE POLICY "Users can delete their own department agents"
   ON public.department_agents FOR DELETE
   USING (auth.uid() = user_id);
 
@@ -123,19 +135,23 @@ CREATE TABLE IF NOT EXISTS public.department_kpis (
 
 ALTER TABLE public.department_kpis ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Users can view their own department KPIs"
+DROP POLICY IF EXISTS "Users can view their own department KPIs" ON public.department_kpis;
+CREATE POLICY "Users can view their own department KPIs"
   ON public.department_kpis FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can create their own department KPIs"
+DROP POLICY IF EXISTS "Users can create their own department KPIs" ON public.department_kpis;
+CREATE POLICY "Users can create their own department KPIs"
   ON public.department_kpis FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can update their own department KPIs"
+DROP POLICY IF EXISTS "Users can update their own department KPIs" ON public.department_kpis;
+CREATE POLICY "Users can update their own department KPIs"
   ON public.department_kpis FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY IF NOT EXISTS "Users can delete their own department KPIs"
+DROP POLICY IF EXISTS "Users can delete their own department KPIs" ON public.department_kpis;
+CREATE POLICY "Users can delete their own department KPIs"
   ON public.department_kpis FOR DELETE
   USING (auth.uid() = user_id);
 

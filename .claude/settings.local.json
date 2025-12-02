@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase --version:*)",
+      "Bash(supabase migration repair:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

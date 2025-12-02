@@ -10,20 +10,11 @@
 create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
 
--- Scope constraint: only allow 'agency' or 'client'
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'n8n_scope') then
-    create type n8n_scope as enum ('agency', 'client');
-  end if;
-end
-$$;
-
 -- Connections to n8n instances (agency or client scoped)
 create table if not exists public.n8n_connections (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  scope n8n_scope not null default 'agency',
+  scope text not null default 'agency' check (scope in ('agency', 'client')),
   client_id text null, -- when scope = 'client', store the client slug/id; null for agency level
   label text,
   base_url text not null, -- e.g. https://your-workspace.n8n.cloud (no trailing slash preferred)
@@ -88,7 +79,7 @@ $policies$;
 create table if not exists public.agent_configs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  scope n8n_scope not null default 'client',
+  scope text not null default 'client' check (scope in ('agency', 'client')),
   client_id text null,
   area text not null,       -- e.g. 'advertising', 'operations', 'sales'
   agent_key text not null,  -- e.g. 'ad-creator', 'ad-optimizer'; future: could be a foreign key if agents are modeled
@@ -97,8 +88,7 @@ create table if not exists public.agent_configs (
   input_mapping jsonb null,     -- user-defined mapping for inputs to workflow
   output_mapping jsonb null,    -- user-defined mapping for outputs storage
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (user_id, scope, coalesce(client_id, ''), area, agent_key)
+  updated_at timestamptz not null default now()
 );
 
 alter table public.agent_configs enable row level security;
@@ -106,6 +96,10 @@ alter table public.agent_configs enable row level security;
 create index if not exists idx_agent_configs_user on public.agent_configs(user_id);
 create index if not exists idx_agent_configs_client on public.agent_configs(client_id);
 create index if not exists idx_agent_configs_area_agent on public.agent_configs(area, agent_key);
+
+-- Create unique index with coalesce for null client_id handling
+create unique index if not exists idx_agent_configs_unique
+  on public.agent_configs(user_id, scope, coalesce(client_id, ''), area, agent_key);
 
 do $policies$
 begin
