@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarToggleProvider } from "@/hooks/use-sidebar-toggle";
 import { SidebarToggleOverlay } from "@/components/SidebarToggleOverlay";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute, AdminRoute, AuthRedirect } from "@/components/ProtectedRoute";
+import { UserProvider } from "@/contexts/UserContext";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
@@ -15,6 +16,7 @@ import AdOptimizerRunDetails from "./pages/AdOptimizerRunDetails";
 import AdSpy from "./pages/AdSpy";
 import AdCreatorDashboard from "./pages/advertising/AdCreatorDashboard";
 import Auth from "./pages/Auth";
+import AuthInvite from "./pages/AuthInvite";
 import NotFound from "./pages/NotFound";
 import Department from "./pages/Department";
 import OperationsAgents from "./pages/OperationsAgents";
@@ -53,6 +55,7 @@ import StrategyCompanyBrain from "./pages/StrategyCompanyBrain";
 import KnowledgeBaseBrowser from "./pages/KnowledgeBaseBrowser";
 import AgencyCentralBrain from "./pages/AgencyCentralBrain";
 import ClientSettings from "./pages/ClientSettings";
+import ClientAgentController from "./pages/ClientAgentController";
 import ClientProjects from "./pages/ClientProjects";
 import ClientKnowledge from "./pages/ClientKnowledge";
 import ClientAnalytics from "./pages/ClientAnalytics";
@@ -62,6 +65,7 @@ import AdminCalendar from "./pages/AdminCalendar";
 import AdminSettings from "./pages/AdminSettings";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminClients from "./pages/AdminClients";
+import AdminFeatureToggles from "./pages/AdminFeatureToggles";
 
 const queryClient = new QueryClient();
 
@@ -70,15 +74,18 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <SidebarToggleProvider>
-        <BrowserRouter>
-          <SidebarToggleOverlay />
-          <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<ProtectedRoute><Navigate to="/client/techstart-solutions" replace /></ProtectedRoute>} />
+      <BrowserRouter>
+        <UserProvider>
+          <SidebarToggleProvider>
+            <SidebarToggleOverlay />
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/invite" element={<AuthInvite />} />
+              <Route path="/" element={<AuthRedirect />} />
           <Route path="/client/:clientId" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           {/* Client-level quick access routes (must be above department catch-all) */}
           <Route path="/client/:clientId/settings" element={<ProtectedRoute><ClientSettings /></ProtectedRoute>} />
+              <Route path="/client/:clientId/agents" element={<ProtectedRoute><ClientAgentController /></ProtectedRoute>} />
           <Route path="/client/:clientId/projects" element={<ProtectedRoute><ClientProjects /></ProtectedRoute>} />
           <Route path="/client/:clientId/knowledge" element={<ProtectedRoute><ClientKnowledge /></ProtectedRoute>} />
           <Route path="/client/:clientId/analytics" element={<ProtectedRoute><ClientAnalytics /></ProtectedRoute>} />
@@ -136,18 +143,20 @@ const App = () => (
           <Route path="/client/:clientId/financial-agents" element={<ProtectedRoute><FinancialAgents /></ProtectedRoute>} />
           {/* Generic department route (after specific advertising/marketing routes) */}
           <Route path="/client/:clientId/:departmentId" element={<ProtectedRoute><Department /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/admin/clients" element={<ProtectedRoute><AdminClients /></ProtectedRoute>} />
-          <Route path="/admin/central-brain" element={<ProtectedRoute><AgencyCentralBrain /></ProtectedRoute>} />
-          <Route path="/admin/reports" element={<ProtectedRoute><AdminReports /></ProtectedRoute>} />
-          <Route path="/admin/calendar" element={<ProtectedRoute><AdminCalendar /></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
-          <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </SidebarToggleProvider>
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
+              <Route path="/admin/feature-toggles" element={<AdminRoute><AdminFeatureToggles /></AdminRoute>} />
+              <Route path="/admin/central-brain" element={<AdminRoute><AgencyCentralBrain /></AdminRoute>} />
+              <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
+              <Route path="/admin/calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
+              <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+              <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SidebarToggleProvider>
+        </UserProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

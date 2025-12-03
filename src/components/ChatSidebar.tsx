@@ -7,7 +7,9 @@ import {
   BarChart3,
   ChevronDown,
   Gauge,
-  Settings
+  Settings,
+  Bot,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,36 +18,75 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { NavLink, useParams } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { NavLink, useParams, useNavigate } from "react-router-dom";
 import { departmentsData } from "@/data/departments";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
+import { useAllFeatureToggles } from "@/hooks/useFeatureToggle";
+import { useUser, usePermissions } from "@/contexts/UserContext";
 
 export const ChatSidebar = () => {
   const { clientId } = useParams();
+  const navigate = useNavigate();
   const { isOpen } = useSidebarToggle();
-  
+  const { isEnabled, loading: loadingFeatures } = useAllFeatureToggles(clientId);
+  const { user, profile, signOut, isAgencyAdmin } = useUser();
+  const { canAccessAdminPanel } = usePermissions();
+
+  // Filter departments based on feature toggles
+  const enabledDepartments = departmentsData.filter((dept) => {
+    if (loadingFeatures) return true; // Show all while loading
+    const featureKey = `department.${dept.id}`;
+    return isEnabled(featureKey);
+  });
+
   const navigationItems = [
-    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: `/client/${clientId}`, agents: [] },
-    ...departmentsData.map(dept => ({
+    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, path: `/client/${clientId}`, agents: [], featureKey: null },
+    ...enabledDepartments.map(dept => ({
       id: dept.id,
       title: dept.title,
       icon: dept.icon,
       path: `/client/${clientId}/${dept.id}`,
       agents: dept.agents,
+      featureKey: `department.${dept.id}`,
     })),
   ];
 
-  const quickAccessItems = [
-    { id: "settings", title: "Settings", icon: Settings, path: `/client/${clientId}/settings` },
-    { id: "projects", title: "Projects", icon: FolderKanban, path: `/client/${clientId}/projects` },
-    { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: `/client/${clientId}/knowledge` },
-    { id: "analytics", title: "Analytics", icon: BarChart3, path: `/client/${clientId}/analytics` },
-    { id: "system", title: "System Control", icon: Shield, path: `/client/${clientId}/system` },
+  // Filter quick access items based on feature toggles
+  const allQuickAccessItems = [
+    { id: "agents", title: "Agent Controller", icon: Bot, path: `/client/${clientId}/agents`, featureKey: null },
+    { id: "settings", title: "Settings", icon: Settings, path: `/client/${clientId}/settings`, featureKey: null },
+    { id: "projects", title: "Projects", icon: FolderKanban, path: `/client/${clientId}/projects`, featureKey: "feature.projects" },
+    { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: `/client/${clientId}/knowledge`, featureKey: "feature.knowledge-base" },
+    { id: "analytics", title: "Analytics", icon: BarChart3, path: `/client/${clientId}/analytics`, featureKey: "feature.analytics" },
+    { id: "system", title: "System Control", icon: Shield, path: `/client/${clientId}/system`, featureKey: null },
   ];
+
+  const quickAccessItems = allQuickAccessItems.filter((item) => {
+    if (!item.featureKey) return true;
+    if (loadingFeatures) return true;
+    return isEnabled(item.featureKey);
+  });
 
   const adminItems = [
     { id: "admin", title: "Admin Panel", icon: Gauge, path: "/admin" },
   ];
+
+  async function handleSignOut() {
+    await signOut();
+    navigate("/auth");
+  }
+
+  // Get user initials for avatar
+  const userInitials = profile?.display_name
+    ? profile.display_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : user?.email?.slice(0, 2).toUpperCase() || "U";
 
   return (
     <aside className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col border-r border-border bg-sidebar`}>
@@ -79,8 +120,6 @@ export const ChatSidebar = () => {
                 <span>{item.title}</span>
               </div>
             );
-
-            // No nested submenu for Financials; handled inside Financials area
 
             return hasDepartmentAgents ? (
               <HoverCard key={item.id} openDelay={2000}>
@@ -120,25 +159,6 @@ export const ChatSidebar = () => {
               <NavLink
                 key={item.id}
                 to={item.path}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-
-        {/* Admin Section */}
-        <div className="mt-6">
-          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Super Admin
-          </p>
-          <nav className="space-y-1">
-            {adminItems.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.path}
                 className={({ isActive }) =>
                   `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                     isActive
@@ -153,20 +173,72 @@ export const ChatSidebar = () => {
             ))}
           </nav>
         </div>
+
+        {/* Admin Section - Only show for agency admins */}
+        {canAccessAdminPanel && (
+          <div className="mt-6">
+            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Administration
+            </p>
+            <nav className="space-y-1">
+              {adminItems.map((item) => (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                    }`
+                  }
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        )}
       </ScrollArea>
 
       {/* User Profile */}
       <div className="border-t border-border p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
-            <span className="text-xs font-semibold text-primary">AU</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Admin User</p>
-            <p className="text-xs text-muted-foreground">Premium Plan</p>
-          </div>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
+                <span className="text-xs font-semibold text-primary">{userInitials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {profile?.display_name || user?.email || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {isAgencyAdmin ? "Agency Admin" : "Client User"}
+                </p>
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => navigate(`/client/${clientId}/settings`)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </DropdownMenuItem>
+            {canAccessAdminPanel && (
+              <DropdownMenuItem onClick={() => navigate("/admin")}>
+                <Gauge className="h-4 w-4 mr-2" />
+                Admin Panel
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );

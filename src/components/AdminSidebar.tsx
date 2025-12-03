@@ -16,7 +16,8 @@ import {
   ChevronDown,
   Building2,
   Loader2,
-  Brain
+  Brain,
+  ToggleLeft
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -33,6 +34,7 @@ import { listClients, type Client } from "@/integrations/clients/api";
 const navigationItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
   { id: "client-management", title: "Client Management", icon: Users, path: "/admin/clients" },
+  { id: "feature-toggles", title: "Feature Toggles", icon: ToggleLeft, path: "/admin/feature-toggles" },
   { id: "task-orchestration", title: "Task Orchestration", icon: CheckSquare, path: "/admin/tasks" },
   { id: "revenue-analytics", title: "Revenue Analytics", icon: DollarSign, path: "/admin/revenue" },
   { id: "department-health", title: "Department Health", icon: Activity, path: "/admin/departments" },
