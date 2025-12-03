@@ -17,7 +17,8 @@ import {
   Building2,
   Loader2,
   Brain,
-  ToggleLeft
+  ToggleLeft,
+  Brush
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -47,6 +48,7 @@ const quickAccessItems = [
   { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
   { id: "calendar", title: "Calendar", icon: Calendar, path: "/admin/calendar" },
   { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },
+  { id: "themes", title: "Theme Builder", icon: Brush, path: "/settings/themes" },
   { id: "notifications", title: "Notifications", icon: Bell, path: "/admin/notifications" },
   { id: "client-view", title: "Switch to Client View", icon: ArrowLeftRight, path: "/" },
 ];

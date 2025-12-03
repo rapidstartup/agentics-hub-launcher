@@ -75,6 +75,11 @@ import AdminFeatureToggles from "./pages/AdminFeatureToggles";
 import Calendar from "./pages/Calendar";
 import Launch from "./pages/Launch";
 import ThemeSettings from "./pages/ThemeSettings";
+import BoardLayout from "./pages/board/BoardLayout";
+import BoardChat from "./pages/board/Chat";
+import BoardCanvas from "./pages/board/Canvas";
+import BoardKanban from "./pages/board/Kanban";
+import BoardSettings from "./pages/board/Settings";
 
 const queryClient = new QueryClient();
 
@@ -108,7 +113,7 @@ const App = () => (
           <Route path="/client/:clientId/advertising/market-research" element={<ProtectedRoute><MarketResearch /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/ad-optimizer" element={<ProtectedRoute><AdOptimizer /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/ad-optimizer/run/:runId" element={<ProtectedRoute><AdOptimizerRunDetails /></ProtectedRoute>} />
-          <Route path="/client/:clientId/advertising/ad-spy" element={<ProtectedRoute><AdSpy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/ad-creator" element={<ProtectedRoute><AdCreatorDashboard /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           {/* Strategy dedicated area */}
@@ -140,7 +145,7 @@ const App = () => (
           {/* Marketing dedicated area */}
           <Route path="/client/:clientId/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/agents" element={<ProtectedRoute><MarketingAgents /></ProtectedRoute>} />
-          <Route path="/client/:clientId/marketing/ad-spy" element={<ProtectedRoute><MarketingAdSpy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/market-research" element={<ProtectedRoute><MarketingMarketResearch /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/ad-creator" element={<ProtectedRoute><MarketingAdCreator /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/landing-page-copywriter" element={<ProtectedRoute><LandingPageCopywriter /></ProtectedRoute>} />
@@ -162,6 +167,14 @@ const App = () => (
           <Route path="/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
           <Route path="/central-brain" element={<ProtectedRoute><CentralBrain /></ProtectedRoute>} />
           <Route path="/knowledge-base" element={<ProtectedRoute><KnowledgeBaseBrowser /></ProtectedRoute>} />
+          {/* Board routes with nested tabs */}
+          <Route path="/projects/:boardId" element={<ProtectedRoute><BoardLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="chat" replace />} />
+            <Route path="chat" element={<BoardChat />} />
+            <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="kanban" element={<BoardKanban />} />
+            <Route path="settings" element={<BoardSettings />} />
+          </Route>
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
               <Route path="/admin/feature-toggles" element={<AdminRoute><AdminFeatureToggles /></AdminRoute>} />
