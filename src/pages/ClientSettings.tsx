@@ -42,7 +42,10 @@ import {
   Shield,
   CheckCircle2,
   AlertCircle,
+  Brush,
 } from "lucide-react";
+import { ThemesSettings } from "@/components/settings/ThemesSettings";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { ClientSwitcher } from "@/components/ClientSwitcher";
 import { ConnectionsButtons } from "@/components/advertising/ConnectionsButtons";
 import { useToast } from "@/hooks/use-toast";
@@ -95,6 +98,7 @@ const ClientSettings = () => {
 
   const canManage = clientId ? canManageClient(clientId) : false;
   const canInvite = clientId ? canInviteToClient(clientId) : false;
+  const { enabled: themeBuilderEnabled } = useFeatureToggle("feature.theme-builder");
 
   useEffect(() => {
     if (clientId) {
@@ -314,6 +318,12 @@ const ClientSettings = () => {
                 <Key className="h-4 w-4" />
                 Security
               </TabsTrigger>
+              {themeBuilderEnabled && (
+                <TabsTrigger value="themes" className="gap-2">
+                  <Brush className="h-4 w-4" />
+                  Themes
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Profile Tab */}
@@ -557,6 +567,13 @@ const ClientSettings = () => {
                 </div>
               </Card>
             </TabsContent>
+
+            {/* Themes Tab - Inline Theme Builder */}
+            {themeBuilderEnabled && (
+              <TabsContent value="themes">
+                <ThemesSettings />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </main>
