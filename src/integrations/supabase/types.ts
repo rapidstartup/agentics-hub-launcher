@@ -1347,6 +1347,116 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_posts: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          scheduled_at: string
+          status: string
+          platform: string
+          content: string | null
+          image_url: string | null
+          color: string | null
+          client_id: string | null
+          user_id: string
+          tags: string[] | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          scheduled_at: string
+          status?: string
+          platform?: string
+          content?: string | null
+          image_url?: string | null
+          color?: string | null
+          client_id?: string | null
+          user_id: string
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          scheduled_at?: string
+          status?: string
+          platform?: string
+          content?: string | null
+          image_url?: string | null
+          color?: string | null
+          client_id?: string | null
+          user_id?: string
+          tags?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_sessions: {
+        Row: {
+          id: string
+          client_id: string | null
+          user_id: string
+          title: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          client_id?: string | null
+          user_id: string
+          title?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string | null
+          user_id?: string
+          title?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          id: string
+          chat_session_id: string
+          role: string
+          content: string
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          chat_session_id: string
+          role: string
+          content: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          chat_session_id?: string
+          role?: string
+          content?: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_session_id_fkey"
+            columns: ["chat_session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

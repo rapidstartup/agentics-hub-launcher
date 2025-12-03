@@ -10,6 +10,8 @@ import {
   Settings,
   Bot,
   LogOut,
+  Calendar,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -65,6 +67,8 @@ export const ChatSidebar = () => {
     { id: "projects", title: "Projects", icon: FolderKanban, path: `/client/${clientId}/projects`, featureKey: "feature.projects" },
     { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: `/client/${clientId}/knowledge`, featureKey: "feature.knowledge-base" },
     { id: "analytics", title: "Analytics", icon: BarChart3, path: `/client/${clientId}/analytics`, featureKey: "feature.analytics" },
+    { id: "calendar", title: "Calendar", icon: Calendar, path: `/client/${clientId}/calendar`, featureKey: "feature.calendar" },
+    { id: "launch", title: "Launch", icon: Rocket, path: `/client/${clientId}/launch`, featureKey: "feature.launch" },
     // TODO: Re-enable System Control once LLM swap functionality is fully implemented
     // This feature allows users to switch between different language models (e.g., GPT-4, Claude, etc.)
     // See docs/N8N-Integration-Plan.md for planned functionality

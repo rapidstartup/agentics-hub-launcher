@@ -4,8 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { N8nConnectForm } from "@/components/integrations/N8nConnectForm";
+import { useNavigate } from "react-router-dom";
+import { Brush, ChevronRight, Palette, Building2 } from "lucide-react";
+import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 
 const AdminSettings = () => {
+  const navigate = useNavigate();
+  const { enabled: themeBuilderEnabled } = useFeatureToggle("feature.theme-builder");
+
   return (
     <div className="flex h-screen w-full bg-background">
       <AdminSidebar />
@@ -16,6 +22,44 @@ const AdminSettings = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          {/* Theme Builder Card - Only shown if feature is enabled */}
+          {themeBuilderEnabled && (
+            <Card 
+              className="border border-border bg-card p-6 cursor-pointer hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-200 group"
+              onClick={() => navigate('/settings/themes')}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Brush className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                      Theme Builder
+                      <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                        New
+                      </span>
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Customize colors, backgrounds, sidebars, cards, and more across the entire platform.
+                    </p>
+                    <div className="flex items-center gap-4 mt-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Palette className="h-3.5 w-3.5" />
+                        <span>Agency-wide defaults</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span>Per-client themes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+            </Card>
+          )}
+
           <Card className="border border-border bg-card p-6">
             <h3 className="mb-4 text-base font-semibold text-foreground">Security</h3>
             <div className="flex items-center justify-between rounded-md border border-border p-4">

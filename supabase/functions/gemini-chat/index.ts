@@ -12,6 +12,8 @@ type ChatInput = {
   temperature?: number;
   clientId?: string; // Context for RAG
   scope?: 'agency' | 'client'; // Context for RAG
+  stream?: boolean; // Enable streaming response
+  model?: string; // Model selection
 };
 
 serve(async (req) => {
@@ -41,7 +43,15 @@ serve(async (req) => {
     }
 
     const body = (await req.json()) as ChatInput;
-    const { prompt, responseFormat = 'text', temperature = 0.7, clientId, scope } = body;
+    const { 
+      prompt, 
+      responseFormat = 'text', 
+      temperature = 0.7, 
+      clientId, 
+      scope,
+      stream = false,
+      model = 'google/gemini-2.5-flash'
+    } = body;
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { 
@@ -51,7 +61,7 @@ serve(async (req) => {
     }
 
     const requestId = crypto.randomUUID();
-    console.log(JSON.stringify({ event: 'gemini-chat:start', requestId, userId: user.id }));
+    console.log(JSON.stringify({ event: 'gemini-chat:start', requestId, userId: user.id, stream, model }));
 
     const lovableKey = Deno.env.get('LOVABLE_API_KEY');
     const geminiKey = Deno.env.get('GEMINI_API_KEY');
@@ -105,8 +115,7 @@ serve(async (req) => {
       : 'You are a helpful assistant.';
 
     if (lovableKey) {
-      // Lovable currently might not support 'tools' param for Google File Search via their Gateway 
-      // unless specified. For now keeping as is.
+      // Use Lovable AI Gateway with optional streaming
       const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -114,17 +123,55 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: model,
           temperature,
+          stream: stream,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
           ]
         })
       });
+
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        console.error('Lovable API error:', resp.status, errorText);
+        
+        if (resp.status === 429) {
+          return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        if (resp.status === 402) {
+          return new Response(JSON.stringify({ error: 'Payment required' }), {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
+        throw new Error(`Lovable API error: ${errorText}`);
+      }
+
+      // Handle streaming response
+      if (stream && resp.body) {
+        console.log(JSON.stringify({ event: 'gemini-chat:streaming', requestId }));
+        
+        return new Response(resp.body, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          }
+        });
+      }
+
+      // Handle non-streaming response
       const data = await resp.json();
       console.log(JSON.stringify({ event: 'gemini-chat:lovable:response', requestId, hasChoices: !!data?.choices }));
       response = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.message?.text ?? '';
+      
     } else if (geminiKey) {
       // Prepare tools
       const tools = fileSearchTool ? [fileSearchTool] : undefined;

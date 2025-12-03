@@ -7,6 +7,9 @@ import { SidebarToggleProvider } from "@/hooks/use-sidebar-toggle";
 import { SidebarToggleOverlay } from "@/components/SidebarToggleOverlay";
 import { ProtectedRoute, AdminRoute, AuthRedirect } from "@/components/ProtectedRoute";
 import { UserProvider } from "@/contexts/UserContext";
+import { ProjectProvider } from "@/contexts/ProjectContext";
+import { DocumentParsingProvider } from "@/contexts/DocumentParsingContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
@@ -14,6 +17,9 @@ import MarketResearch from "./pages/MarketResearch";
 import AdOptimizer from "./pages/AdOptimizer";
 import AdOptimizerRunDetails from "./pages/AdOptimizerRunDetails";
 import AdSpy from "./pages/AdSpy";
+import AdSpyNew from "./pages/AdSpyNew";
+import AgentProjects from "./pages/AgentProjects";
+import CentralBrain from "./pages/CentralBrain";
 import AdCreatorDashboard from "./pages/advertising/AdCreatorDashboard";
 import Auth from "./pages/Auth";
 import AuthInvite from "./pages/AuthInvite";
@@ -66,18 +72,24 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminClients from "./pages/AdminClients";
 import AdminFeatureToggles from "./pages/AdminFeatureToggles";
+import Calendar from "./pages/Calendar";
+import Launch from "./pages/Launch";
+import ThemeSettings from "./pages/ThemeSettings";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <UserProvider>
-          <SidebarToggleProvider>
-            <SidebarToggleOverlay />
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <UserProvider>
+            <ProjectProvider>
+              <DocumentParsingProvider>
+                <SidebarToggleProvider>
+                  <SidebarToggleOverlay />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/invite" element={<AuthInvite />} />
@@ -89,6 +101,8 @@ const App = () => (
           <Route path="/client/:clientId/projects" element={<ProtectedRoute><ClientProjects /></ProtectedRoute>} />
           <Route path="/client/:clientId/knowledge" element={<ProtectedRoute><ClientKnowledge /></ProtectedRoute>} />
           <Route path="/client/:clientId/analytics" element={<ProtectedRoute><ClientAnalytics /></ProtectedRoute>} />
+          <Route path="/client/:clientId/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+          <Route path="/client/:clientId/launch" element={<ProtectedRoute><Launch /></ProtectedRoute>} />
           <Route path="/client/:clientId/system" element={<ProtectedRoute><SystemControl /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising" element={<ProtectedRoute><Advertising /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/market-research" element={<ProtectedRoute><MarketResearch /></ProtectedRoute>} />
@@ -143,6 +157,11 @@ const App = () => (
           <Route path="/client/:clientId/financial-agents" element={<ProtectedRoute><FinancialAgents /></ProtectedRoute>} />
           {/* Generic department route (after specific advertising/marketing routes) */}
           <Route path="/client/:clientId/:departmentId" element={<ProtectedRoute><Department /></ProtectedRoute>} />
+          {/* New Agent Projects and Central Brain routes */}
+          <Route path="/agent-projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
+          <Route path="/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
+          <Route path="/central-brain" element={<ProtectedRoute><CentralBrain /></ProtectedRoute>} />
+          <Route path="/knowledge-base" element={<ProtectedRoute><KnowledgeBaseBrowser /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
               <Route path="/admin/feature-toggles" element={<AdminRoute><AdminFeatureToggles /></AdminRoute>} />
@@ -151,13 +170,18 @@ const App = () => (
               <Route path="/admin/calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+              {/* Theme Settings - accessible to agency admins */}
+              <Route path="/settings/themes" element={<ProtectedRoute><ThemeSettings /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </SidebarToggleProvider>
-        </UserProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+              </Routes>
+                </SidebarToggleProvider>
+              </DocumentParsingProvider>
+            </ProjectProvider>
+          </UserProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
