@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClientSwitcher } from "@/components/ClientSwitcher";
 import { RunNowModal } from "@/components/RunNowModal";
+import { AgentSettingsModal } from "@/components/AgentSettingsModal";
+import { getAllAgentSettings, type UserAgentSettings } from "@/integrations/user-agent-settings/api";
 import {
   Select,
   SelectContent,
@@ -34,6 +36,8 @@ import {
   RefreshCw,
   FileOutput,
   ChevronRight,
+  Settings2,
+  Star,
 } from "lucide-react";
 import { departmentsData, type Agent, type Department } from "@/data/departments";
 import { useAllFeatureToggles } from "@/hooks/useFeatureToggle";
@@ -63,8 +67,10 @@ export default function ClientAgentController() {
     department: Department;
   } | null>(null);
   const [runModalOpen, setRunModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [runHistory, setRunHistory] = useState<AgentRun[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [userSettings, setUserSettings] = useState<UserAgentSettings[]>([]);
 
   // Filter departments and agents based on feature toggles
   const enabledDepartments = departmentsData.filter((dept) => {
@@ -108,10 +114,33 @@ export default function ClientAgentController() {
     return true;
   });
 
-  // Load run history (mock for now)
+  // Load run history and user settings
   useEffect(() => {
     loadRunHistory();
+    loadUserSettings();
   }, [clientId]);
+
+  async function loadUserSettings() {
+    try {
+      const settings = await getAllAgentSettings(clientId);
+      setUserSettings(settings);
+    } catch (error) {
+      console.error("Error loading user settings:", error);
+    }
+  }
+
+  // Get user settings for a specific agent
+  function getAgentSettings(departmentId: string, agentName: string): UserAgentSettings | undefined {
+    return userSettings.find(
+      (s) => s.department_id === departmentId && s.agent_name === agentName
+    );
+  }
+
+  // Get display name for an agent (custom or default)
+  function getAgentDisplayName(departmentId: string, agentName: string): string {
+    const settings = getAgentSettings(departmentId, agentName);
+    return settings?.custom_name || agentName;
+  }
 
   async function loadRunHistory() {
     setLoadingHistory(true);
@@ -154,6 +183,11 @@ export default function ClientAgentController() {
   function handleRunAgent(agent: Agent, department: Department) {
     setSelectedAgent({ agent, department });
     setRunModalOpen(true);
+  }
+
+  function handleOpenSettings(agent: Agent, department: Department) {
+    setSelectedAgent({ agent, department });
+    setSettingsModalOpen(true);
   }
 
   function getStatusColor(status: string) {
@@ -277,56 +311,78 @@ export default function ClientAgentController() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredAgents.map((item, index) => (
-                    <Card
-                      key={`${item.department.id}-${item.agent.name}-${index}`}
-                      className="p-5 hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Bot className="h-4 w-4 text-primary" />
-                            <h3 className="font-semibold text-foreground truncate">
-                              {item.agent.name}
-                            </h3>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {item.department.title}
-                            </Badge>
-                            <Badge className={`text-xs ${getStatusColor(item.agent.status)}`}>
-                              {item.agent.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
+                  {filteredAgents.map((item, index) => {
+                    const agentSettings = getAgentSettings(item.department.id, item.agent.name);
+                    const displayName = getAgentDisplayName(item.department.id, item.agent.name);
+                    const hasSchedule = agentSettings?.schedule_enabled;
+                    const isFavorite = agentSettings?.is_favorite;
+                    const scheduleDisplay = hasSchedule 
+                      ? agentSettings?.schedule_type 
+                      : item.agent.schedule;
 
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {item.agent.source && (
-                            <Badge variant="secondary" className="text-xs">
-                              {item.agent.source}
-                            </Badge>
-                          )}
-                          {item.agent.schedule && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {item.agent.schedule}
-                            </span>
-                          )}
+                    return (
+                      <Card
+                        key={`${item.department.id}-${item.agent.name}-${index}`}
+                        className="p-5 hover:border-primary/50 transition-colors group"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Bot className="h-4 w-4 text-primary" />
+                              <h3 className="font-semibold text-foreground truncate">
+                                {displayName}
+                              </h3>
+                              {isFavorite && (
+                                <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                {item.department.title}
+                              </Badge>
+                              <Badge className={`text-xs ${getStatusColor(item.agent.status)}`}>
+                                {item.agent.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleOpenSettings(item.agent, item.department)}
+                            title="Agent Settings"
+                          >
+                            <Settings2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => handleRunAgent(item.agent, item.department)}
-                          disabled={item.agent.status === "Inactive"}
-                        >
-                          <Play className="h-4 w-4" />
-                          Run
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {item.agent.source && (
+                              <Badge variant="secondary" className="text-xs">
+                                {item.agent.source}
+                              </Badge>
+                            )}
+                            {scheduleDisplay && (
+                              <span className={`flex items-center gap-1 ${hasSchedule ? "text-primary" : ""}`}>
+                                <Clock className="h-3 w-3" />
+                                {scheduleDisplay}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => handleRunAgent(item.agent, item.department)}
+                            disabled={item.agent.status === "Inactive"}
+                          >
+                            <Play className="h-4 w-4" />
+                            Run
+                          </Button>
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
@@ -399,7 +455,19 @@ export default function ClientAgentController() {
         <RunNowModal
           open={runModalOpen}
           onOpenChange={setRunModalOpen}
-          agentName={selectedAgent.agent.name}
+          agentName={getAgentDisplayName(selectedAgent.department.id, selectedAgent.agent.name)}
+        />
+      )}
+
+      {/* Agent Settings Modal */}
+      {selectedAgent && (
+        <AgentSettingsModal
+          open={settingsModalOpen}
+          onOpenChange={setSettingsModalOpen}
+          agent={selectedAgent.agent}
+          department={selectedAgent.department}
+          clientId={clientId}
+          onSettingsChange={loadUserSettings}
         />
       )}
     </div>
