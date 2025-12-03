@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,11 @@ import { ResearchTab } from "@/components/ad-spy/tabs/ResearchTab";
 import { SettingsTab } from "@/components/ad-spy/tabs/SettingsTab";
 import BreakoutTab from "@/components/ad-spy/tabs/BreakoutTab";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
+import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 
 export default function AdSpyNew() {
   const navigate = useNavigate();
+  const { clientId } = useParams();
   const [activeTab, setActiveTab] = useState("ads");
   const [viewMode, setViewMode] = useState<"card" | "line">("card");
   const [channelFilter, setChannelFilter] = useState<string>("all");
@@ -23,23 +25,28 @@ export default function AdSpyNew() {
   // Show feature disabled message if feature is toggled off
   if (!featureLoading && !featureEnabled) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <Card className="p-8 max-w-md text-center">
-          <Lock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-semibold mb-2">Feature Not Available</h2>
-          <p className="text-muted-foreground mb-4">
-            Enhanced Ad Spy is currently disabled. Contact your administrator to enable this feature.
-          </p>
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Go Back
-          </Button>
-        </Card>
+      <div className="flex min-h-screen">
+        {clientId && <AdvertisingSidebar />}
+        <div className="flex-1 p-8 flex items-center justify-center">
+          <Card className="p-8 max-w-md text-center">
+            <Lock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">Feature Not Available</h2>
+            <p className="text-muted-foreground mb-4">
+              Enhanced Ad Spy is currently disabled. Contact your administrator to enable this feature.
+            </p>
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              Go Back
+            </Button>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen">
+      {clientId && <AdvertisingSidebar />}
+      <main className="flex-1 bg-background overflow-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="border-b border-border bg-card">
           <div className="px-6">
@@ -145,6 +152,7 @@ export default function AdSpyNew() {
           </TabsContent>
         </div>
       </Tabs>
+      </main>
     </div>
   );
 }
