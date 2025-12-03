@@ -1,7 +1,7 @@
 import { 
   Hexagon,
   LayoutDashboard,
-  Shield,
+  // Shield, // TODO: Re-enable when System Control is implemented
   FolderKanban,
   BookOpen,
   BarChart3,
@@ -65,7 +65,10 @@ export const ChatSidebar = () => {
     { id: "projects", title: "Projects", icon: FolderKanban, path: `/client/${clientId}/projects`, featureKey: "feature.projects" },
     { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: `/client/${clientId}/knowledge`, featureKey: "feature.knowledge-base" },
     { id: "analytics", title: "Analytics", icon: BarChart3, path: `/client/${clientId}/analytics`, featureKey: "feature.analytics" },
-    { id: "system", title: "System Control", icon: Shield, path: `/client/${clientId}/system`, featureKey: null },
+    // TODO: Re-enable System Control once LLM swap functionality is fully implemented
+    // This feature allows users to switch between different language models (e.g., GPT-4, Claude, etc.)
+    // See docs/N8N-Integration-Plan.md for planned functionality
+    // { id: "system", title: "System Control", icon: Shield, path: `/client/${clientId}/system`, featureKey: null },
   ];
 
   const quickAccessItems = allQuickAccessItems.filter((item) => {
