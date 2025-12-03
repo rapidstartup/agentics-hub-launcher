@@ -40,23 +40,35 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user?.id) return null;
 
-  const { data, error } = await untypedSupabase
-    .from("user_profiles")
-    .select("*")
-    .eq("id", userData.user.id)
-    .single();
+  // Add timeout to prevent infinite hang
+  const timeoutPromise = new Promise<null>((resolve) => {
+    setTimeout(() => {
+      console.warn("Profile fetch timed out after 10s");
+      resolve(null);
+    }, 10000);
+  });
 
-  if (error) {
-    // Profile doesn't exist - try to create one
-    if (error.code === "PGRST116") {
-      return await createDefaultProfile(userData.user.id, userData.user.email);
+  const fetchPromise = (async () => {
+    const { data, error } = await untypedSupabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", userData.user.id)
+      .single();
+
+    if (error) {
+      // Profile doesn't exist - try to create one
+      if (error.code === "PGRST116") {
+        return await createDefaultProfile(userData.user.id, userData.user.email);
+      }
+      // Log other errors but don't throw - return null to allow graceful handling
+      console.error("Error fetching user profile:", error);
+      return null;
     }
-    // Log other errors but don't throw - return null to allow graceful handling
-    console.error("Error fetching user profile:", error);
-    return null;
-  }
 
-  return data as UserProfile;
+    return data as UserProfile;
+  })();
+
+  return Promise.race([fetchPromise, timeoutPromise]);
 }
 
 // Create a default profile for new users

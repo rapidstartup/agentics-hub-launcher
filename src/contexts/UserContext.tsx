@@ -93,12 +93,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        await loadUserData(session?.user ?? null);
+        // Don't await - let it run async to prevent blocking auth
+        loadUserData(session?.user ?? null);
       } else if (event === "SIGNED_OUT") {
         setProfile(null);
         setAccessibleClients([]);
