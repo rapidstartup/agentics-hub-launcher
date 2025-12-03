@@ -13,18 +13,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface RunNowModalProps {
+export interface RunNowModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agentName: string;
-  clientName: string;
+  clientName?: string;
 }
 
 export const RunNowModal = ({
   open,
   onOpenChange,
   agentName,
-  clientName,
+  clientName = "Client",
 }: RunNowModalProps) => {
   const [parameters, setParameters] = useState("");
   const [notes, setNotes] = useState("");

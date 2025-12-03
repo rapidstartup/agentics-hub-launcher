@@ -1,6 +1,8 @@
 // Client Invitations API - Data access layer for invitation management
+// Uses untyped client as these tables exist in external Supabase but not in auto-generated types
 
 import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase } from "@/integrations/supabase/untyped-client";
 
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";
 export type InvitationRole = "owner" | "admin" | "member";
@@ -62,18 +64,18 @@ export interface AcceptInvitationResult {
 // ============================================================================
 
 export async function listClientInvitations(clientId: string): Promise<ClientInvitation[]> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_invitations")
     .select("*")
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data || []) as unknown as ClientInvitation[];
+  return (data || []) as ClientInvitation[];
 }
 
 export async function listPendingInvitations(clientId: string): Promise<ClientInvitation[]> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_invitations")
     .select("*")
     .eq("client_id", clientId)
@@ -82,7 +84,7 @@ export async function listPendingInvitations(clientId: string): Promise<ClientIn
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data || []) as unknown as ClientInvitation[];
+  return (data || []) as ClientInvitation[];
 }
 
 export async function createInvitation(
@@ -91,7 +93,7 @@ export async function createInvitation(
   role: InvitationRole = "member",
   message?: string
 ): Promise<CreateInvitationResult> {
-  const { data, error } = await supabase.rpc("create_client_invitation", {
+  const { data, error } = await untypedSupabase.rpc("create_client_invitation", {
     p_client_id: clientId,
     p_email: email,
     p_role: role,
@@ -103,7 +105,7 @@ export async function createInvitation(
 }
 
 export async function revokeInvitation(invitationId: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("revoke_invitation", {
+  const { data, error } = await untypedSupabase.rpc("revoke_invitation", {
     p_invitation_id: invitationId,
   });
 
@@ -113,7 +115,7 @@ export async function revokeInvitation(invitationId: string): Promise<boolean> {
 
 export async function resendInvitation(invitationId: string): Promise<CreateInvitationResult> {
   // Get the existing invitation
-  const { data: existing, error: fetchError } = await supabase
+  const { data: existing, error: fetchError } = await untypedSupabase
     .from("client_invitations")
     .select("*")
     .eq("id", invitationId)
@@ -138,7 +140,7 @@ export async function resendInvitation(invitationId: string): Promise<CreateInvi
 // ============================================================================
 
 export async function getInvitationByToken(token: string): Promise<InvitationDetails | null> {
-  const { data, error } = await supabase.rpc("get_invitation_by_token", {
+  const { data, error } = await untypedSupabase.rpc("get_invitation_by_token", {
     p_token: token,
   });
 
@@ -161,7 +163,7 @@ export async function getInvitationByToken(token: string): Promise<InvitationDet
 }
 
 export async function acceptInvitation(token: string): Promise<AcceptInvitationResult> {
-  const { data, error } = await supabase.rpc("accept_invitation", {
+  const { data, error } = await untypedSupabase.rpc("accept_invitation", {
     p_token: token,
   });
 
@@ -177,7 +179,7 @@ export async function getMyPendingInvitations(): Promise<InvitationWithClient[]>
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user?.email) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_invitations")
     .select(`
       *,
@@ -189,7 +191,7 @@ export async function getMyPendingInvitations(): Promise<InvitationWithClient[]>
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data || []) as unknown as InvitationWithClient[];
+  return (data || []) as InvitationWithClient[];
 }
 
 // ============================================================================
@@ -215,4 +217,3 @@ export function formatExpiresAt(expiresAt: string): string {
   if (diffDays === 1) return "Expires tomorrow";
   return `Expires in ${diffDays} days`;
 }
-

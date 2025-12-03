@@ -1,6 +1,8 @@
 // User Profiles API - Data access layer for user profile and role management
+// Uses untyped client as these tables exist in external Supabase but not in auto-generated types
 
 import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase } from "@/integrations/supabase/untyped-client";
 
 export type UserRole = "agency_admin" | "client_user";
 export type ClientMemberRole = "owner" | "admin" | "member";
@@ -38,7 +40,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user?.id) return null;
 
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("user_profiles")
     .select("*")
     .eq("id", userData.user.id)
@@ -49,11 +51,11 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     throw error;
   }
 
-  return data as unknown as UserProfile;
+  return data as UserProfile;
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("user_profiles")
     .select("*")
     .eq("id", userId)
@@ -64,7 +66,7 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
     throw error;
   }
 
-  return data as unknown as UserProfile;
+  return data as UserProfile;
 }
 
 export async function updateUserProfile(
@@ -76,7 +78,7 @@ export async function updateUserProfile(
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user?.id) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("user_profiles")
     .update(updates)
     .eq("id", userData.user.id)
@@ -84,14 +86,14 @@ export async function updateUserProfile(
     .single();
 
   if (error) throw error;
-  return data as unknown as UserProfile;
+  return data as UserProfile;
 }
 
 export async function updateUserRole(
   userId: string,
   role: UserRole
 ): Promise<UserProfile> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("user_profiles")
     .update({ role })
     .eq("id", userId)
@@ -99,7 +101,7 @@ export async function updateUserRole(
     .single();
 
   if (error) throw error;
-  return data as unknown as UserProfile;
+  return data as UserProfile;
 }
 
 export async function isAgencyAdmin(): Promise<boolean> {
@@ -112,7 +114,7 @@ export async function isAgencyAdmin(): Promise<boolean> {
 // ============================================================================
 
 export async function getClientMembers(clientId: string): Promise<ClientMemberWithDetails[]> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_members")
     .select(`
       *,
@@ -125,7 +127,6 @@ export async function getClientMembers(clientId: string): Promise<ClientMemberWi
   
   // Also fetch user emails
   const memberData = data as any[];
-  const userIds = memberData.map(m => m.user_id);
   
   // Note: In production, you'd want a server-side function for this
   // For now, we'll return what we have
@@ -139,7 +140,7 @@ export async function getUserClientMemberships(): Promise<(ClientMember & { clie
   const { data: userData } = await supabase.auth.getUser();
   if (!userData?.user?.id) return [];
 
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_members")
     .select(`
       *,
@@ -156,7 +157,7 @@ export async function addClientMember(
   userId: string,
   role: ClientMemberRole = "member"
 ): Promise<ClientMember> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_members")
     .insert({
       client_id: clientId,
@@ -167,14 +168,14 @@ export async function addClientMember(
     .single();
 
   if (error) throw error;
-  return data as unknown as ClientMember;
+  return data as ClientMember;
 }
 
 export async function updateClientMemberRole(
   memberId: string,
   role: ClientMemberRole
 ): Promise<ClientMember> {
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_members")
     .update({ role })
     .eq("id", memberId)
@@ -182,11 +183,11 @@ export async function updateClientMemberRole(
     .single();
 
   if (error) throw error;
-  return data as unknown as ClientMember;
+  return data as ClientMember;
 }
 
 export async function removeClientMember(memberId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await untypedSupabase
     .from("client_members")
     .delete()
     .eq("id", memberId);
@@ -203,7 +204,7 @@ export async function canAccessClient(clientId: string): Promise<boolean> {
   if (profile?.role === "agency_admin") return true;
 
   // Check membership
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_members")
     .select("id")
     .eq("client_id", clientId)
@@ -222,7 +223,7 @@ export async function getClientRole(clientId: string): Promise<ClientMemberRole 
   if (profile?.role === "agency_admin") return "agency_admin";
 
   // Get membership role
-  const { data, error } = await supabase
+  const { data, error } = await untypedSupabase
     .from("client_members")
     .select("role")
     .eq("client_id", clientId)
@@ -232,4 +233,3 @@ export async function getClientRole(clientId: string): Promise<ClientMemberRole 
   if (error || !data) return null;
   return data.role as ClientMemberRole;
 }
-

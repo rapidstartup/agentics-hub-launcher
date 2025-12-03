@@ -1,6 +1,7 @@
 // Feature Toggles API - Data access layer for feature toggle management
+// Uses untyped client as these tables exist in external Supabase but not in auto-generated types
 
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 
 export type FeatureCategory = "department" | "agent" | "feature" | "module";
 
@@ -67,7 +68,7 @@ export async function listFeatureDefinitions(): Promise<FeatureDefinition[]> {
     .order("name", { ascending: true });
 
   if (error) throw error;
-  return (data || []) as unknown as FeatureDefinition[];
+  return (data || []) as FeatureDefinition[];
 }
 
 export async function getFeatureDefinition(key: string): Promise<FeatureDefinition | null> {
@@ -82,7 +83,7 @@ export async function getFeatureDefinition(key: string): Promise<FeatureDefiniti
     throw error;
   }
 
-  return data as unknown as FeatureDefinition;
+  return data as FeatureDefinition;
 }
 
 export async function getFeaturesByCategory(category: FeatureCategory): Promise<FeatureDefinition[]> {
@@ -94,7 +95,7 @@ export async function getFeaturesByCategory(category: FeatureCategory): Promise<
     .order("name", { ascending: true });
 
   if (error) throw error;
-  return (data || []) as unknown as FeatureDefinition[];
+  return (data || []) as FeatureDefinition[];
 }
 
 export async function getChildFeatures(parentKey: string): Promise<FeatureDefinition[]> {
@@ -106,7 +107,7 @@ export async function getChildFeatures(parentKey: string): Promise<FeatureDefini
     .order("name", { ascending: true });
 
   if (error) throw error;
-  return (data || []) as unknown as FeatureDefinition[];
+  return (data || []) as FeatureDefinition[];
 }
 
 // ============================================================================
@@ -119,7 +120,7 @@ export async function listPlatformToggles(): Promise<PlatformFeatureToggle[]> {
     .select("*");
 
   if (error) throw error;
-  return (data || []) as unknown as PlatformFeatureToggle[];
+  return (data || []) as PlatformFeatureToggle[];
 }
 
 export async function getPlatformToggle(featureKey: string): Promise<PlatformFeatureToggle | null> {
@@ -134,7 +135,7 @@ export async function getPlatformToggle(featureKey: string): Promise<PlatformFea
     throw error;
   }
 
-  return data as unknown as PlatformFeatureToggle;
+  return data as PlatformFeatureToggle;
 }
 
 export async function setPlatformToggle(
@@ -151,7 +152,7 @@ export async function setPlatformToggle(
     .single();
 
   if (error) throw error;
-  return data as unknown as PlatformFeatureToggle;
+  return data as PlatformFeatureToggle;
 }
 
 export async function deletePlatformToggle(featureKey: string): Promise<void> {
@@ -174,7 +175,7 @@ export async function listClientToggles(clientId: string): Promise<ClientFeature
     .eq("client_id", clientId);
 
   if (error) throw error;
-  return (data || []) as unknown as ClientFeatureToggle[];
+  return (data || []) as ClientFeatureToggle[];
 }
 
 export async function getClientToggle(
@@ -193,7 +194,7 @@ export async function getClientToggle(
     throw error;
   }
 
-  return data as unknown as ClientFeatureToggle;
+  return data as ClientFeatureToggle;
 }
 
 export async function setClientToggle(
@@ -223,7 +224,7 @@ export async function setClientToggle(
     .single();
 
   if (error) throw error;
-  return data as unknown as ClientFeatureToggle;
+  return data as ClientFeatureToggle;
 }
 
 export async function bulkSetClientToggles(
@@ -358,4 +359,3 @@ export async function getFeatureTree(clientId?: string): Promise<FeatureTree[]> 
 
   return buildTree(null);
 }
-
