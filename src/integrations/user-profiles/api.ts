@@ -47,11 +47,41 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") return null;
-    throw error;
+    // Profile doesn't exist - try to create one
+    if (error.code === "PGRST116") {
+      return await createDefaultProfile(userData.user.id, userData.user.email);
+    }
+    // Log other errors but don't throw - return null to allow graceful handling
+    console.error("Error fetching user profile:", error);
+    return null;
   }
 
   return data as UserProfile;
+}
+
+// Create a default profile for new users
+async function createDefaultProfile(userId: string, email?: string | null): Promise<UserProfile | null> {
+  try {
+    const { data, error } = await untypedSupabase
+      .from("user_profiles")
+      .insert({
+        id: userId,
+        role: "client_user", // Default to client_user, admin promotes manually
+        display_name: email?.split("@")[0] || "User",
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Error creating default profile:", error);
+      return null;
+    }
+
+    return data as UserProfile;
+  } catch (e) {
+    console.error("Failed to create default profile:", e);
+    return null;
+  }
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
