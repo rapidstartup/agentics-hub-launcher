@@ -77,3 +77,9 @@ verify_jwt = false
 
 [functions.google-search-indexing]
 verify_jwt = false
+
+[functions.import-central-brain-data]
+verify_jwt = false
+
+[functions.export-central-brain-data]
+verify_jwt = false

@@ -20,6 +20,96 @@ const BUILT_IN_PRESETS: {
 } = {
   dark: [
     {
+      name: "Agentix",
+      theme: {
+        colors: {
+          background: "#0f0f0f",
+          foreground: "#ffffff",
+          primary: "#ff0000",
+          secondary: "#700000",
+          accent: "#d6d6d6",
+          muted: "#202020"
+        },
+        sidebarConfig: {
+          colors: {
+            background: "#0a0c10",
+            text: "#ffffff",
+            activeBackground: "#ff0000",
+            activeText: "#ffffff",
+            hoverBackground: "#212121",
+            tabBarBackground: "#0a0c10",
+            tabActiveBackground: "#7f1d1d",
+            tabActiveText: "#ffffff",
+            tabActiveBorder: "#7f1d1d",
+            tabInactiveText: "#a1a1aa",
+            tabHoverBackground: "#1a1d24"
+          },
+          gradient: {
+            enabled: true,
+            type: 'radial',
+            angle: 180,
+            centerX: 47,
+            centerY: 100,
+            stops: [
+              { id: "1", color: "#0a0c10", position: 0 },
+              { id: "2", color: "#750000", position: 0 },
+              { id: "3", color: "#0d0d0d", position: 100 }
+            ]
+          }
+        },
+        buttonConfig: {
+          colors: { default: "#333333", hover: "#2e0002", active: "#ff0000", text: "#ffffff" },
+          gradient: { enabled: false, type: 'linear', angle: 168, centerX: 34, centerY: 48, stops: [] }
+        },
+        dividerConfig: { color: "#ff0000", opacity: 25, width: 1, style: 'solid' },
+        backgroundConfig: {
+          color: "#0a0c10",
+          gradient: {
+            enabled: true,
+            type: 'linear',
+            angle: 339,
+            centerX: 50,
+            centerY: 35,
+            stops: [
+              { id: "1", color: "#212121", position: 46 },
+              { id: "2", color: "#000000", position: 100 }
+            ]
+          }
+        },
+        cardConfig: {
+          background: "#131620",
+          gradient: {
+            enabled: true,
+            type: 'linear',
+            angle: 178,
+            centerX: 50,
+            centerY: 50,
+            stops: [
+              { id: "1", color: "#0d0d0d", position: 0 },
+              { id: "2", color: "#292929", position: 50 },
+              { id: "3", color: "#121212", position: 99 }
+            ]
+          },
+          border: { color: "#545454", opacity: 100, width: 1 },
+          shadow: { color: "#000000", opacity: 78, blur: 30, spread: -1, offsetX: 6, offsetY: 6 }
+        },
+        glassConfig: {
+          enabled: true,
+          blurAmount: 37,
+          backgroundOpacity: 47,
+          chromeIntensity: 31,
+          chromeTexture: true,
+          tintColor: "#000000"
+        },
+        statusColors: {
+          success: "#16a34a", successForeground: "#ffffff",
+          warning: "#d97706", warningForeground: "#ffffff",
+          error: "#dc2626", errorForeground: "#ffffff",
+          info: "#2563eb", infoForeground: "#ffffff"
+        }
+      }
+    },
+    {
       name: "Midnight",
       theme: {
         colors: {

@@ -248,12 +248,12 @@ interface ThemeContextType {
 // =============================================================================
 
 const defaultDarkColors: ThemeColors = {
-  background: "#090a0e",
+  background: "#0f0f0f",
   foreground: "#ffffff",
-  primary: "#134736",
-  secondary: "#1f6e2f",
-  accent: "#1d7a62",
-  muted: "#252a36",
+  primary: "#ff0000",
+  secondary: "#700000",
+  accent: "#d6d6d6",
+  muted: "#202020",
 };
 
 const defaultLightColors: ThemeColors = {
@@ -287,20 +287,21 @@ const defaultLightButtonConfig: ModeSpecificButtonConfig = {
 
 const defaultDarkButtonConfig: ModeSpecificButtonConfig = {
   colors: {
-    default: "#134736",
-    hover: "#1d7a62",
-    active: "#0f3a2b",
+    default: "#333333",
+    hover: "#2e0002",
+    active: "#ff0000",
     text: "#ffffff",
   },
   gradient: {
     enabled: false,
     type: 'linear',
-    angle: 90,
-    centerX: 50,
-    centerY: 50,
+    angle: 168,
+    centerX: 34,
+    centerY: 48,
     stops: [
-      { id: "1", color: "#134736", position: 0 },
-      { id: "2", color: "#1d7a62", position: 100 },
+      { id: "1", color: "#000000", position: 45 },
+      { id: "2", color: "#6b0000", position: 0 },
+      { id: "3", color: "#3d3d3d", position: 97 },
     ],
   },
 };
@@ -336,25 +337,26 @@ const defaultDarkSidebarConfig: ModeSpecificSidebarConfig = {
   colors: {
     background: "#0a0c10",
     text: "#ffffff",
-    activeBackground: "#134736",
+    activeBackground: "#ff0000",
     activeText: "#ffffff",
-    hoverBackground: "#1a1d28",
+    hoverBackground: "#212121",
     tabBarBackground: "#0a0c10",
-    tabActiveBackground: "#134736",
+    tabActiveBackground: "#7f1d1d",
     tabActiveText: "#ffffff",
-    tabActiveBorder: "#134736",
+    tabActiveBorder: "#7f1d1d",
     tabInactiveText: "#a1a1aa",
     tabHoverBackground: "#1a1d24",
   },
   gradient: {
-    enabled: false,
-    type: 'linear',
+    enabled: true,
+    type: 'radial',
     angle: 180,
-    centerX: 50,
-    centerY: 50,
+    centerX: 47,
+    centerY: 100,
     stops: [
       { id: "1", color: "#0a0c10", position: 0 },
-      { id: "2", color: "#1a1d28", position: 100 },
+      { id: "2", color: "#750000", position: 0 },
+      { id: "3", color: "#0d0d0d", position: 100 },
     ],
   },
 };
@@ -375,16 +377,16 @@ const defaultLightBackgroundConfig: ModeSpecificBackgroundConfig = {
 };
 
 const defaultDarkBackgroundConfig: ModeSpecificBackgroundConfig = {
-  color: "#090a0e",
+  color: "#0a0c10",
   gradient: {
-    enabled: false,
+    enabled: true,
     type: 'linear',
-    angle: 180,
+    angle: 339,
     centerX: 50,
-    centerY: 50,
+    centerY: 35,
     stops: [
-      { id: "1", color: "#090a0e", position: 0 },
-      { id: "2", color: "#1a1d28", position: 100 },
+      { id: "1", color: "#212121", position: 46 },
+      { id: "2", color: "#000000", position: 100 },
     ],
   },
 };
@@ -420,28 +422,29 @@ const defaultLightCardConfig: ModeSpecificCardConfig = {
 const defaultDarkCardConfig: ModeSpecificCardConfig = {
   background: "#131620",
   gradient: {
-    enabled: false,
+    enabled: true,
     type: 'linear',
-    angle: 135,
+    angle: 178,
     centerX: 50,
     centerY: 50,
     stops: [
-      { id: "1", color: "#131620", position: 0 },
-      { id: "2", color: "#1a1d28", position: 100 },
+      { id: "1", color: "#0d0d0d", position: 0 },
+      { id: "2", color: "#292929", position: 50 },
+      { id: "3", color: "#121212", position: 99 },
     ],
   },
   border: {
-    color: "#404040",
+    color: "#545454",
     opacity: 100,
     width: 1,
   },
   shadow: {
     color: "#000000",
-    opacity: 20,
-    blur: 8,
-    spread: 0,
-    offsetX: 0,
-    offsetY: 2,
+    opacity: 78,
+    blur: 30,
+    spread: -1,
+    offsetX: 6,
+    offsetY: 6,
   },
 };
 
@@ -455,11 +458,11 @@ const defaultLightGlassConfig: GlassConfig = {
 };
 
 const defaultDarkGlassConfig: GlassConfig = {
-  enabled: false,
-  blurAmount: 16,
-  backgroundOpacity: 15,
-  chromeTexture: false,
-  chromeIntensity: 0,
+  enabled: true,
+  blurAmount: 37,
+  backgroundOpacity: 47,
+  chromeTexture: true,
+  chromeIntensity: 31,
   tintColor: "#000000",
 };
 
@@ -493,8 +496,8 @@ const defaultLightDividerConfig: DividerConfig = {
 };
 
 const defaultDarkDividerConfig: DividerConfig = {
-  color: "#404040",
-  opacity: 100,
+  color: "#ff0000",
+  opacity: 25,
   width: 1,
   style: 'solid',
 };
