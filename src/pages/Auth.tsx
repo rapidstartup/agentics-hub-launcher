@@ -7,12 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Rocket } from "lucide-react";
+import { Loader2, Rocket, Zap } from "lucide-react";
+
+const DEV_EMAIL = "dev@agentix.local";
+const DEV_PASSWORD = "DevTest123!";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDevLoading, setIsDevLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -78,6 +82,83 @@ const Auth = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDevLogin = async () => {
+    setIsDevLoading(true);
+
+    try {
+      // First try to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: DEV_EMAIL,
+        password: DEV_PASSWORD,
+      });
+
+      if (signInError) {
+        // If user doesn't exist, create them
+        if (signInError.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Creating dev account...",
+            description: "Setting up admin access",
+          });
+
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: DEV_EMAIL,
+            password: DEV_PASSWORD,
+            options: {
+              emailRedirectTo: `${window.location.origin}/`,
+            },
+          });
+
+          if (signUpError) throw signUpError;
+
+          // Now sign in with the new account
+          const { data: newSignIn, error: newSignInError } = await supabase.auth.signInWithPassword({
+            email: DEV_EMAIL,
+            password: DEV_PASSWORD,
+          });
+
+          if (newSignInError) throw newSignInError;
+
+          // Upgrade to admin role
+          if (newSignIn.user) {
+            const { error: roleError } = await supabase
+              .from("user_roles")
+              .update({ role: "agency_admin" })
+              .eq("user_id", newSignIn.user.id);
+
+            if (roleError) {
+              console.warn("Could not set admin role:", roleError);
+            }
+          }
+
+          toast({
+            title: "Dev account created!",
+            description: "Logging in with admin access...",
+          });
+
+          navigate("/");
+          return;
+        }
+        throw signInError;
+      }
+
+      toast({
+        title: "Dev Login Success!",
+        description: "Welcome back, admin.",
+      });
+
+      navigate("/");
+    } catch (error: any) {
+      console.error("Dev login error:", error);
+      toast({
+        title: "Dev login failed",
+        description: error.message || "Could not complete dev login",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDevLoading(false);
     }
   };
 
@@ -187,8 +268,40 @@ const Auth = () => {
           </Tabs>
         </Card>
 
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Testing mode - Auto-confirm enabled</p>
+        {/* Dev Login Button */}
+        <div className="space-y-3">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Development Only
+              </span>
+            </div>
+          </div>
+          
+          <Button
+            onClick={handleDevLogin}
+            disabled={isDevLoading}
+            variant="outline"
+            className="w-full border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 hover:border-amber-500 text-amber-500"
+          >
+            {isDevLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Setting up dev access...
+              </>
+            ) : (
+              <>
+                <Zap className="mr-2 h-4 w-4" />
+                Dev Login (Admin Access)
+              </>
+            )}
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            {DEV_EMAIL} • Auto-creates account with full admin access
+          </p>
         </div>
       </div>
     </div>
