@@ -215,7 +215,7 @@ export default function AgentProjects() {
     const reordered = arrayMove(filteredBoards, oldIndex, newIndex);
     
     // Update positions
-    const updates = reordered.map((board, index) => ({
+    const updates = reordered.map((board: any, index: number) => ({
       id: board.id,
       position: index,
     }));
