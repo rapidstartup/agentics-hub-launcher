@@ -95,3 +95,5 @@ ON CONFLICT (feature_key) DO NOTHING;
 -- Comment
 COMMENT ON TABLE public.feature_definitions IS 'Updated with fork merge features (Agent Projects, Central Brain, Enhanced Ad Spy) on 2025-12-05';
 
+
+

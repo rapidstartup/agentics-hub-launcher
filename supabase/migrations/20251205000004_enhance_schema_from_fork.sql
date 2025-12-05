@@ -81,3 +81,5 @@ COMMENT ON COLUMN public.chat_sessions.canvas_block_id IS 'Links chat session to
 COMMENT ON COLUMN public.scheduled_posts.agent_board_id IS 'Links scheduled post to a specific agent project board';
 COMMENT ON COLUMN public.scheduled_posts.creative_card_id IS 'Links scheduled post to a specific creative card';
 
+
+

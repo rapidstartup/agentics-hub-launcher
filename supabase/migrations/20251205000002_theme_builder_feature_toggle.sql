@@ -49,3 +49,5 @@ ON CONFLICT (feature_key) DO NOTHING;
 -- Comment
 COMMENT ON TABLE public.feature_definitions IS 'Updated with Theme Builder feature on 2025-12-05';
 
+
+

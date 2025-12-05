@@ -220,3 +220,5 @@ If you're unsure which variable to use for a specific use case, check the existi
 - `src/index.css` - CSS variable definitions
 - `src/contexts/ThemeContext.tsx` - Theme context and defaults
 
+
+
