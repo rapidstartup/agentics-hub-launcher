@@ -1485,47 +1485,18 @@ export type Database = {
         }
         Relationships: []
       }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       check_and_trigger_scheduled_runs: { Args: never; Returns: undefined }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       seed_demo_data_for_user: {
         Args: { p_user_id: string }
         Returns: undefined
       }
     }
     Enums: {
-      app_role: "agency_admin" | "client_user"
       execution_mode: "n8n" | "internal"
       kb_category:
         | "document"
@@ -1671,7 +1642,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["agency_admin", "client_user"],
       execution_mode: ["n8n", "internal"],
       kb_category: [
         "document",
