@@ -5,7 +5,7 @@ import { ReportStatusCard } from "@/components/advertising/ReportStatusCard";
 import { ResearchReportViewer } from "@/components/advertising/ResearchReportViewer";
 import { ReportsList } from "@/components/advertising/ReportsList";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { useToast } from "@/hooks/use-toast";
 
 const MarketResearch = () => {

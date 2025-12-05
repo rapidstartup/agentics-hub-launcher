@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -45,7 +45,7 @@ import {
   Camera,
   Wand2,
   Layers,
-  Database,
+  Database as DatabaseIcon,
   Shield,
   Crown,
   Lock,

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { ThemesSettings } from "@/components/settings/ThemesSettings";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
