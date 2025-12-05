@@ -205,7 +205,7 @@ export function AdsTab({ viewMode, channelFilter, onViewModeChange, onChannelFil
                       }, {} as Record<string, number>);
                       
                       const topCompetitor = Object.entries(competitorBreakdown)
-                        .sort(([, a], [, b]) => b - a)[0];
+                        .sort(([, a], [, b]) => (b as number) - (a as number))[0];
 
                       return (
                         <div
@@ -222,7 +222,7 @@ export function AdsTab({ viewMode, channelFilter, onViewModeChange, onChannelFil
                           </div>
                           {topCompetitor && (
                             <div className="text-xs text-muted-foreground">
-                              {topCompetitor[0]}: {topCompetitor[1]} ads
+                              {topCompetitor[0]}: {String(topCompetitor[1])} ads
                             </div>
                           )}
                         </div>

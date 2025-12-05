@@ -305,7 +305,7 @@ export default function CentralBrain() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/10">
-                      <Database className="w-5 h-5 text-primary" />
+                      <DatabaseIcon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">Company Brain Status</CardTitle>
@@ -644,7 +644,7 @@ export default function CentralBrain() {
                 <Card className="border-border p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-lg bg-emerald-500/10">
-                      <Database className="w-5 h-5 text-emerald-500" />
+                      <DatabaseIcon className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">CRM</h3>

@@ -624,7 +624,7 @@ export function ThemePresets({ mode }: ThemePresetsProps) {
         <p className="text-sm text-muted-foreground mb-3">Built-in Presets</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {builtInPresets.map((preset) => {
-            const isActive = isActivePreset(preset.theme.colors);
+            const isActive = isActivePreset(preset.theme.colors as unknown as Record<string, string>);
             return (
               <Card
                 key={preset.name}
@@ -685,7 +685,7 @@ export function ThemePresets({ mode }: ThemePresetsProps) {
             {userPresets.map((preset) => {
               const presetTheme = preset.theme_config;
               const colors = presetTheme.colors;
-              const isActive = isActivePreset(colors);
+              const isActive = isActivePreset(colors as unknown as Record<string, string>);
               return (
                 <Card
                   key={preset.id}

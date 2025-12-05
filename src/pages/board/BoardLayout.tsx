@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, PenTool, Columns3, Settings, Maximize2, Minimize2, Loader2 } from "lucide-react";
