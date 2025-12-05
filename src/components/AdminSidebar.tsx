@@ -13,12 +13,13 @@ import {
   Settings,
   Bell,
   ArrowLeftRight,
-  ChevronDown,
+  ChevronUp,
   Building2,
   Loader2,
   Brain,
   ToggleLeft,
-  Brush
+  Brush,
+  LogOut
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -29,8 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 import { listClients, type Client } from "@/integrations/clients/api";
+import { useUser } from "@/contexts/UserContext";
 
 const navigationItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
@@ -59,6 +68,17 @@ export const AdminSidebar = () => {
   const [loadingClients, setLoadingClients] = useState(true);
   const navigate = useNavigate();
   const { isOpen } = useSidebarToggle();
+  const { user, profile, signOut, isAgencyAdmin } = useUser();
+
+  // Get user initials for avatar
+  const userInitials = profile?.display_name 
+    ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.slice(0, 2).toUpperCase() || 'AU';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   useEffect(() => {
     loadClients();
@@ -186,16 +206,35 @@ export const AdminSidebar = () => {
 
       {/* User Profile */}
       <div className="border-t border-border p-4">
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
-            <span className="text-xs font-semibold text-primary">AU</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Admin User</p>
-            <p className="text-xs text-muted-foreground">Premium Plan</p>
-          </div>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
+                <span className="text-xs font-semibold text-primary">{userInitials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {profile?.display_name || user?.email || "Admin User"}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {isAgencyAdmin ? "Agency Admin" : "Premium Plan"}
+                </p>
+              </div>
+              <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuItem onClick={() => navigate("/admin/settings")}>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );

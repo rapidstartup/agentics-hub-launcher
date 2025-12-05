@@ -8,7 +8,7 @@ const https = require('https');
 const http = require('http');
 
 // Configuration - update these values
-const SUPABASE_URL = 'https://xmzicwvafqxfnnsqabqz.supabase.co';
+const SUPABASE_URL = 'https://bzldwfwyriwvlyfixmrt.supabase.co';
 const IMPORT_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/import-central-brain-data`;
 const EXPORT_FILE = './central-brain-export.json';
 
