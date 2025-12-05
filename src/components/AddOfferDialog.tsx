@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { toast as sonnerToast } from "sonner";
 import { Upload, X, FileText, Image as ImageIcon, Video } from "lucide-react";
 

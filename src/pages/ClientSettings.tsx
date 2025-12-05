@@ -50,7 +50,7 @@ import { ClientSwitcher } from "@/components/ClientSwitcher";
 import { ConnectionsButtons } from "@/components/advertising/ConnectionsButtons";
 import { useToast } from "@/hooks/use-toast";
 import { useUser, usePermissions } from "@/contexts/UserContext";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { getClient, type Client } from "@/integrations/clients/api";
 import {
   getClientMembers,

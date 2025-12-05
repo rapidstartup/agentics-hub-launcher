@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Calendar as CalendarIcon, Lock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { toast } from "sonner";
 import { CalendarView } from "@/components/calendar/CalendarView";
 import { UpcomingPosts } from "@/components/calendar/UpcomingPosts";

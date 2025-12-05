@@ -369,79 +369,32 @@ export type Database = {
         }
         Relationships: []
       }
-      assets: {
+      agency_theme_settings: {
         Row: {
+          created_at: string | null
           id: string
-          name: string
-          type: string
-          url_or_path: string | null
-          text_content: string | null
-          tags: string[] | null
-          niche_tag: string | null
-          agent_board_id: string | null
-          enabled: boolean
-          status: string
-          group_id: string | null
-          description: string | null
-          category: string | null
-          file_size: number | null
-          mime_type: string | null
-          thumbnail_url: string | null
-          scraped_content: string | null
-          created_at: string
-          updated_at: string
+          theme_config: Json
+          updated_at: string | null
+          updated_by: string | null
+          user_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          name: string
-          type: string
-          url_or_path?: string | null
-          text_content?: string | null
-          tags?: string[] | null
-          niche_tag?: string | null
-          agent_board_id?: string | null
-          enabled?: boolean
-          status?: string
-          group_id?: string | null
-          description?: string | null
-          category?: string | null
-          file_size?: number | null
-          mime_type?: string | null
-          thumbnail_url?: string | null
-          scraped_content?: string | null
-          created_at?: string
-          updated_at?: string
+          theme_config?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          name?: string
-          type?: string
-          url_or_path?: string | null
-          text_content?: string | null
-          tags?: string[] | null
-          niche_tag?: string | null
-          agent_board_id?: string | null
-          enabled?: boolean
-          status?: string
-          group_id?: string | null
-          description?: string | null
-          category?: string | null
-          file_size?: number | null
-          mime_type?: string | null
-          thumbnail_url?: string | null
-          scraped_content?: string | null
-          created_at?: string
-          updated_at?: string
+          theme_config?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "assets_agent_board_id_fkey"
-            columns: ["agent_board_id"]
-            isOneToOne: false
-            referencedRelation: "agent_boards"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       agent_configs: {
         Row: {
@@ -519,196 +472,6 @@ export type Database = {
             columns: ["connection_id"]
             isOneToOne: false
             referencedRelation: "n8n_connections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      agent_boards: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          goal: string | null
-          default_platform: string | null
-          budget_cap_note: string | null
-          creative_style_notes: string | null
-          facebook_ad_account_id: string | null
-          redtrack_workspace_id: string | null
-          position: number
-          group_name: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          goal?: string | null
-          default_platform?: string | null
-          budget_cap_note?: string | null
-          creative_style_notes?: string | null
-          facebook_ad_account_id?: string | null
-          redtrack_workspace_id?: string | null
-          position?: number
-          group_name?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          goal?: string | null
-          default_platform?: string | null
-          budget_cap_note?: string | null
-          creative_style_notes?: string | null
-          facebook_ad_account_id?: string | null
-          redtrack_workspace_id?: string | null
-          position?: number
-          group_name?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      canvas_blocks: {
-        Row: {
-          id: string
-          agent_board_id: string
-          type: string
-          content: string | null
-          asset_id: string | null
-          position_x: number
-          position_y: number
-          width: number
-          height: number
-          group_id: string | null
-          title: string | null
-          url: string | null
-          file_path: string | null
-          color: string | null
-          metadata: Json | null
-          associated_prompt_id: string | null
-          instruction_prompt: string | null
-          parsing_status: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          agent_board_id: string
-          type: string
-          content?: string | null
-          asset_id?: string | null
-          position_x?: number
-          position_y?: number
-          width?: number
-          height?: number
-          group_id?: string | null
-          title?: string | null
-          url?: string | null
-          file_path?: string | null
-          color?: string | null
-          metadata?: Json | null
-          associated_prompt_id?: string | null
-          instruction_prompt?: string | null
-          parsing_status?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          agent_board_id?: string
-          type?: string
-          content?: string | null
-          asset_id?: string | null
-          position_x?: number
-          position_y?: number
-          width?: number
-          height?: number
-          group_id?: string | null
-          title?: string | null
-          url?: string | null
-          file_path?: string | null
-          color?: string | null
-          metadata?: Json | null
-          associated_prompt_id?: string | null
-          instruction_prompt?: string | null
-          parsing_status?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "canvas_blocks_agent_board_id_fkey"
-            columns: ["agent_board_id"]
-            isOneToOne: false
-            referencedRelation: "agent_boards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      creative_cards: {
-        Row: {
-          id: string
-          agent_board_id: string
-          title: string
-          image_url: string | null
-          headline: string | null
-          primary_text: string | null
-          description_text: string | null
-          tags: string[] | null
-          status: string
-          is_winner: boolean
-          notes: string | null
-          redtrack_metrics: Json | null
-          compliance_status: string | null
-          compliance_notes: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          agent_board_id: string
-          title: string
-          image_url?: string | null
-          headline?: string | null
-          primary_text?: string | null
-          description_text?: string | null
-          tags?: string[] | null
-          status?: string
-          is_winner?: boolean
-          notes?: string | null
-          redtrack_metrics?: Json | null
-          compliance_status?: string | null
-          compliance_notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          agent_board_id?: string
-          title?: string
-          image_url?: string | null
-          headline?: string | null
-          primary_text?: string | null
-          description_text?: string | null
-          tags?: string[] | null
-          status?: string
-          is_winner?: boolean
-          notes?: string | null
-          redtrack_metrics?: Json | null
-          compliance_status?: string | null
-          compliance_notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "creative_cards_agent_board_id_fkey"
-            columns: ["agent_board_id"]
-            isOneToOne: false
-            referencedRelation: "agent_boards"
             referencedColumns: ["id"]
           },
         ]
@@ -802,6 +565,57 @@ export type Database = {
         }
         Relationships: []
       }
+      client_theme_settings: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          id: string
+          is_locked: boolean | null
+          template_id: string | null
+          theme_config: Json
+          theme_source: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          id?: string
+          is_locked?: boolean | null
+          template_id?: string | null
+          theme_config?: Json
+          theme_source?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          is_locked?: boolean | null
+          template_id?: string | null
+          theme_config?: Json
+          theme_source?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_theme_settings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_theme_settings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "theme_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           contact_email: string | null
@@ -850,6 +664,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      custom_theme_presets: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          theme_config: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          theme_config?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          theme_config?: Json
+          user_id?: string
         }
         Relationships: []
       }
@@ -1611,157 +1449,41 @@ export type Database = {
         }
         Relationships: []
       }
-      scheduled_posts: {
+      theme_templates: {
         Row: {
-          id: string
-          title: string
+          created_at: string | null
           description: string | null
-          scheduled_at: string
-          status: string
-          platform: string
-          content: string | null
-          image_url: string | null
-          color: string | null
-          client_id: string | null
-          user_id: string
-          tags: string[] | null
-          agent_board_id: string | null
-          creative_card_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description?: string | null
-          scheduled_at: string
-          status?: string
-          platform?: string
-          content?: string | null
-          image_url?: string | null
-          color?: string | null
-          client_id?: string | null
-          user_id: string
-          tags?: string[] | null
-          agent_board_id?: string | null
-          creative_card_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          scheduled_at?: string
-          status?: string
-          platform?: string
-          content?: string | null
-          image_url?: string | null
-          color?: string | null
-          client_id?: string | null
-          user_id?: string
-          tags?: string[] | null
-          agent_board_id?: string | null
-          creative_card_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scheduled_posts_agent_board_id_fkey"
-            columns: ["agent_board_id"]
-            isOneToOne: false
-            referencedRelation: "agent_boards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scheduled_posts_creative_card_id_fkey"
-            columns: ["creative_card_id"]
-            isOneToOne: false
-            referencedRelation: "creative_cards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_sessions: {
-        Row: {
           id: string
-          client_id: string | null
+          is_public: boolean | null
+          name: string
+          preview_colors: Json | null
+          theme_config: Json
+          updated_at: string | null
           user_id: string
-          title: string | null
-          agent_board_id: string | null
-          canvas_block_id: string | null
-          created_at: string
         }
         Insert: {
+          created_at?: string | null
+          description?: string | null
           id?: string
-          client_id?: string | null
+          is_public?: boolean | null
+          name: string
+          preview_colors?: Json | null
+          theme_config?: Json
+          updated_at?: string | null
           user_id: string
-          title?: string | null
-          agent_board_id?: string | null
-          canvas_block_id?: string | null
-          created_at?: string
         }
         Update: {
+          created_at?: string | null
+          description?: string | null
           id?: string
-          client_id?: string | null
+          is_public?: boolean | null
+          name?: string
+          preview_colors?: Json | null
+          theme_config?: Json
+          updated_at?: string | null
           user_id?: string
-          title?: string | null
-          agent_board_id?: string | null
-          canvas_block_id?: string | null
-          created_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_sessions_agent_board_id_fkey"
-            columns: ["agent_board_id"]
-            isOneToOne: false
-            referencedRelation: "agent_boards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_sessions_canvas_block_id_fkey"
-            columns: ["canvas_block_id"]
-            isOneToOne: false
-            referencedRelation: "canvas_blocks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chat_messages: {
-        Row: {
-          id: string
-          chat_session_id: string
-          role: string
-          content: string
-          metadata: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          chat_session_id: string
-          role: string
-          content: string
-          metadata?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          chat_session_id?: string
-          role?: string
-          content?: string
-          metadata?: Json | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_chat_session_id_fkey"
-            columns: ["chat_session_id"]
-            isOneToOne: false
-            referencedRelation: "chat_sessions"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
