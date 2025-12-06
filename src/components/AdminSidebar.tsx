@@ -106,23 +106,46 @@ export const AdminSidebar = () => {
   };
 
   return (
-    <aside className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col border-r border-border bg-sidebar`}>
+    <aside 
+      className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col`}
+      style={{
+        background: 'var(--sidebar-bg)',
+        borderRight: '1px solid var(--divider-color)',
+        color: 'var(--sidebar-text)',
+      }}
+    >
       {/* Brand Header */}
-      <div className="border-b border-border p-6">
+      <div 
+        className="p-6"
+        style={{ borderBottom: '1px solid var(--divider-color)' }}
+      >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
-            <Hexagon className="h-5 w-5 text-primary-foreground" />
+          <div 
+            className="flex h-10 w-10 items-center justify-center rounded-lg"
+            style={{ background: 'var(--sidebar-active-bg)' }}
+          >
+            <Hexagon className="h-5 w-5" style={{ color: 'var(--sidebar-active-text)' }} />
           </div>
           <div>
-            <h2 className="text-base font-bold text-foreground">Agentix</h2>
+            <h2 className="text-base font-bold" style={{ color: 'var(--sidebar-text)' }}>Agentix</h2>
           </div>
         </div>
       </div>
 
       {/* Client Switcher */}
-      <div className="px-3 py-4 border-b border-border">
+      <div 
+        className="px-3 py-4"
+        style={{ borderBottom: '1px solid var(--divider-color)' }}
+      >
         <Select value={selectedClient} onValueChange={handleClientChange} disabled={loadingClients}>
-          <SelectTrigger className="w-full bg-sidebar border-border text-sm h-10">
+          <SelectTrigger 
+            className="w-full text-sm h-10"
+            style={{
+              background: 'var(--sidebar-bg)',
+              borderColor: 'var(--divider-color)',
+              color: 'var(--sidebar-text)',
+            }}
+          >
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               {loadingClients ? (
@@ -161,13 +184,22 @@ export const AdminSidebar = () => {
               key={item.id}
               to={item.path}
               end={item.path === "/admin"}
-              className={({ isActive }) =>
-                `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                }`
-              }
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors"
+              style={({ isActive }) => ({
+                background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+              })}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.classList.contains('active')) {
+                  e.currentTarget.style.background = 'var(--sidebar-hover-bg)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
             >
               <item.icon className="h-4 w-4" />
               <span>{item.title}</span>
@@ -177,7 +209,10 @@ export const AdminSidebar = () => {
 
         {/* Quick Access Section */}
         <div className="mt-6">
-          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p 
+            className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}
+          >
             Quick Access
           </p>
           <nav className="space-y-1">
@@ -186,13 +221,22 @@ export const AdminSidebar = () => {
                 key={item.id}
                 to={item.path}
                 end={item.path === "/"}
-                className={({ isActive }) =>
-                  `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                  }`
-                }
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors"
+                style={({ isActive }) => ({
+                  background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                  color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                })}
+                onMouseEnter={(e) => {
+                  if (!e.currentTarget.classList.contains('active')) {
+                    e.currentTarget.style.background = 'var(--sidebar-hover-bg)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>
@@ -203,22 +247,38 @@ export const AdminSidebar = () => {
       </ScrollArea>
 
       {/* User Profile */}
-      <div className="border-t border-border p-4">
+      <div 
+        className="p-4"
+        style={{ borderTop: '1px solid var(--divider-color)' }}
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
-                <span className="text-xs font-semibold text-primary">{userInitials}</span>
+            <button 
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors"
+              style={{ color: 'var(--sidebar-text)' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sidebar-hover-bg)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <div 
+                className="flex h-8 w-8 items-center justify-center rounded-full"
+                style={{ background: 'var(--sidebar-active-bg)', opacity: 0.2 }}
+              >
+                <span 
+                  className="text-xs font-semibold"
+                  style={{ color: 'var(--sidebar-active-bg)' }}
+                >
+                  {userInitials}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--sidebar-text)' }}>
                   {profile?.display_name || user?.email || "Admin User"}
                 </p>
-                <p className="text-xs text-muted-foreground capitalize">
+                <p className="text-xs capitalize" style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}>
                   {isAgencyAdmin ? "Agency Admin" : "Premium Plan"}
                 </p>
               </div>
-              <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <ChevronUp className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--sidebar-text)', opacity: 0.6 }} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start" className="w-56">

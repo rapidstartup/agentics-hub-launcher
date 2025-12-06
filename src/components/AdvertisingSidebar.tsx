@@ -70,14 +70,27 @@ export const AdvertisingSidebar = () => {
   ];
 
   return (
-    <aside className={`${isOpen ? "flex" : "hidden"} h-screen min-w-64 w-64 flex-col border-r border-border bg-background shrink-0`}>
+    <aside 
+      className={`${isOpen ? "flex" : "hidden"} h-screen min-w-64 w-64 flex-col shrink-0`}
+      style={{
+        background: 'var(--sidebar-bg)',
+        borderRight: '1px solid var(--divider-color)',
+        color: 'var(--sidebar-text)',
+      }}
+    >
       {/* Header with Logo */}
-      <div className="border-b border-border p-6">
+      <div 
+        className="p-6"
+        style={{ borderBottom: '1px solid var(--divider-color)' }}
+      >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 shrink-0">
-            <Rocket className="h-6 w-6 text-primary" />
+          <div 
+            className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
+            style={{ background: 'var(--sidebar-active-bg)', opacity: 0.2 }}
+          >
+            <Rocket className="h-6 w-6" style={{ color: 'var(--sidebar-active-bg)' }} />
           </div>
-          <h1 className="text-xl font-bold text-foreground whitespace-nowrap">AdLaunch Pro</h1>
+          <h1 className="text-xl font-bold whitespace-nowrap" style={{ color: 'var(--sidebar-text)' }}>AdLaunch Pro</h1>
         </div>
       </div>
 
@@ -86,7 +99,7 @@ export const AdvertisingSidebar = () => {
         <Button
           variant="outline"
           onClick={() => navigate(`/client/${clientId}`)}
-          className="w-full justify-start gap-2 border-border text-muted-foreground hover:text-foreground"
+          className="w-full justify-start gap-2"
         >
           <ArrowLeft className="h-4 w-4 shrink-0" />
           <span className="truncate">Client Dashboard</span>
@@ -98,7 +111,10 @@ export const AdvertisingSidebar = () => {
         <div className="space-y-4">
           {navigationSections.map((section) => (
             <div key={section.label} className="space-y-1">
-              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+              <div 
+                className="px-3 py-2 text-xs font-semibold"
+                style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}
+              >
                 {section.label}
               </div>
               <div className="space-y-1">
@@ -107,13 +123,23 @@ export const AdvertisingSidebar = () => {
                     key={item.path}
                     to={item.path}
                     end={item.path === `/client/${clientId}/advertising`}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                        isActive
-                          ? "bg-primary/20 text-primary"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                      }`
-                    }
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                    style={({ isActive }) => ({
+                      background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                      color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                    })}
+                    onMouseEnter={(e) => {
+                      const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'var(--sidebar-hover-bg)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     <span className="truncate">{item.title}</span>
