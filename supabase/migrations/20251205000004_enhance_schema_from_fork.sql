@@ -85,3 +85,4 @@ COMMENT ON COLUMN public.scheduled_posts.creative_card_id IS 'Links scheduled po
 
 
 
+
