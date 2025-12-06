@@ -9,20 +9,26 @@ All Supabase URLs and keys are properly configured to use environment variables.
 ## 📋 Summary
 
 ### Frontend Application (src/)
+
 ✅ **All files use centralized Supabase client**
+
 - Main client: `src/integrations/supabase/client.ts`
 - Uses: `import.meta.env.VITE_SUPABASE_URL`
 - Uses: `import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY`
 - All 20+ components import from this centralized client
 
 ### Edge Functions (supabase/functions/)
+
 ✅ **All functions use Deno environment variables**
+
 - Pattern: `Deno.env.get('SUPABASE_URL')`
 - Pattern: `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')`
 - These are automatically provided by Supabase platform
 
 ### Configuration Files
+
 ✅ **Only local development config has project ID**
+
 - `supabase/config.toml` - Used for CLI only (not deployed)
 - `.env` file - Local development only (not committed to git)
 
@@ -51,16 +57,19 @@ GEMINI_API_KEY="..."
 **CRITICAL: Update these 4 Supabase variables in Vercel dashboard:**
 
 1. **VITE_SUPABASE_PROJECT_ID**
+
    ```
    bzldwfwyriwvlyfixmrt
    ```
 
 2. **VITE_SUPABASE_URL**
+
    ```
    https://bzldwfwyriwvlyfixmrt.supabase.co
    ```
 
 3. **VITE_SUPABASE_PUBLISHABLE_KEY**
+
    ```
    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bGR3Znd5cml3dmx5Zml4bXJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjUzNTAsImV4cCI6MjA3OTk0MTM1MH0.c1PZ7kD8RLdPnBQOhYRfDLGJMfXXfXlCy8r1QKd-Thw
    ```
@@ -77,7 +86,9 @@ GEMINI_API_KEY="..."
 ## 🔍 Files Checked
 
 ### Application Code (20+ files)
+
 All using centralized client:
+
 - `src/integrations/supabase/client.ts` ✅
 - `src/integrations/clients/api.ts` ✅
 - `src/integrations/projects/api.ts` ✅
@@ -96,7 +107,9 @@ All using centralized client:
 - `src/components/knowledge-base/*.tsx` (2 files) ✅
 
 ### Edge Functions (26 functions)
+
 All using `Deno.env.get()`:
+
 - `ad-spy-recreate` ✅
 - `ad-spy-scrape` ✅
 - `composio-manage-connection` ✅
@@ -131,6 +144,7 @@ All using `Deno.env.get()`:
 ## 🎯 How Environment Variables Work
 
 ### Frontend (Vite)
+
 ```typescript
 // src/integrations/supabase/client.ts
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -138,10 +152,12 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 ```
 
 At **build time**, Vite replaces `import.meta.env.VITE_*` with actual values from:
+
 1. `.env` file (local dev)
 2. Vercel environment variables (production)
 
 ### Edge Functions (Deno)
+
 ```typescript
 // supabase/functions/*/index.ts
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -149,6 +165,7 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 ```
 
 At **runtime**, Supabase automatically provides:
+
 - `SUPABASE_URL` - Your project URL
 - `SUPABASE_SERVICE_ROLE_KEY` - Service role key
 - `SUPABASE_ANON_KEY` - Anon/public key
@@ -180,12 +197,14 @@ No configuration needed - these are injected by the Supabase platform.
    - Keep all other variables unchanged
 
 2. **Verify Local Development Works**
+
    ```bash
    npm run dev
    # Test login and data access
    ```
 
 3. **Commit Changes**
+
    ```bash
    git add .env supabase/config.toml
    git commit -m "Update to new Supabase instance"
@@ -206,33 +225,41 @@ No configuration needed - these are injected by the Supabase platform.
 ## 🔧 Troubleshooting
 
 ### "Failed to fetch" or "Connection refused"
+
 **Cause**: Wrong Supabase URL in environment variables
 
 **Fix**:
+
 1. Check Vercel env vars match new Supabase project
 2. Redeploy after updating env vars
 
 ### "Invalid API key" or "Unauthorized"
+
 **Cause**: Wrong anon key or service role key
 
 **Fix**:
+
 1. Get fresh keys from Supabase dashboard
 2. Update in Vercel environment variables
 3. Redeploy
 
 ### "Table does not exist"
+
 **Cause**: Migrations not run on Supabase instance
 
 **Fix**:
+
 ```bash
 npx supabase link --project-ref bzldwfwyriwvlyfixmrt
 npx supabase db push
 ```
 
 ### Edge functions not working
+
 **Cause**: Environment variables not injected
 
 **Fix**:
+
 - These are automatic - no action needed
 - If issues persist, check Supabase function logs
 
@@ -258,3 +285,8 @@ Your application is **100% environment-variable based** with no hardcoded creden
 ✅ **Ready to Deploy**: Just update Vercel env vars and deploy!
 
 When you update environment variables in Vercel and redeploy, your app will automatically use the new Supabase instance. No code changes needed! 🎉
+
+SUPABASE_URL="https://bzldwfwyriwvlyfixmrt.supabase.co"
+VITE_SUPABASE_PROJECT_ID="bzldwfwyriwvlyfixmrt"
+VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bGR3Znd5cml3dmx5Zml4bXJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNjUzNTAsImV4cCI6MjA3OTk0MTM1MH0.7ahL3xSzBW_EtnbyUrcX6Smh51LWFO5gLnFbQ2rapD0"
+VITE_SUPABASE_URL="https://bzldwfwyriwvlyfixmrt.supabase.co"
