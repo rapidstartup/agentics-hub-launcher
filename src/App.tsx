@@ -74,7 +74,7 @@ import AdminClients from "./pages/AdminClients";
 import AdminFeatureToggles from "./pages/AdminFeatureToggles";
 import Calendar from "./pages/Calendar";
 import Launch from "./pages/Launch";
-import ThemeSettings from "./pages/ThemeSettings";
+
 import BoardLayout from "./pages/board/BoardLayout";
 import BoardChat from "./pages/board/Chat";
 import BoardCanvas from "./pages/board/Canvas";
@@ -183,8 +183,6 @@ const App = () => (
               <Route path="/admin/calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
-              {/* Theme Settings - accessible to agency admins */}
-              <Route path="/settings/themes" element={<ProtectedRoute><ThemeSettings /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
               </Routes>
