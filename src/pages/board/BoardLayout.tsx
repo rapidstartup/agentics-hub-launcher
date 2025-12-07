@@ -10,7 +10,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { ProjectTitleSelector } from "@/components/ProjectTitleSelector";
 
 export default function BoardLayout() {
-  const { boardId } = useParams();
+  const { boardId, clientId } = useParams();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isTransitioning } = useProject();
@@ -41,7 +41,11 @@ export default function BoardLayout() {
   }, [isFullscreen]);
 
   const handleTabChange = (value: string) => {
-    navigate(`/projects/${boardId}/${value}`);
+    if (clientId) {
+      navigate(`/client/${clientId}/projects/${boardId}/${value}`);
+    } else {
+      navigate(`/projects/${boardId}/${value}`);
+    }
   };
 
   return (

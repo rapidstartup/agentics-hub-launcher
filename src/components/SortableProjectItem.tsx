@@ -21,6 +21,7 @@ interface SortableProjectItemProps {
   groups: any[];
   onDelete: (id: string) => void;
   onMoveToGroup: (boardId: string, groupSlug: string | null) => void;
+  clientId?: string;
 }
 
 export function SortableProjectItem({
@@ -29,8 +30,17 @@ export function SortableProjectItem({
   groups,
   onDelete,
   onMoveToGroup,
+  clientId,
 }: SortableProjectItemProps) {
   const navigate = useNavigate();
+  
+  // Use correct route based on context
+  const getProjectPath = (tab: string) => {
+    if (clientId) {
+      return `/client/${clientId}/projects/${board.id}/${tab}`;
+    }
+    return `/projects/${board.id}/${tab}`;
+  };
   const {
     attributes,
     listeners,
@@ -53,7 +63,7 @@ export function SortableProjectItem({
       ref={setNodeRef}
       style={style}
       className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors group bg-card"
-      onClick={() => navigate(`/agent-projects/${board.id}/chat`)}
+      onClick={() => navigate(getProjectPath("chat"))}
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
         <div
@@ -155,7 +165,7 @@ export function SortableProjectItem({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/agent-projects/${board.id}/settings`);
+                  navigate(getProjectPath("settings"));
                 }}
               >
                 <Edit className="w-4 h-4 mr-2" />
