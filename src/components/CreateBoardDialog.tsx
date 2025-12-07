@@ -19,9 +19,10 @@ import { useToast } from "@/hooks/use-toast";
 interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  clientId?: string;
 }
 
-export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps) {
+export function CreateBoardDialog({ open, onOpenChange, clientId }: CreateBoardDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [goal, setGoal] = useState("");
@@ -31,14 +32,21 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
 
   const createBoardMutation = useMutation({
     mutationFn: async () => {
+      const insertData: any = {
+        name: name || "Untitled Board",
+        description,
+        goal,
+        default_platform: "Meta/Facebook",
+      };
+      
+      // Associate with client if in client context
+      if (clientId) {
+        insertData.client_id = clientId;
+      }
+      
       const { data, error } = await supabase
         .from("agent_boards")
-        .insert({
-          name: name || "Untitled Board",
-          description,
-          goal,
-          default_platform: "Meta/Facebook",
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -46,7 +54,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["agent-boards"] });
+      queryClient.invalidateQueries({ queryKey: ["agent-boards", clientId] });
       toast({
         title: "Project Created",
         description: `${data.name} has been created successfully.`,
@@ -55,7 +63,13 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
       setName("");
       setDescription("");
       setGoal("");
-      navigate(`/agent-projects/${data.id}/chat`);
+      
+      // Navigate to correct path based on context
+      if (clientId) {
+        navigate(`/client/${clientId}/projects/${data.id}/chat`);
+      } else {
+        navigate(`/projects/${data.id}/chat`);
+      }
     },
     onError: (error) => {
       toast({

@@ -116,6 +116,7 @@ const App = () => (
           <Route path="/client/:clientId/advertising/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/ad-creator" element={<ProtectedRoute><AdCreatorDashboard /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
           {/* Strategy dedicated area */}
           <Route path="/client/:clientId/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/agents" element={<ProtectedRoute><StrategyAgents /></ProtectedRoute>} />
@@ -169,6 +170,14 @@ const App = () => (
           <Route path="/knowledge-base" element={<ProtectedRoute><KnowledgeBaseBrowser /></ProtectedRoute>} />
           {/* Board routes with nested tabs */}
           <Route path="/projects/:boardId" element={<ProtectedRoute><BoardLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="chat" replace />} />
+            <Route path="chat" element={<BoardChat />} />
+            <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="kanban" element={<BoardKanban />} />
+            <Route path="settings" element={<BoardSettings />} />
+          </Route>
+          {/* Client-scoped board routes */}
+          <Route path="/client/:clientId/projects/:boardId" element={<ProtectedRoute><BoardLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />

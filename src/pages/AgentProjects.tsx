@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ export default function AgentProjects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { clientId } = useParams();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
@@ -90,12 +91,19 @@ export default function AgentProjects() {
   });
 
   const { data: boards } = useQuery({
-    queryKey: ["agent-boards"],
+    queryKey: ["agent-boards", clientId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("agent_boards")
         .select("*")
         .order("position", { ascending: true });
+      
+      // Filter by client_id if we're in client context
+      if (clientId) {
+        query = query.eq("client_id", clientId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -343,6 +351,7 @@ export default function AgentProjects() {
                         onMoveToGroup={(boardId, groupSlug) =>
                           moveToGroupMutation.mutate({ boardId, groupSlug })
                         }
+                        clientId={clientId}
                       />
                     );
                   })}
@@ -353,7 +362,7 @@ export default function AgentProjects() {
         </TabsContent>
       </Tabs>
 
-      <CreateBoardDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <CreateBoardDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} clientId={clientId} />
       <CreateGroupDialog open={createGroupDialogOpen} onOpenChange={setCreateGroupDialogOpen} />
 
       <AlertDialog open={!!groupToDelete} onOpenChange={() => setGroupToDelete(null)}>
