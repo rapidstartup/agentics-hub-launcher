@@ -32,8 +32,7 @@ export const AdvertisingSidebar = () => {
       items: [
         { title: "Overview", path: `/client/${clientId}/advertising`, icon: LayoutDashboard },
         { title: "Analytics", path: `/client/${clientId}/advertising/analytics`, icon: LineChart },
-        { title: "Projects", path: `/client/${clientId}/advertising/projects`, icon: FolderKanban },
-        { title: "Advertising Agents", path: `/client/${clientId}/advertising/agents`, icon: Users },
+        { title: "Ad Agents", path: `/client/${clientId}/advertising/projects`, icon: FolderKanban },
       ],
     },
     {
