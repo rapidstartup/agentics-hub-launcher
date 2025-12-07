@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Button } from "@/components/ui/button";
@@ -250,14 +251,16 @@ export default function AgentProjects() {
   };
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Agent Projects</h1>
-          <p className="text-muted-foreground mt-1">
-            Campaign workspaces for your advertising goals
-          </p>
-        </div>
+    <div className="flex min-h-screen w-full bg-background">
+      <AdvertisingSidebar />
+      <main className="flex-1 p-8 space-y-8 overflow-auto">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Ad Agents</h1>
+            <p className="text-muted-foreground mt-1">
+              Campaign workspaces for your advertising goals
+            </p>
+          </div>
         <Button onClick={() => setCreateDialogOpen(true)} size="lg">
           <Plus className="w-4 h-4 mr-2" />
           New Project
@@ -365,30 +368,31 @@ export default function AgentProjects() {
       <CreateBoardDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} clientId={clientId} />
       <CreateGroupDialog open={createGroupDialogOpen} onOpenChange={setCreateGroupDialogOpen} />
 
-      <AlertDialog open={!!groupToDelete} onOpenChange={() => setGroupToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Group</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{groupToDelete?.name}"? All {groupToDelete?.count || 0} project{groupToDelete?.count !== 1 ? 's' : ''} in this group will be moved to "All".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (groupToDelete) {
-                  deleteGroupMutation.mutate(groupToDelete.slug);
-                  setGroupToDelete(null);
-                }
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete Group
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={!!groupToDelete} onOpenChange={() => setGroupToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Group</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{groupToDelete?.name}"? All {groupToDelete?.count || 0} project{groupToDelete?.count !== 1 ? 's' : ''} in this group will be moved to "All".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (groupToDelete) {
+                    deleteGroupMutation.mutate(groupToDelete.slug);
+                    setGroupToDelete(null);
+                  }
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Group
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </main>
     </div>
   );
 }
