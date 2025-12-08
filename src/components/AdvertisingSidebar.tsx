@@ -47,9 +47,9 @@ export const AdvertisingSidebar = () => {
       ],
     },
     {
-      label: "CENTRAL BRAIN",
+      label: "RESOURCES",
       items: [
-        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
+        { title: "Central Brain", path: `/client/${clientId}/central-brain`, icon: Brain },
       ],
     },
   ];

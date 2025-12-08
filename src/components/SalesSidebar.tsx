@@ -9,7 +9,7 @@ import {
   Workflow,
   Phone,
   Plug,
-  BookOpen,
+  Brain,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -39,7 +39,7 @@ export const SalesSidebar = () => {
     {
       label: "RESOURCES",
       items: [
-        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
+        { title: "Central Brain", path: `/client/${clientId}/central-brain`, icon: Brain },
       ],
     },
   ];
