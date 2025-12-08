@@ -1,9 +1,9 @@
-import { 
+import {
   Hexagon,
   LayoutDashboard,
   // Shield, // TODO: Re-enable when System Control is implemented
   FolderKanban,
-  BookOpen,
+  Brain,
   BarChart3,
   ChevronDown,
   Gauge,
@@ -65,7 +65,7 @@ export const ChatSidebar = () => {
     { id: "agents", title: "Agent Controller", icon: Bot, path: `/client/${clientId}/agents`, featureKey: null },
     { id: "settings", title: "Settings", icon: Settings, path: `/client/${clientId}/settings`, featureKey: null },
     { id: "projects", title: "Projects", icon: FolderKanban, path: `/client/${clientId}/projects`, featureKey: "feature.projects" },
-    { id: "knowledge", title: "Knowledge Base", icon: BookOpen, path: `/client/${clientId}/knowledge`, featureKey: "feature.knowledge-base" },
+    { id: "central-brain", title: "Central Brain", icon: Brain, path: `/client/${clientId}/central-brain`, featureKey: "feature.knowledge-base" },
     { id: "analytics", title: "Analytics", icon: BarChart3, path: `/client/${clientId}/analytics`, featureKey: "feature.analytics" },
     { id: "calendar", title: "Calendar", icon: Calendar, path: `/client/${clientId}/calendar`, featureKey: "feature.calendar" },
     { id: "launch", title: "Launch", icon: Rocket, path: `/client/${clientId}/launch`, featureKey: "feature.launch" },

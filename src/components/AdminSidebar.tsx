@@ -52,7 +52,7 @@ const navigationItems = [
 ];
 
 const quickAccessItems = [
-  { id: "central-brain", title: "Knowledge Base", icon: Brain, path: "/admin/central-brain" },
+  { id: "central-brain", title: "Central Brain", icon: Brain, path: "/admin/central-brain" },
   { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
   { id: "calendar", title: "Calendar", icon: Calendar, path: "/admin/calendar" },
   { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },

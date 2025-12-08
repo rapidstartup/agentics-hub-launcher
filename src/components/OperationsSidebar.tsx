@@ -10,7 +10,7 @@ import {
   Workflow,
   Cog,
   ShieldCheck,
-  BookOpen,
+  Brain,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -40,7 +40,7 @@ export const OperationsSidebar = () => {
     {
       label: "RESOURCES",
       items: [
-        { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
+        { title: "Central Brain", path: `/client/${clientId}/central-brain`, icon: Brain },
       ],
     },
   ];

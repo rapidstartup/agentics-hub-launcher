@@ -64,6 +64,7 @@ import ClientSettings from "./pages/ClientSettings";
 import ClientAgentController from "./pages/ClientAgentController";
 import ClientProjects from "./pages/ClientProjects";
 import ClientKnowledge from "./pages/ClientKnowledge";
+import ClientCentralBrain from "./pages/ClientCentralBrain";
 import ClientAnalytics from "./pages/ClientAnalytics";
 import SystemControl from "./pages/SystemControl";
 import AdminReports from "./pages/AdminReports";
@@ -105,6 +106,7 @@ const App = () => (
               <Route path="/client/:clientId/agents" element={<ProtectedRoute><ClientAgentController /></ProtectedRoute>} />
           <Route path="/client/:clientId/projects" element={<ProtectedRoute><ClientProjects /></ProtectedRoute>} />
           <Route path="/client/:clientId/knowledge" element={<ProtectedRoute><ClientKnowledge /></ProtectedRoute>} />
+          <Route path="/client/:clientId/central-brain" element={<ProtectedRoute><ClientCentralBrain /></ProtectedRoute>} />
           <Route path="/client/:clientId/analytics" element={<ProtectedRoute><ClientAnalytics /></ProtectedRoute>} />
           <Route path="/client/:clientId/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
           <Route path="/client/:clientId/launch" element={<ProtectedRoute><Launch /></ProtectedRoute>} />
