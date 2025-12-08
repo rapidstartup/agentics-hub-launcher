@@ -9,7 +9,6 @@ import {
   UserCog,
   Layers,
   FileText,
-  Calendar,
   Settings,
   Bell,
   ArrowLeftRight,
@@ -54,8 +53,6 @@ const navigationItems = [
 const quickAccessItems = [
   { id: "central-brain", title: "Central Brain", icon: Brain, path: "/admin/central-brain" },
   { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
-  { id: "calendar", title: "Calendar", icon: Calendar, path: "/admin/calendar" },
-  { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },
   { id: "notifications", title: "Notifications", icon: Bell, path: "/admin/notifications" },
   { id: "client-view", title: "Switch to Client View", icon: ArrowLeftRight, path: "/" },
 ];

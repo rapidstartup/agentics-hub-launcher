@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Rocket, Send, Plus, MessageSquare, Loader2, Lock } from "lucide-react";
+import { Sparkles, Send, Plus, MessageSquare, Loader2, Lock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -317,8 +317,8 @@ export default function Launch() {
       <Card className="flex-1 flex flex-col">
         <CardHeader className="border-b">
           <div className="flex items-center gap-2">
-            <Rocket className="h-5 w-5 text-primary" />
-            <CardTitle>Launch</CardTitle>
+            <Sparkles className="h-5 w-5 text-primary" />
+            <CardTitle>Agentix AI</CardTitle>
             <span className="text-sm text-muted-foreground">Your AI assistant for quick questions & ideas</span>
           </div>
         </CardHeader>
@@ -329,7 +329,7 @@ export default function Launch() {
             <div className="space-y-4 max-w-3xl mx-auto">
               {messages.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
-                  <Rocket className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium">Start a conversation</p>
                   <p className="text-sm">Ask anything - brainstorm ideas, get advice, or just chat.</p>
                 </div>
