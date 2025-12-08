@@ -41,7 +41,7 @@ import OperationsAutomation from "./pages/OperationsAutomation";
 import OperationsResourceOptimization from "./pages/OperationsResourceOptimization";
 import OperationsQualityControl from "./pages/OperationsQualityControl";
 import ProjectDetail from "./pages/operations/ProjectDetail";
-import Financials from "./pages/Financials";
+import FinancialsComingSoon from "./pages/FinancialsComingSoon";
 import FinancialAgents from "./pages/FinancialAgents";
 import FinancialsAnalytics from "./pages/FinancialsAnalytics";
 import FinancialsProjects from "./pages/FinancialsProjects";
@@ -53,7 +53,7 @@ import SalesProjects from "./pages/SalesProjects";
 import SalesPipeline from "./pages/SalesPipeline";
 import SalesCallScripts from "./pages/SalesCallScripts";
 import SalesCrmIntegration from "./pages/SalesCrmIntegration";
-import Strategy from "./pages/Strategy";
+import StrategyComingSoon from "./pages/StrategyComingSoon";
 import StrategyAgents from "./pages/StrategyAgents";
 import StrategyMarketPositioning from "./pages/StrategyMarketPositioning";
 import StrategyKnowledgeBases from "./pages/StrategyKnowledgeBases";
@@ -120,7 +120,7 @@ const App = () => (
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
           {/* Strategy dedicated area */}
-          <Route path="/client/:clientId/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/strategy" element={<ProtectedRoute><StrategyComingSoon /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/agents" element={<ProtectedRoute><StrategyAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/market-positioning" element={<ProtectedRoute><StrategyMarketPositioning /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/knowledge-bases" element={<ProtectedRoute><StrategyKnowledgeBases /></ProtectedRoute>} />
@@ -156,7 +156,7 @@ const App = () => (
           {/* Back-compat alias */}
           <Route path="/client/:clientId/marketing-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/marketing/agents" replace /></ProtectedRoute>} />
           {/* Financials dedicated area */}
-          <Route path="/client/:clientId/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
+          <Route path="/client/:clientId/financials" element={<ProtectedRoute><FinancialsComingSoon /></ProtectedRoute>} />
           <Route path="/client/:clientId/financials/agents" element={<ProtectedRoute><FinancialAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/financials/analytics" element={<ProtectedRoute><FinancialsAnalytics /></ProtectedRoute>} />
           <Route path="/client/:clientId/financials/projects" element={<ProtectedRoute><FinancialsProjects /></ProtectedRoute>} />
