@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   Rocket,
   LayoutDashboard,
-  LineChart,
   FolderKanban,
   Users,
   ArrowLeft,
@@ -15,6 +14,10 @@ import {
   FileEdit,
   Mail,
   Brain,
+  Lightbulb,
+  Tag,
+  FileText,
+  GitBranch,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 import { SidebarUserPanel } from "@/components/SidebarUserPanel";
@@ -28,10 +31,24 @@ export const MarketingSidebar = () => {
     {
       label: "MAIN DASHBOARD",
       items: [
-        { title: "Overview", path: `/client/${clientId}/marketing`, icon: LayoutDashboard },
-        { title: "Analytics", path: `/client/${clientId}/marketing/analytics`, icon: LineChart },
+        { title: "Overview", path: `/client/${clientId}/marketing/overview`, icon: LayoutDashboard },
+        { title: "Launch", path: `/client/${clientId}/marketing/launch`, icon: Rocket },
+      ],
+    },
+    {
+      label: "STUDIO",
+      items: [
         { title: "Projects", path: `/client/${clientId}/marketing/projects`, icon: FolderKanban },
+        { title: "Ideation", path: `/client/${clientId}/marketing/ideation`, icon: Lightbulb },
         { title: "Marketing Agents", path: `/client/${clientId}/marketing/agents`, icon: Users },
+      ],
+    },
+    {
+      label: "CAMPAIGNS",
+      items: [
+        { title: "Offers", path: `/client/${clientId}/marketing/offers`, icon: Tag },
+        { title: "Copy", path: `/client/${clientId}/marketing/copy`, icon: FileText },
+        { title: "Funnel", path: `/client/${clientId}/marketing/funnel`, icon: GitBranch },
       ],
     },
     {

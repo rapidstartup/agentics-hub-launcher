@@ -32,6 +32,11 @@ import MarketingMarketResearch from "./pages/marketing/MarketingMarketResearch";
 import MarketingAdCreator from "./pages/marketing/MarketingAdCreator";
 import LandingPageCopywriter from "./pages/marketing/LandingPageCopywriter";
 import EmailCopywriter from "./pages/marketing/EmailCopywriter";
+import MarketingProjects from "./pages/marketing/Projects";
+import MarketingIdeation from "./pages/marketing/Ideation";
+import MarketingOffers from "./pages/marketing/Offers";
+import MarketingCopy from "./pages/marketing/Copy";
+import MarketingFunnel from "./pages/marketing/Funnel";
 import AdvertisingAgents from "./pages/AdvertisingAgents";
 import Marketing from "./pages/Marketing";
 import Operations from "./pages/Operations";
@@ -53,6 +58,7 @@ import SalesProjects from "./pages/SalesProjects";
 import SalesPipeline from "./pages/SalesPipeline";
 import SalesCallScripts from "./pages/SalesCallScripts";
 import SalesCrmIntegration from "./pages/SalesCrmIntegration";
+import SalesDashboard from "./pages/SalesDashboard";
 import StrategyComingSoon from "./pages/StrategyComingSoon";
 import StrategyAgents from "./pages/StrategyAgents";
 import StrategyMarketPositioning from "./pages/StrategyMarketPositioning";
@@ -128,6 +134,7 @@ const App = () => (
           <Route path="/client/:clientId/knowledge-browser" element={<ProtectedRoute><KnowledgeBaseBrowser /></ProtectedRoute>} />
           {/* Sales dedicated area */}
           <Route path="/client/:clientId/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/dashboard" element={<ProtectedRoute><SalesDashboard /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/analytics" element={<ProtectedRoute><SalesAnalytics /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/projects" element={<ProtectedRoute><SalesProjects /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/agents" element={<ProtectedRoute><SalesAgents /></ProtectedRoute>} />
@@ -147,12 +154,19 @@ const App = () => (
           <Route path="/client/:clientId/operations-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/operations/agents" replace /></ProtectedRoute>} />
           {/* Marketing dedicated area */}
           <Route path="/client/:clientId/marketing" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/overview" element={<ProtectedRoute><Marketing /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/launch" element={<ProtectedRoute><Launch /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/projects" element={<ProtectedRoute><MarketingProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/ideation" element={<ProtectedRoute><MarketingIdeation /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/agents" element={<ProtectedRoute><MarketingAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/market-research" element={<ProtectedRoute><MarketingMarketResearch /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/ad-creator" element={<ProtectedRoute><MarketingAdCreator /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/landing-page-copywriter" element={<ProtectedRoute><LandingPageCopywriter /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/email-copywriter" element={<ProtectedRoute><EmailCopywriter /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/offers" element={<ProtectedRoute><MarketingOffers /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/copy" element={<ProtectedRoute><MarketingCopy /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/funnel" element={<ProtectedRoute><MarketingFunnel /></ProtectedRoute>} />
           {/* Back-compat alias */}
           <Route path="/client/:clientId/marketing-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/marketing/agents" replace /></ProtectedRoute>} />
           {/* Financials dedicated area */}

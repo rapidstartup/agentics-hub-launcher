@@ -24,7 +24,8 @@ import { Upload, X, FileText, Image as ImageIcon, Video } from "lucide-react";
 interface AddOfferDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId: string;
+  projectId?: string | null;
+  clientId?: string | null;
   groups: any[];
   editOffer?: any;
 }
@@ -40,6 +41,7 @@ export function AddOfferDialog({
   open,
   onOpenChange,
   projectId,
+  clientId,
   groups,
   editOffer,
 }: AddOfferDialogProps) {
@@ -125,7 +127,8 @@ export function AddOfferDialog({
         .filter(Boolean);
 
       const offerData = {
-        project_id: projectId,
+        project_id: projectId || null,
+        client_id: clientId || null,
         name: formData.name,
         description: formData.description || null,
         price: formData.price || null,
@@ -192,6 +195,7 @@ export function AddOfferDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["offers"] });
+      queryClient.invalidateQueries({ queryKey: ["offers", clientId] });
       sonnerToast.success(editOffer ? "Offer updated successfully" : "Offer created successfully");
       onOpenChange(false);
     },

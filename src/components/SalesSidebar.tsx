@@ -23,6 +23,7 @@ export const SalesSidebar = () => {
     {
       label: "MAIN DASHBOARD",
       items: [
+        { title: "Dashboard", path: `/client/${clientId}/sales/dashboard`, icon: LayoutDashboard },
         { title: "Overview", path: `/client/${clientId}/sales`, icon: LayoutDashboard },
         { title: "Analytics", path: `/client/${clientId}/sales/analytics`, icon: LineChart },
         { title: "Projects", path: `/client/${clientId}/sales/projects`, icon: FolderKanban },

@@ -1,89 +1,68 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { BarChart3, ArrowLeft } from "lucide-react";
 import { MarketingSidebar } from "@/components/MarketingSidebar";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
-import {
-  TrendingUp,
-  Users,
-  FileText,
-  Plus,
-  ArrowLeft,
-} from "lucide-react";
+import { MetricsGrid } from "@/components/analytics/MetricsGrid";
+import { PlatformBreakdown } from "@/components/analytics/PlatformBreakdown";
+import { EngagementChart } from "@/components/analytics/EngagementChart";
+import { SentimentAnalyzer } from "@/components/analytics/SentimentAnalyzer";
 
 const Marketing = () => {
   const navigate = useNavigate();
   const { clientId } = useParams();
-  const [timeRange, setTimeRange] = useState("7d");
-
-  const cards = [
-    { icon: Users, label: "Total Agents", value: "12", trend: "+2 this month", trendColor: "text-emerald-500" },
-    { icon: TrendingUp, label: "Active Campaigns", value: "8", trend: "+5% vs last week", trendColor: "text-emerald-500" },
-    { icon: FileText, label: "Content Output", value: "64", trend: "-3% vs last week", trendColor: "text-amber-500" },
-    { icon: TrendingUp, label: "Department Health", value: "92%", trend: "-1% vs last week", trendColor: "text-red-500" },
-  ];
 
   return (
-    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
+    <div className="flex min-h-screen w-full" style={{ background: "var(--page-bg)" }}>
       <MarketingSidebar />
 
-      <main className="flex-1 p-6 lg:p-8">
-        {/* Back Button */}
+      <main className="flex-1 p-6 lg:p-8 space-y-6">
         <Button
           variant="ghost"
           onClick={() => navigate(`/client/${clientId}`)}
-          className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+          className="gap-2 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Client Dashboard
         </Button>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Marketing Overview</h1>
-              <p className="text-muted-foreground">Monitor your marketing performance and manage agents</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7d">Last 7 days</SelectItem>
-                  <SelectItem value="30d">Last 30 days</SelectItem>
-                  <SelectItem value="90d">Last 90 days</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Agent
-              </Button>
-            </div>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="w-8 h-8 text-primary" />
+            Social Analytics Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Your social media performance at a glance
+          </p>
+        </div>
 
-          {/* Metrics */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {cards.map((c, idx) => (
-              <Card key={idx} className="border border-border bg-card p-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-base font-medium text-muted-foreground">{c.label}</p>
-                  <c.icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold leading-tight tracking-tight text-foreground">{c.value}</p>
-                  <span className={`text-sm font-medium ${c.trendColor}`}>{c.trend}</span>
-                </div>
-              </Card>
-            ))}
+        <MetricsGrid />
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <EngagementChart />
+          <PlatformBreakdown />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SentimentAnalyzer />
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-foreground">Quick Insights</h2>
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg border border-border bg-card">
+                <p className="text-sm font-medium text-foreground">📈 Best performing day</p>
+                <p className="text-2xl font-bold text-primary mt-1">Wednesday</p>
+                <p className="text-xs text-muted-foreground">42% higher engagement than average</p>
+              </div>
+              <div className="p-4 rounded-lg border border-border bg-card">
+                <p className="text-sm font-medium text-foreground">⏰ Optimal posting time</p>
+                <p className="text-2xl font-bold text-primary mt-1">6:00 PM</p>
+                <p className="text-xs text-muted-foreground">When your audience is most active</p>
+              </div>
+              <div className="p-4 rounded-lg border border-border bg-card">
+                <p className="text-sm font-medium text-foreground">🎯 Top performing format</p>
+                <p className="text-2xl font-bold text-primary mt-1">Reels</p>
+                <p className="text-xs text-muted-foreground">3.2x more reach than static posts</p>
+              </div>
+            </div>
           </div>
         </div>
       </main>
