@@ -121,7 +121,7 @@ const Advertising = () => {
   ];
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <AdvertisingSidebar />
       
       <main className="flex-1 p-6 lg:p-8">
@@ -221,7 +221,7 @@ const Advertising = () => {
             <PerformanceChart />
           </div>
           <div>
-            <div className="bg-card border border-border rounded-lg p-6">
+            <div className="rounded-lg p-6" style={{ background: 'var(--card-bg)', border: 'var(--card-border-width) solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-foreground">Top Performing Ads</h2>
               </div>

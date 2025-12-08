@@ -253,11 +253,11 @@ export default function MarketingAgents() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <MarketingSidebar />
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <div className="border-b border-border bg-background">
+        <div className="border-b border-border" style={{ background: 'var(--page-bg)' }}>
           <div className="p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>

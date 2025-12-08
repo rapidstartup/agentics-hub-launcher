@@ -251,7 +251,7 @@ export default function AgentProjects() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <AdvertisingSidebar />
       <main className="flex-1 p-8 space-y-8 overflow-auto">
         <div className="flex items-center justify-between mb-2">

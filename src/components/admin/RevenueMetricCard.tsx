@@ -10,7 +10,14 @@ interface RevenueMetricCardProps {
 
 export const RevenueMetricCard = ({ title, metrics }: RevenueMetricCardProps) => {
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
+    <div 
+      className="rounded-lg p-6"
+      style={{
+        background: 'var(--card-bg)',
+        border: 'var(--card-border-width) solid var(--card-border)',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       <h3 className="text-sm font-semibold text-foreground mb-4">{title}</h3>
       <div className="space-y-3">
         {metrics.map((metric, index) => (

@@ -12,7 +12,7 @@ const Operations = () => {
   const { clientId } = useParams();
   // clientId kept for parity and potential future loading
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <OperationsSidebar />
       <main className="flex-1 p-6 lg:p-8">
         <div className="mb-8">

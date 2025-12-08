@@ -118,7 +118,7 @@ export default function OperationsAgents() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <OperationsSidebar />
       <main className="flex-1 overflow-auto p-6 lg:p-8">
         {/* Back Button */}

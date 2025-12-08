@@ -12,7 +12,7 @@ const Strategy = () => {
   const { clientId } = useParams();
   // clientId reserved for future data loading
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <StrategySidebar />
       <main className="flex-1 p-6 lg:p-8">
         <div className="mb-8">

@@ -37,7 +37,14 @@ export const PerformanceChart = () => {
   const [activeTab, setActiveTab] = useState("spend");
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
+    <div 
+      className="rounded-lg p-6"
+      style={{
+        background: 'var(--card-bg)',
+        border: 'var(--card-border-width) solid var(--card-border)',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       <h2 className="text-xl font-semibold text-foreground mb-4">Performance Trends</h2>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>

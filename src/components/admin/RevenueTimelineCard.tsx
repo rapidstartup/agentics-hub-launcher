@@ -8,7 +8,14 @@ interface RevenueTimelineCardProps {
 
 export const RevenueTimelineCard = ({ period, revenue, leads, conversions, aov }: RevenueTimelineCardProps) => {
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
+    <div 
+      className="rounded-lg p-6"
+      style={{
+        background: 'var(--card-bg)',
+        border: 'var(--card-border-width) solid var(--card-border)',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-sm font-semibold text-foreground">{period}</h3>
         <p className="text-xl font-bold text-primary">{revenue}</p>
