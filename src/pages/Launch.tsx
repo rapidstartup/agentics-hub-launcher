@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { ChatSidebar } from "@/components/ChatSidebar";
 import { Sparkles, Send, Plus, MessageSquare, Loader2, Lock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -275,9 +276,11 @@ export default function Launch() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] p-4 gap-4">
-      {/* Sidebar - Chat History */}
-      <Card className="w-64 flex-shrink-0">
+    <div className="flex h-screen w-full bg-background">
+      <ChatSidebar />
+      <main className="flex-1 flex h-[calc(100vh-2rem)] p-4 gap-4 overflow-hidden">
+        {/* Sidebar - Chat History */}
+        <Card className="w-64 flex-shrink-0">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium">Chats</CardTitle>
@@ -394,6 +397,7 @@ export default function Launch() {
           </div>
         </CardContent>
       </Card>
+      </main>
     </div>
   );
 }

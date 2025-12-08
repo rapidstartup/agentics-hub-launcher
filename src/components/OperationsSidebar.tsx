@@ -13,6 +13,7 @@ import {
   Brain,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
+import { SidebarUserPanel } from "@/components/SidebarUserPanel";
 
 export const OperationsSidebar = () => {
   const navigate = useNavigate();
@@ -126,6 +127,9 @@ export const OperationsSidebar = () => {
           ))}
         </div>
       </nav>
+
+      {/* User Profile Panel */}
+      <SidebarUserPanel />
     </aside>
   );
 };
