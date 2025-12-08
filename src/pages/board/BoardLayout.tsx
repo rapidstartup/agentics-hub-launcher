@@ -8,6 +8,7 @@ import { MessageSquare, PenTool, Columns3, Settings, Maximize2, Minimize2, Loade
 import { cn } from "@/lib/utils";
 import { useProject } from "@/contexts/ProjectContext";
 import { ProjectTitleSelector } from "@/components/ProjectTitleSelector";
+import { MarketingSidebar } from "@/components/MarketingSidebar";
 
 export default function BoardLayout() {
   const { boardId, clientId } = useParams();
@@ -59,7 +60,9 @@ export default function BoardLayout() {
     }
   };
 
-  return (
+  const isMarketing = location.pathname.includes("/marketing/");
+
+  const layoutContent = (
     <div className={cn("flex flex-col h-full", isFullscreen && "fixed inset-0 z-50 bg-background")}>
       {/* Board Header */}
       <div className="border-b border-border bg-card">
@@ -72,8 +75,8 @@ export default function BoardLayout() {
             />
           )}
           <Button
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             onClick={() => setIsFullscreen(!isFullscreen)}
             title={isFullscreen ? "Exit fullscreen (ESC)" : "Enter fullscreen"}
           >
@@ -120,5 +123,18 @@ export default function BoardLayout() {
       </div>
     </div>
   );
+
+  if (isMarketing) {
+    return (
+      <div className="flex min-h-screen w-full">
+        <MarketingSidebar />
+        <div className="flex-1 flex flex-col">
+          {layoutContent}
+        </div>
+      </div>
+    );
+  }
+
+  return layoutContent;
 }
 
