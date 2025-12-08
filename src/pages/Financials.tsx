@@ -30,7 +30,7 @@ const Financials = () => {
   ];
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <FinancialsSidebar />
 
       <main className="flex-1 p-6 lg:p-8">

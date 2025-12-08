@@ -118,14 +118,14 @@ const Index = () => {
   const isLoading = loadingFeatures || loadingClient;
 
   return (
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       {/* Left Sidebar */}
       <ChatSidebar />
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Top Header Bar */}
-        <div className="border-b border-border bg-background">
+        <div className="border-b border-border" style={{ background: 'var(--page-bg)' }}>
           <div className="flex items-center justify-between p-6">
             <div className="flex items-center gap-3">
               {loadingClient ? (

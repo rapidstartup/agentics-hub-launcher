@@ -30,11 +30,11 @@ const departmentPerformance = [
 
 const AdminDashboard = () => {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen" style={{ background: 'var(--page-bg)' }}>
       <AdminSidebar />
       <main className="flex-1 overflow-y-auto">
         {/* Top Header */}
-        <div className="border-b border-border bg-background">
+        <div className="border-b border-border" style={{ background: 'var(--page-bg)' }}>
           <div className="p-6">
             <div className="mb-4">
               <h1 className="text-2xl font-bold text-foreground">Agency Pulse Dashboard</h1>
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
                   aov="$279"
                 />
               </div>
-              <div className="bg-card border border-border rounded-lg p-6">
+            <div className="rounded-lg p-6" style={{ background: 'var(--card-bg)', border: 'var(--card-border-width) solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
                 <h3 className="text-sm font-semibold text-foreground mb-4">Revenue Comparison</h3>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={revenueChartData}>
@@ -276,7 +276,7 @@ const AdminDashboard = () => {
           {/* Client Task Activity Tracker */}
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-4">Client Task Activity Tracker</h2>
-            <div className="bg-card border border-border rounded-lg">
+            <div className="rounded-lg" style={{ background: 'var(--card-bg)', border: 'var(--card-border-width) solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
               <div className="border-b border-border p-4">
                 <Tabs defaultValue="tasks">
                   <TabsList className="bg-sidebar">
@@ -320,7 +320,7 @@ const AdminDashboard = () => {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-4">Performance Analytics</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-card border border-border rounded-lg p-6">
+              <div className="rounded-lg p-6" style={{ background: 'var(--card-bg)', border: 'var(--card-border-width) solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
                 <h3 className="text-sm font-semibold text-foreground mb-4">Department Performance</h3>
                 <div className="space-y-4">
                   {departmentPerformance.map((dept) => (
@@ -334,7 +334,7 @@ const AdminDashboard = () => {
                   ))}
                 </div>
               </div>
-              <div className="bg-card border border-border rounded-lg p-6">
+              <div className="rounded-lg p-6" style={{ background: 'var(--card-bg)', border: 'var(--card-border-width) solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
                 <h3 className="text-sm font-semibold text-foreground mb-4">Task Completion Trends</h3>
                 <div className="space-y-4">
                   <div className="bg-sidebar border border-border rounded-lg p-4">

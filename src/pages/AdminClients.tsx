@@ -356,11 +356,11 @@ export default function AdminClients() {
   const coreFeatures = features.filter(f => f.category === "feature" && !f.parent_key);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen" style={{ background: 'var(--page-bg)' }}>
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <div className="border-b border-border bg-background">
+        <div className="border-b border-border" style={{ background: 'var(--page-bg)' }}>
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>

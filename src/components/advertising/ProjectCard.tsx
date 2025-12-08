@@ -24,7 +24,14 @@ export const ProjectCard = ({ icon: Icon, name, description, status, spend, roas
   }[status];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+    <div 
+      className="rounded-lg p-6 hover:border-primary/50 transition-colors"
+      style={{
+        background: 'var(--card-bg)',
+        border: 'var(--card-border-width) solid var(--card-border)',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       <div className="flex items-start gap-4 mb-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/20 flex-shrink-0">
           <Icon className="h-6 w-6 text-primary" />

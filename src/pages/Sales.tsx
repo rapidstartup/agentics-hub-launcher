@@ -14,7 +14,7 @@ const Sales = () => {
   const { kpis, projects, healthPulse } = getDepartmentConfig("sales");
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <SalesSidebar />
 
       <main className="flex-1 p-6 lg:p-8">

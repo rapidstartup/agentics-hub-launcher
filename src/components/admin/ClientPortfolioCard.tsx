@@ -16,7 +16,14 @@ export const ClientPortfolioCard = ({ clientId, name, type, projects, revenue, t
   const navigate = useNavigate();
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
+    <div 
+      className="rounded-lg p-6"
+      style={{
+        background: 'var(--card-bg)',
+        border: 'var(--card-border-width) solid var(--card-border)',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       <div className="flex items-start gap-3 mb-4">
         <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center">
           <span className="text-lg font-bold text-primary">{name.charAt(0)}</span>

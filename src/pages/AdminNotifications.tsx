@@ -10,7 +10,7 @@ const AdminNotifications = () => {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-background">
+    <div className="flex h-screen w-full" style={{ background: 'var(--page-bg)' }}>
       <AdminSidebar />
       <main className="flex-1 overflow-auto p-6 lg:p-8">
         <div className="mb-6">

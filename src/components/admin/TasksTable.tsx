@@ -90,7 +90,14 @@ const getStatusColor = (status: string) => {
 
 export const TasksTable = () => {
   return (
-    <div className="bg-card border border-border rounded-lg">
+    <div 
+      className="rounded-lg"
+      style={{
+        background: 'var(--card-bg)',
+        border: 'var(--card-border-width) solid var(--card-border)',
+        boxShadow: 'var(--card-shadow)',
+      }}
+    >
       <div className="border-b border-border p-4">
         <div className="flex items-center justify-between mb-4">
           <Tabs defaultValue="all">
