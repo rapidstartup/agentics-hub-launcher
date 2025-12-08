@@ -1,7 +1,6 @@
 import { NavLink, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  Rocket,
   LayoutDashboard,
   LineChart,
   FolderKanban,
@@ -10,14 +9,10 @@ import {
   Target,
   Eye,
   TrendingUp,
-  Award,
-  FileText,
   BookOpen,
-  Image,
-  Palette,
   BarChart3,
   ArrowLeft,
-  Users,
+  Megaphone,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 
@@ -55,15 +50,6 @@ export const AdvertisingSidebar = () => {
       label: "CENTRAL BRAIN",
       items: [
         { title: "Knowledge Base", path: `/client/${clientId}/knowledge`, icon: BookOpen },
-        { title: "Proven Assets", path: `/client/${clientId}/advertising/proven-assets`, icon: Award },
-        { title: "Offer Details", path: `/client/${clientId}/advertising/offer-details`, icon: FileText },
-        { title: "Creative Library", path: `/client/${clientId}/advertising/creative-library`, icon: Image },
-      ],
-    },
-    {
-      label: "PROJECT SETTINGS",
-      items: [
-        { title: "Brand Details", path: `/client/${clientId}/advertising/brand-details`, icon: Palette },
       ],
     },
   ];
@@ -77,7 +63,7 @@ export const AdvertisingSidebar = () => {
         color: 'var(--sidebar-text)',
       }}
     >
-      {/* Header with Logo */}
+      {/* Header */}
       <div 
         className="p-6"
         style={{ borderBottom: '1px solid var(--divider-color)' }}
@@ -85,11 +71,11 @@ export const AdvertisingSidebar = () => {
         <div className="flex items-center gap-3">
           <div 
             className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
-            style={{ background: 'var(--sidebar-active-bg)', opacity: 0.2 }}
+            style={{ background: 'var(--sidebar-active-bg)' }}
           >
-            <Rocket className="h-6 w-6" style={{ color: 'var(--sidebar-active-bg)' }} />
+            <Megaphone className="h-5 w-5" style={{ color: 'var(--sidebar-active-text)' }} />
           </div>
-          <h1 className="text-xl font-bold whitespace-nowrap" style={{ color: 'var(--sidebar-text)' }}>AdLaunch Pro</h1>
+          <h1 className="text-xl font-bold whitespace-nowrap" style={{ color: 'var(--sidebar-text)' }}>Advertising</h1>
         </div>
       </div>
 
