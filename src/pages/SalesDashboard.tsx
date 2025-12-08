@@ -3,15 +3,19 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Trash2, LayoutDashboard } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Plus, Trash2, LayoutDashboard, Wand2, BarChart3, LineChart, PieChart, Grid3x3 } from "lucide-react";
 import { useSalesDashboards } from "@/hooks/useSalesDashboards";
 import DashboardRenderer from "@/components/dashboard/DashboardRenderer";
+import type { DashboardComponent } from "@/types/dataBinding";
 
 const SalesDashboard = () => {
   const { clientId } = useParams();
   const { dashboards, sheets, isLoading, createDashboard, updateDashboard, deleteDashboard, saveState } =
     useSalesDashboards({ clientId });
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [addWidgetOpen, setAddWidgetOpen] = useState(false);
 
   const activeDashboard = useMemo(() => {
     if (!dashboards.length) return null;
@@ -33,6 +37,58 @@ const SalesDashboard = () => {
   const handleRename = (name: string) => {
     if (!activeDashboard) return;
     updateDashboard({ ...activeDashboard, name });
+  };
+
+  const addWidget = (type: DashboardComponent["type"]) => {
+    if (!activeDashboard) return;
+    const position = { x: 0, y: activeDashboard.components.length * 2, w: type === "statsCard" || type === "kpi" ? 3 : 6, h: type === "statsCard" || type === "kpi" ? 2 : 4 };
+
+    const newComponent: DashboardComponent = {
+      id: `component-${Date.now()}`,
+      type,
+      position,
+      config: {
+        title:
+          type === "statsCard"
+            ? "Revenue"
+            : type === "lineChart"
+            ? "Revenue Trend"
+            : type === "barChart"
+            ? "Product Performance"
+            : type === "pieChart"
+            ? "Share"
+            : "Metric",
+        change: "+5%",
+        trend: "up",
+        dataKey: type === "pieChart" ? "Revenue" : "Revenue",
+        xAxisKey: "Month",
+      },
+      dataBinding:
+        type === "statsCard" || type === "kpi"
+          ? {
+              sheetId: "ds-1",
+              columns: { value: "Revenue" },
+              aggregation: "sum",
+            }
+          : type === "lineChart" || type === "barChart"
+          ? {
+              sheetId: "ds-1",
+              columns: { x: "Month", y: "Revenue" },
+            }
+          : type === "pieChart"
+          ? {
+              sheetId: "ds-1",
+              columns: { x: "Month", value: "Revenue" },
+            }
+          : undefined,
+    };
+
+    const updated = {
+      ...activeDashboard,
+      components: [...activeDashboard.components, newComponent],
+    };
+    updateDashboard(updated);
+    setAddWidgetOpen(false);
   };
 
   if (isLoading) {
@@ -114,8 +170,86 @@ const SalesDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Floating actions to match builder UI */}
+        <div className="fixed bottom-6 right-6 flex items-center gap-3">
+          <Button variant="outline" size="lg">
+            <Wand2 className="h-4 w-4 mr-2" />
+            Ask AI
+          </Button>
+          <Button size="lg" onClick={() => setAddWidgetOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Widget
+          </Button>
+        </div>
+
+        <Dialog open={addWidgetOpen} onOpenChange={setAddWidgetOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Add Widget</DialogTitle>
+              <DialogDescription>Select a widget to place on the dashboard.</DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[320px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <WidgetCard
+                  icon={Grid3x3}
+                  title="KPI / Stat"
+                  description="Single value with change"
+                  onClick={() => addWidget("statsCard")}
+                />
+                <WidgetCard
+                  icon={LineChart}
+                  title="Line Chart"
+                  description="Trend over time"
+                  onClick={() => addWidget("lineChart")}
+                />
+                <WidgetCard
+                  icon={BarChart3}
+                  title="Bar Chart"
+                  description="Compare categories"
+                  onClick={() => addWidget("barChart")}
+                />
+                <WidgetCard
+                  icon={PieChart}
+                  title="Pie Chart"
+                  description="Distribution view"
+                  onClick={() => addWidget("pieChart")}
+                />
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
+  );
+};
+
+const WidgetCard = ({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+}: {
+  icon: any;
+  title: string;
+  description: string;
+  onClick: () => void;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-lg border border-border bg-card p-4 hover:border-primary/70 hover:shadow-sm transition"
+    >
+      <div className="flex items-start gap-3">
+        <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+          <Icon className="text-primary h-5 w-5" />
+        </div>
+        <div>
+          <p className="font-semibold text-foreground">{title}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+    </button>
   );
 };
 

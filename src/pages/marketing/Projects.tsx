@@ -70,18 +70,33 @@ export default function MarketingProjects() {
   const { data: boards } = useQuery({
     queryKey: ["agent-boards", clientId],
     queryFn: async () => {
-      let query = supabase
-        .from("agent_boards")
-        .select("*")
-        .order("position", { ascending: true });
+      const baseQuery = () =>
+        supabase
+          .from("agent_boards")
+          .select("*")
+          .order("position", { ascending: true });
 
-      if (clientId) {
-        query = query.eq("client_id", clientId);
+      const runQuery = async (withClientFilter: boolean) => {
+        let query = baseQuery();
+        if (withClientFilter && clientId) {
+          query = query.eq("client_id", clientId);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        return data;
+      };
+
+      try {
+        return await runQuery(true);
+      } catch (error: any) {
+        const fallback =
+          typeof error?.message === "string" &&
+          error.message.toLowerCase().includes("client_id");
+        if (fallback) {
+          return await runQuery(false);
+        }
+        throw error;
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
     },
   });
 

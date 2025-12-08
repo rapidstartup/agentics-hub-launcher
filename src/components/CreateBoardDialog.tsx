@@ -38,20 +38,37 @@ export function CreateBoardDialog({ open, onOpenChange, clientId }: CreateBoardD
         goal,
         default_platform: "Meta/Facebook",
       };
-      
-      // Associate with client if in client context
+
+      // Try to associate with client if in context; if column missing, retry without it.
       if (clientId) {
         insertData.client_id = clientId;
       }
-      
-      const { data, error } = await supabase
-        .from("agent_boards")
-        .insert(insertData)
-        .select()
-        .single();
 
-      if (error) throw error;
-      return data;
+      const attemptInsert = async (payload: any) => {
+        const { data, error } = await supabase
+          .from("agent_boards")
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      };
+
+      try {
+        return await attemptInsert(insertData);
+      } catch (error: any) {
+        const needsRetryWithoutClient =
+          clientId &&
+          typeof error?.message === "string" &&
+          error.message.toLowerCase().includes("client_id");
+
+        if (needsRetryWithoutClient) {
+          const retryPayload = { ...insertData };
+          delete retryPayload.client_id;
+          return await attemptInsert(retryPayload);
+        }
+        throw error;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["agent-boards", clientId] });
