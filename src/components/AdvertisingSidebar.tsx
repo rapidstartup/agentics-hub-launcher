@@ -9,12 +9,12 @@ import {
   Target,
   Eye,
   TrendingUp,
-  BookOpen,
   BarChart3,
   ArrowLeft,
   Megaphone,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
+import { SidebarUserPanel } from "@/components/SidebarUserPanel";
 
 export const AdvertisingSidebar = () => {
   const navigate = useNavigate();
@@ -135,6 +135,9 @@ export const AdvertisingSidebar = () => {
           ))}
         </div>
       </nav>
+
+      {/* User Profile Panel */}
+      <SidebarUserPanel />
     </aside>
   );
 };

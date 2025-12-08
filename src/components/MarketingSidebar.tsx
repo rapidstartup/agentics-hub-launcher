@@ -17,6 +17,7 @@ import {
   Brain,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
+import { SidebarUserPanel } from "@/components/SidebarUserPanel";
 
 export const MarketingSidebar = () => {
   const navigate = useNavigate();
@@ -144,6 +145,9 @@ export const MarketingSidebar = () => {
           ))}
         </div>
       </nav>
+
+      {/* User Profile Panel */}
+      <SidebarUserPanel />
     </aside>
   );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -43,6 +43,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Brush,
+  Bot,
 } from "lucide-react";
 import { ThemesSettings } from "@/components/settings/ThemesSettings";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
@@ -70,6 +71,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const ClientSettings = () => {
   const { clientId } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, profile } = useUser();
   const { canManageClient, canInviteToClient } = usePermissions();
@@ -318,6 +320,10 @@ const ClientSettings = () => {
                 <Key className="h-4 w-4" />
                 Security
               </TabsTrigger>
+              <TabsTrigger value="agents" className="gap-2">
+                <Bot className="h-4 w-4" />
+                Agent Controller
+              </TabsTrigger>
               {themeBuilderEnabled && (
                 <TabsTrigger value="themes" className="gap-2">
                   <Brush className="h-4 w-4" />
@@ -565,6 +571,20 @@ const ClientSettings = () => {
                     <Badge variant="outline">Coming Soon</Badge>
                   </div>
                 </div>
+              </Card>
+            </TabsContent>
+
+            {/* Agent Controller Tab */}
+            <TabsContent value="agents">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Agent Controller</h3>
+                <p className="text-muted-foreground mb-6">
+                  Manage your AI agents, configure workflows, and monitor agent activity.
+                </p>
+                <Button onClick={() => navigate(`/client/${clientId}/agent-controller`)}>
+                  <Bot className="h-4 w-4 mr-2" />
+                  Open Agent Controller
+                </Button>
               </Card>
             </TabsContent>
 
