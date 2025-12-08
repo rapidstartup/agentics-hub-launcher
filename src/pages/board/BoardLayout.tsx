@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useParams, useNavigate } from "react-router-dom";
+import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +12,7 @@ import { ProjectTitleSelector } from "@/components/ProjectTitleSelector";
 export default function BoardLayout() {
   const { boardId, clientId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isTransitioning } = useProject();
 
@@ -42,6 +43,16 @@ export default function BoardLayout() {
 
   const handleTabChange = (value: string) => {
     if (clientId) {
+      const isMarketing = location.pathname.includes("/marketing/");
+      const isAdvertising = location.pathname.includes("/advertising/");
+      if (isMarketing) {
+        navigate(`/client/${clientId}/marketing/projects/${boardId}/${value}`);
+        return;
+      }
+      if (isAdvertising) {
+        navigate(`/client/${clientId}/advertising/projects/${boardId}/${value}`);
+        return;
+      }
       navigate(`/client/${clientId}/projects/${boardId}/${value}`);
     } else {
       navigate(`/projects/${boardId}/${value}`);

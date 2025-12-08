@@ -20,9 +20,10 @@ interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId?: string;
+  department?: "marketing" | "advertising" | "operations" | "sales" | "strategy" | "financials";
 }
 
-export function CreateBoardDialog({ open, onOpenChange, clientId }: CreateBoardDialogProps) {
+export function CreateBoardDialog({ open, onOpenChange, clientId, department }: CreateBoardDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [goal, setGoal] = useState("");
@@ -81,9 +82,15 @@ export function CreateBoardDialog({ open, onOpenChange, clientId }: CreateBoardD
       setDescription("");
       setGoal("");
       
-      // Navigate to correct path based on context
+      // Navigate to correct path based on context/department
       if (clientId) {
-        navigate(`/client/${clientId}/projects/${data.id}/chat`);
+        if (department === "marketing") {
+          navigate(`/client/${clientId}/marketing/projects/${data.id}/chat`);
+        } else if (department === "advertising") {
+          navigate(`/client/${clientId}/advertising/projects/${data.id}/chat`);
+        } else {
+          navigate(`/client/${clientId}/projects/${data.id}/chat`);
+        }
       } else {
         navigate(`/projects/${data.id}/chat`);
       }

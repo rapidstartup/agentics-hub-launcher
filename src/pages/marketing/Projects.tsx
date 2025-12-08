@@ -296,6 +296,7 @@ export default function MarketingProjects() {
                           onDelete={(id) => deleteBoardMutation.mutate(id)}
                           onMoveToGroup={(boardId, groupSlug) => moveToGroupMutation.mutate({ boardId, groupSlug })}
                           clientId={clientId}
+                          department="marketing"
                         />
                       );
                     })}
@@ -306,7 +307,7 @@ export default function MarketingProjects() {
           </TabsContent>
         </Tabs>
 
-        <CreateBoardDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} clientId={clientId} />
+        <CreateBoardDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} clientId={clientId} department="marketing" />
         <CreateGroupDialog open={createGroupDialogOpen} onOpenChange={setCreateGroupDialogOpen} />
 
         <AlertDialog open={!!groupToDelete} onOpenChange={() => setGroupToDelete(null)}>

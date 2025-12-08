@@ -22,6 +22,7 @@ interface SortableProjectItemProps {
   onDelete: (id: string) => void;
   onMoveToGroup: (boardId: string, groupSlug: string | null) => void;
   clientId?: string;
+  department?: "marketing" | "advertising" | "operations" | "sales" | "strategy" | "financials";
 }
 
 export function SortableProjectItem({
@@ -31,12 +32,19 @@ export function SortableProjectItem({
   onDelete,
   onMoveToGroup,
   clientId,
+  department,
 }: SortableProjectItemProps) {
   const navigate = useNavigate();
   
   // Use correct route based on context
   const getProjectPath = (tab: string) => {
     if (clientId) {
+      if (department === "marketing") {
+        return `/client/${clientId}/marketing/projects/${board.id}/${tab}`;
+      }
+      if (department === "advertising") {
+        return `/client/${clientId}/advertising/projects/${board.id}/${tab}`;
+      }
       return `/client/${clientId}/projects/${board.id}/${tab}`;
     }
     return `/projects/${board.id}/${tab}`;

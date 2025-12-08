@@ -37,6 +37,7 @@ import MarketingIdeation from "./pages/marketing/Ideation";
 import MarketingOffers from "./pages/marketing/Offers";
 import MarketingCopy from "./pages/marketing/Copy";
 import MarketingFunnel from "./pages/marketing/Funnel";
+import MarketingBoardPage from "./pages/marketing/BoardPage";
 import AdvertisingAgents from "./pages/AdvertisingAgents";
 import Marketing from "./pages/Marketing";
 import Operations from "./pages/Operations";
@@ -167,6 +168,13 @@ const App = () => (
           <Route path="/client/:clientId/marketing/offers" element={<ProtectedRoute><MarketingOffers /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/copy" element={<ProtectedRoute><MarketingCopy /></ProtectedRoute>} />
           <Route path="/client/:clientId/marketing/funnel" element={<ProtectedRoute><MarketingFunnel /></ProtectedRoute>} />
+          <Route path="/client/:clientId/marketing/projects/:boardId" element={<ProtectedRoute><MarketingBoardPage /></ProtectedRoute>}>
+            <Route index element={<Navigate to="chat" replace />} />
+            <Route path="chat" element={<BoardChat />} />
+            <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="kanban" element={<BoardKanban />} />
+            <Route path="settings" element={<BoardSettings />} />
+          </Route>
           {/* Back-compat alias */}
           <Route path="/client/:clientId/marketing-agents" element={<ProtectedRoute><Navigate to="/client/:clientId/marketing/agents" replace /></ProtectedRoute>} />
           {/* Financials dedicated area */}
