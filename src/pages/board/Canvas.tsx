@@ -7,16 +7,26 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Plus, 
-  FileText, 
-  Image, 
-  Link, 
-  MessageSquare, 
-  Trash2, 
+import {
+  Plus,
+  FileText,
+  Image,
+  Link,
+  MessageSquare,
+  Trash2,
   Loader2,
   Move,
-  GripVertical
+  GripVertical,
+  BookText,
+  Video,
+  Sparkles,
+  Brain,
+  ZoomIn,
+  ZoomOut,
+  Focus,
+  Undo2,
+  Redo2,
+  Box,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,6 +65,12 @@ export default function Canvas() {
   const [newBlockUrl, setNewBlockUrl] = useState("");
   const [draggingBlock, setDraggingBlock] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  // Keep zoom fixed at 1 to avoid fractional coordinates breaking integer DB columns.
+  const [zoom, setZoom] = useState(1);
+  const [brainDialogOpen, setBrainDialogOpen] = useState(false);
+  const [brainSearch, setBrainSearch] = useState("");
 
   const { data: blocks = [], isLoading } = useQuery({
     queryKey: ["canvas-blocks", boardId],
@@ -116,8 +133,8 @@ export default function Canvas() {
 
   const handleAddBlock = () => {
     // Place new blocks at a random position
-    const posX = Math.random() * 400 + 50;
-    const posY = Math.random() * 300 + 50;
+    const posX = Math.round(Math.random() * 400 + 50);
+    const posY = Math.round(Math.random() * 300 + 50);
 
     addBlockMutation.mutate({
       type: newBlockType,
@@ -132,25 +149,50 @@ export default function Canvas() {
   };
 
   const handleMouseDown = (e: React.MouseEvent, blockId: string, block: CanvasBlock) => {
-    if ((e.target as HTMLElement).closest('.drag-handle')) {
+    if ((e.target as HTMLElement).closest(".drag-handle")) {
       e.preventDefault();
-      const rect = (e.target as HTMLElement).closest('.canvas-block')?.getBoundingClientRect();
+      const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
         setDraggingBlock(blockId);
         setDragOffset({
-          x: e.clientX - block.position_x,
-          y: e.clientY - block.position_y,
+          x: e.clientX - rect.left - block.position_x,
+          y: e.clientY - rect.top - block.position_y,
         });
       }
     }
   };
 
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    // start panning when clicking empty space
+    const target = e.target as HTMLElement;
+    const isOnBlock = target.closest(".canvas-block");
+    if (!isOnBlock && canvasRef.current) {
+      setIsPanning(true);
+      setPanStart({
+        x: e.clientX,
+        y: e.clientY,
+        scrollLeft: canvasRef.current.scrollLeft,
+        scrollTop: canvasRef.current.scrollTop,
+      });
+    }
+  };
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isPanning && canvasRef.current) {
+      const deltaX = e.clientX - panStart.x;
+      const deltaY = e.clientY - panStart.y;
+      canvasRef.current.scrollLeft = panStart.scrollLeft - deltaX;
+      canvasRef.current.scrollTop = panStart.scrollTop - deltaY;
+      return;
+    }
+
     if (draggingBlock) {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const newX = Math.round(e.clientX - rect.left - dragOffset.x);
+      const newY = Math.round(e.clientY - rect.top - dragOffset.y);
       
-      // Update optimistically
       queryClient.setQueryData(["canvas-blocks", boardId], (old: CanvasBlock[] | undefined) =>
         old?.map(block => 
           block.id === draggingBlock 
@@ -159,9 +201,12 @@ export default function Canvas() {
         )
       );
     }
-  }, [draggingBlock, dragOffset, boardId, queryClient]);
+  }, [draggingBlock, dragOffset, boardId, queryClient, isPanning, panStart]);
 
   const handleMouseUp = useCallback(() => {
+    if (isPanning) {
+      setIsPanning(false);
+    }
     if (draggingBlock) {
       const block = blocks.find(b => b.id === draggingBlock);
       if (block) {
@@ -172,7 +217,7 @@ export default function Canvas() {
       }
       setDraggingBlock(null);
     }
-  }, [draggingBlock, blocks, updateBlockMutation]);
+  }, [draggingBlock, blocks, updateBlockMutation, isPanning]);
 
   const getBlockIcon = (type: string) => {
     switch (type) {
@@ -180,6 +225,10 @@ export default function Canvas() {
       case "image": return <Image className="w-4 h-4" />;
       case "url": return <Link className="w-4 h-4" />;
       case "chat": return <MessageSquare className="w-4 h-4" />;
+    case "doc": return <BookText className="w-4 h-4" />;
+    case "video": return <Video className="w-4 h-4" />;
+    case "creative": return <Sparkles className="w-4 h-4" />;
+    case "brain": return <Brain className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
     }
   };
@@ -188,13 +237,23 @@ const toolItems = [
   { type: "image", label: "Image", icon: <Image className="w-4 h-4" />, hint: "References, inspo" },
   { type: "text", label: "Text", icon: <FileText className="w-4 h-4" />, hint: "Notes, concepts" },
   { type: "url", label: "URL", icon: <Link className="w-4 h-4" />, hint: "Competitive links" },
+  { type: "doc", label: "Doc", icon: <BookText className="w-4 h-4" />, hint: "Briefs, scripts" },
+  { type: "video", label: "Video", icon: <Video className="w-4 h-4" />, hint: "Cuts, references" },
+  { type: "creative", label: "Creative", icon: <Sparkles className="w-4 h-4" />, hint: "Ideas, variants" },
+  { type: "brain", label: "Brain", icon: <Brain className="w-4 h-4" />, hint: "From Central Brain" },
   { type: "chat", label: "Chat", icon: <MessageSquare className="w-4 h-4" />, hint: "Prompt threads" },
 ];
 
 const CanvasToolPalette = ({
   onSelect,
+  onZoomIn,
+  onZoomOut,
+  onCenter,
 }: {
   onSelect: (type: string) => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onCenter: () => void;
 }) => (
   <Card className="p-3 shadow-lg border-border/70 bg-card/95 backdrop-blur">
     <div className="text-xs font-semibold text-muted-foreground mb-2">Canvas tools</div>
@@ -214,6 +273,30 @@ const CanvasToolPalette = ({
           </div>
         </Button>
       ))}
+    </div>
+    <div className="my-3 border-t border-border/50" />
+    <div className="grid grid-cols-3 gap-1">
+      <Button variant="ghost" size="icon" onClick={onZoomIn} title="Zoom in">
+        <ZoomIn className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="icon" onClick={onZoomOut} title="Zoom out">
+        <ZoomOut className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="icon" onClick={onCenter} title="Center canvas">
+        <Focus className="w-4 h-4" />
+      </Button>
+    </div>
+    <div className="my-3 border-t border-border/50" />
+    <div className="grid grid-cols-3 gap-1 opacity-60">
+      <Button variant="ghost" size="icon" disabled title="Undo (coming soon)">
+        <Undo2 className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="icon" disabled title="Redo (coming soon)">
+        <Redo2 className="w-4 h-4" />
+      </Button>
+      <Button variant="ghost" size="icon" disabled title="Add Box (coming soon)">
+        <Box className="w-4 h-4" />
+      </Button>
     </div>
   </Card>
 );
@@ -254,18 +337,52 @@ const CanvasToolPalette = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onMouseDown={handleCanvasMouseDown}
       >
         {/* Canvas tool palette */}
-        <div className="absolute top-4 left-4 z-20 w-52">
+        <div className="fixed top-24 left-72 z-30 w-52 pointer-events-auto">
           <CanvasToolPalette
             onSelect={(type) => {
+              if (type === "brain") {
+                setBrainDialogOpen(true);
+                return;
+              }
               setNewBlockType(type);
               setAddBlockDialogOpen(true);
+            }}
+            onZoomIn={() => setZoom(1)}
+            onZoomOut={() => setZoom(1)}
+            onCenter={() => {
+              setZoom(1);
+              if (blocks.length === 0) {
+                canvasRef.current?.scrollTo({ top: 500, left: 500, behavior: "smooth" });
+                return;
+              }
+              const bounds = blocks.reduce(
+                (acc, b) => ({
+                  minX: Math.min(acc.minX, b.position_x),
+                  minY: Math.min(acc.minY, b.position_y),
+                  maxX: Math.max(acc.maxX, b.position_x + (b.width || 0)),
+                  maxY: Math.max(acc.maxY, b.position_y + (b.height || 0)),
+                }),
+                { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
+              );
+              const viewportW = canvasRef.current?.clientWidth || 0;
+              const viewportH = canvasRef.current?.clientHeight || 0;
+              const targetX = Math.max(0, bounds.minX + (bounds.maxX - bounds.minX) / 2 - viewportW / 2);
+              const targetY = Math.max(0, bounds.minY + (bounds.maxY - bounds.minY) / 2 - viewportH / 2);
+              canvasRef.current?.scrollTo({ top: targetY, left: targetX, behavior: "smooth" });
             }}
           />
         </div>
 
-        <div className="min-h-full min-w-full relative" style={{ minHeight: "2000px", minWidth: "2000px" }}>
+        <div
+          className="min-h-full min-w-full relative"
+          style={{
+            minHeight: "2000px",
+            minWidth: "2000px",
+          }}
+        >
           {/* Grid background */}
           <div 
             className="absolute inset-0 pointer-events-none"
@@ -376,7 +493,11 @@ const CanvasToolPalette = ({
                   <SelectItem value="text">Text</SelectItem>
                   <SelectItem value="image">Image</SelectItem>
                   <SelectItem value="url">URL</SelectItem>
-                  <SelectItem value="chat">Chat</SelectItem>
+                      <SelectItem value="doc">Doc</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="creative">Creative</SelectItem>
+                      <SelectItem value="brain">Brain</SelectItem>
+                      <SelectItem value="chat">Chat</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -424,7 +545,149 @@ const CanvasToolPalette = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Brain Picker Dialog */}
+      <BrainPickerDialog
+        open={brainDialogOpen}
+        onOpenChange={setBrainDialogOpen}
+        search={brainSearch}
+        onSearchChange={setBrainSearch}
+        onSelectItem={(item) => {
+          const posX = Math.random() * 400 + 50;
+          const posY = Math.random() * 300 + 50;
+          addBlockMutation.mutate({
+            type: "brain",
+            title: item.title,
+            content: item.description || null,
+            url: item.external_url || item.file_path || null,
+            position_x: posX,
+            position_y: posY,
+            width: 320,
+            height: 220,
+          });
+          setBrainDialogOpen(false);
+        }}
+      />
     </div>
   );
 }
 
+
+interface BrainItem {
+  id: string;
+  title: string;
+  description: string | null;
+  category?: string | null;
+  external_url?: string | null;
+  file_path?: string | null;
+  source_department?: string | null;
+  tags?: string[] | null;
+}
+
+interface BrainPickerDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  onSelectItem: (item: BrainItem) => void;
+}
+
+function BrainPickerDialog({
+  open,
+  onOpenChange,
+  search,
+  onSearchChange,
+  onSelectItem,
+}: BrainPickerDialogProps) {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["brain-items"],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("knowledge_base_items")
+        .select("id,title,description,category,external_url,file_path,source_department,tags,indexing_status,is_archived")
+        .eq("is_archived", false)
+        .in("indexing_status", ["indexed", "processing"])
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data as BrainItem[];
+    },
+  });
+
+  const filtered = items.filter((item) => {
+    const q = search.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(q) ||
+      (item.description || "").toLowerCase().includes(q) ||
+      (item.category || "").toLowerCase().includes(q) ||
+      (item.tags || []).some((t) => t.toLowerCase().includes(q))
+    );
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Add from Brain</DialogTitle>
+          <DialogDescription>Select indexed knowledge base items to drop onto the canvas.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <Input
+            placeholder="Search Brain items..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+
+          <div className="max-h-[320px] overflow-auto space-y-2">
+            {isLoading && (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading knowledge base...
+              </div>
+            )}
+
+            {!isLoading && filtered.length === 0 && (
+              <p className="text-sm text-muted-foreground">No items found.</p>
+            )}
+
+            {filtered.map((item) => (
+              <Card
+                key={item.id}
+                className="p-3 hover:border-primary/50 cursor-pointer transition-colors"
+                onClick={() => onSelectItem(item)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium text-foreground">{item.title}</p>
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {item.description}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {item.category && (
+                        <Badge variant="secondary" className="text-xs">
+                          {item.category}
+                        </Badge>
+                      )}
+                      {item.source_department && (
+                        <Badge variant="outline" className="text-xs">
+                          {item.source_department}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => onSelectItem(item)}>
+                    Add
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

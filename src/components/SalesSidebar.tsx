@@ -10,6 +10,7 @@ import {
   Phone,
   Plug,
   Brain,
+  Settings as Gear,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 import { SidebarUserPanel } from "@/components/SidebarUserPanel";
@@ -23,8 +24,7 @@ export const SalesSidebar = () => {
     {
       label: "MAIN DASHBOARD",
       items: [
-        { title: "Dashboard", path: `/client/${clientId}/sales/dashboard`, icon: LayoutDashboard },
-        { title: "Overview", path: `/client/${clientId}/sales`, icon: LayoutDashboard },
+        { title: "Dashboard", path: `/client/${clientId}/sales`, icon: LayoutDashboard },
         { title: "Analytics", path: `/client/${clientId}/sales/analytics`, icon: LineChart },
         { title: "Projects", path: `/client/${clientId}/sales/projects`, icon: FolderKanban },
         { title: "Sales Agents", path: `/client/${clientId}/sales/agents`, icon: Users },
@@ -35,13 +35,13 @@ export const SalesSidebar = () => {
       items: [
         { title: "Pipeline Manager", path: `/client/${clientId}/sales/pipeline`, icon: Workflow },
         { title: "Call Scripts", path: `/client/${clientId}/sales/call-scripts`, icon: Phone },
-        { title: "CRM Integration", path: `/client/${clientId}/sales/crm-integration`, icon: Plug },
       ],
     },
     {
       label: "RESOURCES",
       items: [
         { title: "Central Brain", path: `/client/${clientId}/central-brain`, icon: Brain },
+        { title: "Sales Settings", path: `/client/${clientId}/sales/settings`, icon: Gear },
       ],
     },
   ];

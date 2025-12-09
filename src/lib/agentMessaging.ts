@@ -6,6 +6,18 @@ type RecordAgentExchangeParams = {
   clientId?: string;
   userText: string;
   agentText: string;
+  trace?: {
+    requestId?: string;
+    durationMs?: number;
+    startTs?: string;
+    endTs?: string;
+    success?: boolean;
+    status?: number | null;
+    statusText?: string | null;
+    contentLength?: number | null;
+    headers?: Record<string, string>;
+    error?: string | null;
+  };
 };
 
 export async function recordAgentExchange({
@@ -13,6 +25,7 @@ export async function recordAgentExchange({
   clientId,
   userText,
   agentText,
+  trace,
 }: RecordAgentExchangeParams) {
   const {
     data: { user },
@@ -31,7 +44,7 @@ export async function recordAgentExchange({
       user_id: user.id,
       role: "user",
       content: userText,
-      metadata: { area: agent.area, agent_key: agent.agent_key },
+      metadata: { area: agent.area, agent_key: agent.agent_key, trace },
       source: "user",
     });
   }
@@ -43,7 +56,7 @@ export async function recordAgentExchange({
       user_id: user.id,
       role: "assistant",
       content: agentText,
-      metadata: { area: agent.area, agent_key: agent.agent_key },
+      metadata: { area: agent.area, agent_key: agent.agent_key, trace },
       source: "agent",
     });
   }
@@ -67,6 +80,7 @@ export async function recordAgentExchange({
         agent_config_id: agent.id,
         agent_name: agent.display_name || agent.agent_key,
         exchange_type: "n8n-webhook",
+        trace,
       },
     });
   }

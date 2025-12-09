@@ -60,6 +60,7 @@ import SalesPipeline from "./pages/SalesPipeline";
 import SalesCallScripts from "./pages/SalesCallScripts";
 import SalesCrmIntegration from "./pages/SalesCrmIntegration";
 import SalesDashboard from "./pages/SalesDashboard";
+import SalesSettings from "./pages/SalesSettings";
 import StrategyComingSoon from "./pages/StrategyComingSoon";
 import StrategyAgents from "./pages/StrategyAgents";
 import StrategyMarketPositioning from "./pages/StrategyMarketPositioning";
@@ -135,13 +136,14 @@ const App = () => (
           <Route path="/client/:clientId/knowledge-browser" element={<ProtectedRoute><KnowledgeBaseBrowser /></ProtectedRoute>} />
           {/* Sales dedicated area */}
           <Route path="/client/:clientId/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
-          <Route path="/client/:clientId/sales/dashboard" element={<ProtectedRoute><SalesDashboard /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/dashboard" element={<ProtectedRoute><Navigate to="/client/:clientId/sales" replace /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/analytics" element={<ProtectedRoute><SalesAnalytics /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/projects" element={<ProtectedRoute><SalesProjects /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/agents" element={<ProtectedRoute><SalesAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/pipeline" element={<ProtectedRoute><SalesPipeline /></ProtectedRoute>} />
           <Route path="/client/:clientId/sales/call-scripts" element={<ProtectedRoute><SalesCallScripts /></ProtectedRoute>} />
-          <Route path="/client/:clientId/sales/crm-integration" element={<ProtectedRoute><SalesCrmIntegration /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/crm-integration" element={<ProtectedRoute><Navigate to="/client/:clientId/sales/settings" replace /></ProtectedRoute>} />
+          <Route path="/client/:clientId/sales/settings" element={<ProtectedRoute><SalesSettings /></ProtectedRoute>} />
           {/* Operations dedicated area */}
           <Route path="/client/:clientId/operations" element={<ProtectedRoute><Operations /></ProtectedRoute>} />
           <Route path="/client/:clientId/operations/analytics" element={<ProtectedRoute><OperationsAnalytics /></ProtectedRoute>} />

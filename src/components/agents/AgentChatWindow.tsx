@@ -35,6 +35,23 @@ const createMessageId = () => {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 };
 
+const createRequestId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `req-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
+
+const formatDuration = (ms: number) => {
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+};
+
+const nowMs = () =>
+  typeof performance !== "undefined" && typeof performance.now === "function"
+    ? performance.now()
+    : Date.now();
+
 const formatFieldPrompt = (field: RuntimeField) =>
   field.placeholder
     ? `${field.label || field.key}: ${field.placeholder}`
@@ -160,35 +177,28 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
   }, [agent.id, requiredFieldSignature, requiredFields, optionalFields]);
 
   const executeAgentWithPayload = async (payload: Record<string, any>, userSummary: string) => {
+    const requestId = createRequestId();
+    const start = nowMs();
+    const startTs = new Date().toISOString();
+    let workingTimer: ReturnType<typeof setTimeout> | undefined;
+
+    workingTimer = setTimeout(() => {
+      appendMessages({
+        id: createMessageId(),
+        role: "assistant",
+        content: "Still working... this may take a bit.",
+        timestamp: new Date(),
+      });
+    }, 10000);
+
     setIsLoading(true);
-    try {
-      let response: any;
 
-      // Check if this is a predefined agent with a direct webhook URL
-      if (agent.is_predefined && agent.webhook_url) {
-        const result = await executeAgentWebhook({
-          webhookUrl: agent.webhook_url,
-          payload,
-        });
-        response = result.success ? result.result : { error: result.error };
-      } else {
-        // Use the n8n connection flow
-        const result = await runN8nWorkflow({
-          connectionId: agent.connection_id,
-          workflowId: agent.workflow_id,
-          webhookUrl: agent.webhook_url || undefined,
-          payload,
-          waitTillFinished: true,
-        });
-        response = result.result;
-      }
-
-      // Extract the response text
+    const buildContent = (response: any) => {
       let content = "";
       if (typeof response === "string") {
         content = response;
       } else if (response?.output) {
-        content = response.output;
+        content = typeof response.output === "string" ? response.output : JSON.stringify(response.output, null, 2);
       } else if (response?.result) {
         content = typeof response.result === "string" ? response.result : JSON.stringify(response.result, null, 2);
       } else if (response?.raw) {
@@ -199,10 +209,69 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
         content = JSON.stringify(response, null, 2);
       }
 
+      if (response?.threadId) {
+        content += `\n\nThread: ${response.threadId}`;
+      }
+      return content;
+    };
+
+    const buildTrace = (args: {
+      status?: number | null;
+      statusText?: string | null;
+      error?: string | null;
+      contentLength?: number | null;
+    }) => {
+      const end = nowMs();
+      return {
+        requestId,
+        durationMs: Math.round(end - start),
+        startTs,
+        endTs: new Date().toISOString(),
+        success: args.error ? false : true,
+        status: args.status ?? null,
+        statusText: args.statusText ?? null,
+        contentLength: args.contentLength ?? null,
+        headers: undefined,
+        error: args.error ?? null,
+      };
+    };
+
+    try {
+      let response: any;
+      let status: number | null = null;
+      let statusText: string | null = null;
+
+      if (agent.is_predefined && agent.webhook_url) {
+        const result = await executeAgentWebhook({
+          webhookUrl: agent.webhook_url,
+          payload,
+        });
+        response = result.result;
+        status = result.success ? 200 : 400;
+        statusText = result.success ? "OK" : "Webhook Error";
+        if (!result.success) {
+          throw new Error(result.error || "Webhook execution failed");
+        }
+      } else {
+        const result = await runN8nWorkflow({
+          connectionId: agent.connection_id,
+          workflowId: agent.workflow_id,
+          webhookUrl: agent.webhook_url || undefined,
+          payload,
+          waitTillFinished: true,
+        });
+        response = result.result;
+        status = result?.success === false ? 400 : 200;
+        statusText = result?.success === false ? "n8n-run error" : "OK";
+      }
+
+      const content = buildContent(response);
+      const trace = buildTrace({ status, statusText, contentLength: content.length });
+
       appendMessages({
         id: createMessageId(),
         role: "assistant",
-        content,
+        content: `${content}\n\n_(Completed in ${formatDuration(trace.durationMs)}.)_`,
         timestamp: new Date(),
       });
 
@@ -211,15 +280,34 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
         clientId,
         userText: userSummary || JSON.stringify(payload, null, 2),
         agentText: content,
+        trace,
       });
     } catch (error: any) {
+      const trace = buildTrace({
+        status: null,
+        statusText: null,
+        error: error?.message || "Failed to get response",
+        contentLength: null,
+      });
+
       appendMessages({
         id: createMessageId(),
         role: "assistant",
-        content: `Error: ${error?.message || "Failed to get response"}`,
+        content: `Error: ${error?.message || "Failed to get response"}\n\n_(Failed after ${formatDuration(
+          trace.durationMs || 0,
+        )}; requestId: ${requestId}.)_`,
         timestamp: new Date(),
       });
+
+      await recordAgentExchange({
+        agent,
+        clientId,
+        userText: userSummary || JSON.stringify(payload, null, 2),
+        agentText: `Error: ${error?.message || "Failed to get response"}`,
+        trace,
+      });
     } finally {
+      if (workingTimer) clearTimeout(workingTimer);
       setIsLoading(false);
       inputRef.current?.focus();
     }

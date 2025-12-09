@@ -98,11 +98,11 @@ export const MarketingSidebar = () => {
         <div className="flex items-center gap-3">
           <div 
             className="flex h-10 w-10 items-center justify-center rounded-lg shrink-0"
-            style={{ background: 'var(--sidebar-active-bg)', opacity: 0.2 }}
+            style={{ background: 'var(--sidebar-active-bg)' }}
           >
-            <Rocket className="h-6 w-6" style={{ color: 'var(--sidebar-active-bg)' }} />
+            <Megaphone className="h-5 w-5" style={{ color: 'var(--sidebar-active-text)' }} />
           </div>
-          <h1 className="text-xl font-bold whitespace-nowrap" style={{ color: 'var(--sidebar-text)' }}>Marketing Hub</h1>
+          <h1 className="text-xl font-bold whitespace-nowrap" style={{ color: 'var(--sidebar-text)' }}>Marketing</h1>
         </div>
       </div>
 

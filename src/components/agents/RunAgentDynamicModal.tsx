@@ -20,6 +20,7 @@ interface RunAgentDynamicModalProps {
   onRun: (values: Record<string, any>) => Promise<any>;
   running?: boolean;
   outputBehavior?: OutputBehavior;
+  progressNote?: string;
 }
 
 export function RunAgentDynamicModal({
@@ -31,6 +32,7 @@ export function RunAgentDynamicModal({
   onRun,
   running = false,
   outputBehavior = "modal_display",
+  progressNote,
 }: RunAgentDynamicModalProps) {
   const [values, setValues] = useState<Record<string, any>>({});
   const [phase, setPhase] = useState<"input" | "result">("input");
@@ -185,6 +187,9 @@ export function RunAgentDynamicModal({
           </DialogTitle>
           {description && phase === "input" && (
             <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+          {progressNote && phase === "input" && (
+            <p className="text-xs text-muted-foreground">{progressNote}</p>
           )}
         </DialogHeader>
 

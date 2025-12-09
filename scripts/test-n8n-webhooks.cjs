@@ -10,6 +10,8 @@
     --limit=400     max characters of body to print (default 600)
 */
 
+const { randomUUID } = require("crypto");
+
 const webhookTests = [
   {
     name: "Meeting Agent",
@@ -59,9 +61,29 @@ const outputLimit =
 const truncateAt = Number(outputLimit) || 600;
 const failFast = process.argv.includes("--fail-fast");
 
+function pickHeaders(headers, limit = 12) {
+  const entries = [];
+  for (const [key, value] of headers.entries()) {
+    entries.push([key, value]);
+    if (entries.length >= limit) break;
+  }
+  return Object.fromEntries(entries);
+}
+
+function formatDuration(ms) {
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = (ms / 1000).toFixed(2);
+  return `${seconds}s`;
+}
+
 async function runWebhookTest(test) {
+  const requestId = randomUUID();
+  const start = Date.now();
+  const startIso = new Date(start).toISOString();
+
   console.log(`\n=== ${test.name} ===`);
   console.log(`POST ${test.url}`);
+  console.log(`requestId: ${requestId}`);
 
   try {
     const response = await fetch(test.url, {
@@ -70,6 +92,10 @@ async function runWebhookTest(test) {
       body: JSON.stringify(test.payload),
     });
 
+    const end = Date.now();
+    const durationMs = end - start;
+    const endIso = new Date(end).toISOString();
+
     const bodyText = await response.text();
     const trimmedBody =
       bodyText.length > truncateAt
@@ -77,12 +103,42 @@ async function runWebhookTest(test) {
         : bodyText;
 
     console.log(`Status: ${response.status} ${response.statusText}`);
+    console.log(`Duration: ${formatDuration(durationMs)}`);
     console.log(`Body (${bodyText.length} chars):`);
     console.log(trimmedBody || "(empty response)");
+    console.log(
+      "Trace:",
+      JSON.stringify(
+        {
+          requestId,
+          startTs: startIso,
+          endTs: endIso,
+          durationMs,
+          success: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+          headers: pickHeaders(response.headers),
+          contentLength: bodyText.length,
+        },
+        null,
+        2
+      )
+    );
 
     return response.ok;
   } catch (error) {
+    const end = Date.now();
+    const durationMs = end - start;
+    const endIso = new Date(end).toISOString();
     console.error(`Request failed: ${error.message}`);
+    console.log(
+      "Trace:",
+      JSON.stringify(
+        { requestId, startTs: startIso, endTs: endIso, durationMs, success: false, error: error.message },
+        null,
+        2
+      )
+    );
     return false;
   }
 }
