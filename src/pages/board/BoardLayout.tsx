@@ -8,12 +8,6 @@ import { MessageSquare, PenTool, Columns3, Settings, Maximize2, Minimize2, Loade
 import { cn } from "@/lib/utils";
 import { useProject } from "@/contexts/ProjectContext";
 import { ProjectTitleSelector } from "@/components/ProjectTitleSelector";
-import { MarketingSidebar } from "@/components/MarketingSidebar";
-import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
-import { OperationsSidebar } from "@/components/OperationsSidebar";
-import { SalesSidebar } from "@/components/SalesSidebar";
-import { FinancialsSidebar } from "@/components/FinancialsSidebar";
-import { StrategySidebar } from "@/components/StrategySidebar";
 
 export default function BoardLayout() {
   const { boardId, clientId } = useParams();
@@ -64,13 +58,6 @@ export default function BoardLayout() {
       navigate(`/projects/${boardId}/${value}`);
     }
   };
-
-  const isMarketing = location.pathname.includes("/marketing/");
-  const isAdvertising = location.pathname.includes("/advertising/");
-  const isOperations = location.pathname.includes("/operations/");
-  const isSales = location.pathname.includes("/sales/");
-  const isFinancials = location.pathname.includes("/financials/");
-  const isStrategy = location.pathname.includes("/strategy/");
 
   const layoutContent = (
     <div className={cn("flex flex-col h-full", isFullscreen && "fixed inset-0 z-50 bg-background")}>
@@ -133,20 +120,6 @@ export default function BoardLayout() {
       </div>
     </div>
   );
-
-  const wrapWithSidebar = (SidebarComponent: React.ComponentType) => (
-    <div className="flex min-h-screen w-full">
-      <SidebarComponent />
-      <div className="flex-1 flex flex-col">{layoutContent}</div>
-    </div>
-  );
-
-  if (isMarketing) return wrapWithSidebar(MarketingSidebar);
-  if (isAdvertising) return wrapWithSidebar(AdvertisingSidebar);
-  if (isOperations) return wrapWithSidebar(OperationsSidebar);
-  if (isSales) return wrapWithSidebar(SalesSidebar);
-  if (isFinancials) return wrapWithSidebar(FinancialsSidebar);
-  if (isStrategy) return wrapWithSidebar(StrategySidebar);
 
   return layoutContent;
 }
