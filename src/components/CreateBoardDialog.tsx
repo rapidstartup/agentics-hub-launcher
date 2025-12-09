@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
+const isUuid = (value?: string) => !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -40,9 +42,22 @@ export function CreateBoardDialog({ open, onOpenChange, clientId, department }: 
         default_platform: "Meta/Facebook",
       };
 
-      // Try to associate with client if in context; if column missing, retry without it.
+      // Resolve client id: accept UUID directly, otherwise try slug lookup; fall back to no client if not found.
+      let resolvedClientId: string | null = null;
       if (clientId) {
-        insertData.client_id = clientId;
+        if (isUuid(clientId)) {
+          resolvedClientId = clientId;
+        } else {
+          const { data: client } = await (supabase as any)
+            .from("clients")
+            .select("id")
+            .eq("slug", clientId)
+            .maybeSingle();
+          resolvedClientId = client?.id ?? null;
+        }
+      }
+      if (resolvedClientId) {
+        insertData.client_id = resolvedClientId;
       }
 
       const attemptInsert = async (payload: any) => {
@@ -59,7 +74,7 @@ export function CreateBoardDialog({ open, onOpenChange, clientId, department }: 
         return await attemptInsert(insertData);
       } catch (error: any) {
         const needsRetryWithoutClient =
-          clientId &&
+          resolvedClientId &&
           typeof error?.message === "string" &&
           error.message.toLowerCase().includes("client_id");
 

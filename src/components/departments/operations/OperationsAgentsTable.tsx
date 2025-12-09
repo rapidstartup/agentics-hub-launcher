@@ -12,32 +12,36 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Mail, RotateCw, Bot } from "lucide-react";
 
-export type MarketingAgentRow = {
+export type OperationsAgentRow = {
   id: string;
   name: string;
   role: string;
   avatarUrl?: string;
-  status: "active" | "on-leave";
-  contentProgressPercent: number; // 0-100
-  contentText: string; // "15/20 Projects"
-  campaignsProgressPercent: number; // 0-100
-  campaignsText: string; // "6/10 Campaigns"
-  healthPercent: number; // 0-100
+  status: "online" | "busy" | "offline";
+  workflowProgressPercent: number;
+  workflowText: string;
+  tasksProgressPercent: number;
+  tasksText: string;
+  efficiencyPercent: number;
   isAI?: boolean;
   email?: string;
   description?: string;
 };
 
-function StatusPill({ status }: { status: MarketingAgentRow["status"] }) {
-  const isActive = status === "active";
-  const classes = isActive
+function StatusPill({ status }: { status: OperationsAgentRow["status"] }) {
+  const isOnline = status === "online";
+  const isBusy = status === "busy";
+  const classes = isOnline
     ? "text-emerald-500 bg-emerald-500/10"
+    : isBusy
+    ? "text-amber-500 bg-amber-500/10"
     : "text-muted-foreground bg-muted";
-  const dot = isActive ? "bg-emerald-500" : "bg-foreground/50";
+  const dot = isOnline ? "bg-emerald-500" : isBusy ? "bg-amber-500" : "bg-foreground/50";
+  const label = isOnline ? "Online" : isBusy ? "Busy" : "Offline";
   return (
     <div className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${classes}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      {isActive ? "Active" : "On Leave"}
+      {label}
     </div>
   );
 }
@@ -80,15 +84,15 @@ function CircularProgress({ percent }: { percent: number }) {
 }
 
 interface Props {
-  rows: MarketingAgentRow[];
-  onRun?: (row: MarketingAgentRow) => void;
-  onEdit?: (row: MarketingAgentRow) => void;
-  onView?: (row: MarketingAgentRow) => void;
-  onMessage?: (row: MarketingAgentRow) => void;
-  onRowClick?: (row: MarketingAgentRow) => void;
+  rows: OperationsAgentRow[];
+  onRun?: (row: OperationsAgentRow) => void;
+  onEdit?: (row: OperationsAgentRow) => void;
+  onView?: (row: OperationsAgentRow) => void;
+  onMessage?: (row: OperationsAgentRow) => void;
+  onRowClick?: (row: OperationsAgentRow) => void;
 }
 
-export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, onRowClick }: Props) => {
+export const OperationsAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, onRowClick }: Props) => {
   const data = useMemo(() => rows, [rows]);
 
   return (
@@ -99,9 +103,9 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, o
             <TableRow>
               <TableHead>Agent</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Content Creation</TableHead>
-              <TableHead>Campaigns</TableHead>
-              <TableHead className="text-center">Health Pulse</TableHead>
+              <TableHead>Workflows</TableHead>
+              <TableHead>Tasks</TableHead>
+              <TableHead className="text-center">Efficiency</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -133,29 +137,41 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, o
                 </TableCell>
                 <TableCell>
                   <div className="w-56">
-                    <Progress value={r.contentProgressPercent} className="h-2.5" />
-                    <p className="mt-1 text-xs text-muted-foreground">{r.contentText}</p>
+                    <Progress value={r.workflowProgressPercent} className="h-2.5" />
+                    <p className="mt-1 text-xs text-muted-foreground">{r.workflowText}</p>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="w-56">
-                    <Progress value={r.campaignsProgressPercent} className="h-2.5" />
-                    <p className="mt-1 text-xs text-muted-foreground">{r.campaignsText}</p>
+                    <Progress value={r.tasksProgressPercent} className="h-2.5" />
+                    <p className="mt-1 text-xs text-muted-foreground">{r.tasksText}</p>
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center">
-                    <CircularProgress percent={r.healthPercent} />
+                    <CircularProgress percent={r.efficiencyPercent} />
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     {onRun ? (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Run now" onClick={() => onRun(r)}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8" 
+                        title="Run now" 
+                        onClick={(e) => { e.stopPropagation(); onRun(r); }}
+                      >
                         <RotateCw className="h-4 w-4" />
                       </Button>
                     ) : null}
-                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Edit" onClick={() => onEdit?.(r)}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8" 
+                      title="Edit" 
+                      onClick={(e) => { e.stopPropagation(); onEdit?.(r); }}
+                    >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
@@ -164,7 +180,7 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, o
                       className="h-8 w-8"
                       title="View"
                       disabled={!onView}
-                      onClick={() => onView?.(r)}
+                      onClick={(e) => { e.stopPropagation(); onView?.(r); }}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -174,7 +190,7 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, o
                       className="h-8 w-8"
                       title="Send message"
                       disabled={!onMessage}
-                      onClick={() => onMessage?.(r)}
+                      onClick={(e) => { e.stopPropagation(); onMessage?.(r); }}
                     >
                       <Mail className="h-4 w-4" />
                     </Button>
@@ -188,5 +204,3 @@ export const MarketingAgentsTable = ({ rows, onRun, onEdit, onView, onMessage, o
     </div>
   );
 };
-
-

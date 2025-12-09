@@ -395,7 +395,7 @@ const ClientKnowledge = () => {
       />
 
       {/* Floating Ask AI */}
-      <FloatingAskAI />
+      <FloatingAskAI clientId={clientId} />
     </div>
   );
 };

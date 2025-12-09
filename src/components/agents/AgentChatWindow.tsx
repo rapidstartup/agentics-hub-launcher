@@ -20,6 +20,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  trace?: TraceMeta;
 }
 
 interface AgentChatWindowProps {
@@ -27,6 +28,19 @@ interface AgentChatWindowProps {
   clientId?: string;
   className?: string;
 }
+
+type TraceMeta = {
+  requestId?: string;
+  durationMs?: number;
+  startTs?: string;
+  endTs?: string;
+  success?: boolean;
+  status?: number | null;
+  statusText?: string | null;
+  contentLength?: number | null;
+  headers?: Record<string, string>;
+  error?: string | null;
+};
 
 const createMessageId = () => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -51,6 +65,25 @@ const nowMs = () =>
   typeof performance !== "undefined" && typeof performance.now === "function"
     ? performance.now()
     : Date.now();
+
+  const renderTrace = (trace?: TraceMeta) => {
+    if (!trace) return null;
+    return (
+      <div className="mt-2 text-[11px] text-muted-foreground border-l pl-3 space-y-1">
+        <div className="font-semibold">Trace (admin)</div>
+        <div>requestId: {trace.requestId || "n/a"}</div>
+        <div>
+          status: {trace.status ?? "n/a"} {trace.statusText ? `(${trace.statusText})` : ""}
+          {trace.success === false ? " – failed" : ""}
+        </div>
+        <div>duration: {trace.durationMs != null ? formatDuration(trace.durationMs) : "n/a"}</div>
+        <div>size: {trace.contentLength != null ? `${trace.contentLength} chars` : "n/a"}</div>
+        {trace.startTs && <div>start: {trace.startTs}</div>}
+        {trace.endTs && <div>end: {trace.endTs}</div>}
+        {trace.error && <div className="text-destructive">error: {trace.error}</div>}
+      </div>
+    );
+  };
 
 const formatFieldPrompt = (field: RuntimeField) =>
   field.placeholder
@@ -79,6 +112,7 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showTraces, setShowTraces] = useState(false);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [pendingFieldKeys, setPendingFieldKeys] = useState<string[]>([]);
   const [hasCollectedAll, setHasCollectedAll] = useState(true);
@@ -273,6 +307,7 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
         role: "assistant",
         content: `${content}\n\n_(Completed in ${formatDuration(trace.durationMs)}.)_`,
         timestamp: new Date(),
+        trace,
       });
 
       await recordAgentExchange({
@@ -297,6 +332,7 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
           trace.durationMs || 0,
         )}; requestId: ${requestId}.)_`,
         timestamp: new Date(),
+        trace,
       });
 
       await recordAgentExchange({
@@ -552,6 +588,14 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
         <div className="ml-auto flex items-center gap-1">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           <span className="text-xs text-muted-foreground">Online</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            onClick={() => setShowTraces((v) => !v)}
+          >
+            {showTraces ? "Hide traces" : "Show traces"}
+          </Button>
           {requiredFields.length > 0 && (
             <Button
               variant="ghost"
@@ -600,10 +644,8 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
                   )}
                 </Avatar>
                 <div
-          className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                    msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                   }`}
                 >
                   {msg.role === "assistant" ? (
@@ -616,6 +658,7 @@ export function AgentChatWindow({ agent, clientId, className = "" }: AgentChatWi
                   <p className="text-xs mt-1 opacity-60">
                     {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
+                  {showTraces && msg.trace ? renderTrace(msg.trace) : null}
                 </div>
               </div>
             ))}

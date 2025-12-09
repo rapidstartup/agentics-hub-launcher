@@ -41,6 +41,21 @@ import {
 
 const PROTECTED_GROUPS = ["top5", "active"];
 
+const isUuid = (value?: string) => !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+async function resolveClientId(rawClientId?: string) {
+  if (!rawClientId) return null;
+  if (isUuid(rawClientId)) return rawClientId;
+
+  const { data } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("slug", rawClientId)
+    .maybeSingle();
+
+  return data?.id ?? null;
+}
+
 export default function AgentProjects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -94,14 +109,16 @@ export default function AgentProjects() {
   const { data: boards } = useQuery({
     queryKey: ["agent-boards", clientId],
     queryFn: async () => {
+      const resolvedClientId = await resolveClientId(clientId);
+
       let query = supabase
         .from("agent_boards")
         .select("*")
         .order("position", { ascending: true });
       
-      // Filter by client_id if we're in client context
-      if (clientId) {
-        query = query.eq("client_id", clientId);
+      // Filter by client_id if we resolved a valid id for this client
+      if (resolvedClientId) {
+        query = query.eq("client_id", resolvedClientId);
       }
       
       const { data, error } = await query;
@@ -256,10 +273,8 @@ export default function AgentProjects() {
       <main className="flex-1 p-8 space-y-8 overflow-auto">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Ad Agents</h1>
-            <p className="text-muted-foreground mt-1">
-              Campaign workspaces for your advertising goals
-            </p>
+            <h1 className="text-3xl font-bold text-foreground">Projects</h1>
+            <p className="text-muted-foreground mt-1">Campaign workspaces for your advertising goals</p>
           </div>
         <Button onClick={() => setCreateDialogOpen(true)} size="lg">
           <Plus className="w-4 h-4 mr-2" />
@@ -350,6 +365,7 @@ export default function AgentProjects() {
                         board={board}
                         stats={stats}
                         groups={groups || []}
+                        department="advertising"
                         onDelete={(id) => deleteBoardMutation.mutate(id)}
                         onMoveToGroup={(boardId, groupSlug) =>
                           moveToGroupMutation.mutate({ boardId, groupSlug })
@@ -365,7 +381,12 @@ export default function AgentProjects() {
         </TabsContent>
       </Tabs>
 
-      <CreateBoardDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} clientId={clientId} />
+      <CreateBoardDialog 
+        open={createDialogOpen} 
+        onOpenChange={setCreateDialogOpen} 
+        clientId={clientId} 
+        department="advertising" 
+      />
       <CreateGroupDialog open={createGroupDialogOpen} onOpenChange={setCreateGroupDialogOpen} />
 
         <AlertDialog open={!!groupToDelete} onOpenChange={() => setGroupToDelete(null)}>

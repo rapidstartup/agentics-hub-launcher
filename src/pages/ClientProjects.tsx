@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type ProjectWithDepartments = Project & { departmentIds: string[] };
+
 function getStatusBadgeVariant(status: ProjectStatus): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "complete":
@@ -132,14 +134,34 @@ const ClientProjects = () => {
     [],
   );
 
-  const grouped = useMemo(() => {
-    const map: Record<string, Project[]> = {};
-    for (const p of projects) {
-      map[p.department_id] ||= [];
-      map[p.department_id].push(p);
-    }
-    return map;
-  }, [projects]);
+  const projectsWithDepartments = useMemo<ProjectWithDepartments[]>(() => {
+    return projects.map((project) => {
+      const metadataDepartments = Array.isArray(project.metadata?.departments)
+        ? project.metadata.departments.filter((id: unknown): id is string => typeof id === "string")
+        : [];
+      const tagDepartments = (project.tags || []).filter(
+        (tag): tag is string => typeof tag === "string" && Boolean(departmentsById[tag]),
+      );
+      const departmentIds = Array.from(new Set([project.department_id, ...metadataDepartments, ...tagDepartments]));
+      return { ...project, departmentIds };
+    });
+  }, [projects, departmentsById]);
+
+  const sortedProjects = useMemo(
+    () =>
+      [...projectsWithDepartments].sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+      ),
+    [projectsWithDepartments],
+  );
+
+  const uniqueDepartmentCount = useMemo(() => {
+    const set = new Set<string>();
+    projectsWithDepartments.forEach((project) => {
+      project.departmentIds.forEach((id) => set.add(id));
+    });
+    return set.size;
+  }, [projectsWithDepartments]);
 
   function handleProjectClick(project: Project) {
     // Navigate to the project detail page under operations
@@ -190,57 +212,60 @@ const ClientProjects = () => {
               <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
                 <Card className="border border-border bg-card p-4">
                   <p className="text-xs text-muted-foreground">Total Projects</p>
-                  <p className="text-2xl font-bold text-foreground">{projects.length}</p>
+                  <p className="text-2xl font-bold text-foreground">{projectsWithDepartments.length}</p>
                 </Card>
                 <Card className="border border-border bg-card p-4">
                   <p className="text-xs text-muted-foreground">Departments Involved</p>
-                  <p className="text-2xl font-bold text-foreground">{Object.keys(grouped).length}</p>
+                  <p className="text-2xl font-bold text-foreground">{uniqueDepartmentCount}</p>
                 </Card>
               </div>
 
-              {Object.keys(grouped).map((deptId) => (
-                <div key={deptId} className="mb-8">
-                  <h2 className="mb-3 text-lg font-semibold text-foreground">
-                    {departmentsById[deptId]?.title || deptId}
-                  </h2>
-                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                    {grouped[deptId].map((p) => (
-                      <Card 
-                        key={p.id} 
-                        className="border border-border bg-card p-5 cursor-pointer hover:border-primary/50 transition-colors"
-                        onClick={() => handleProjectClick(p)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{p.title}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{p.description}</p>
-                          </div>
-                          <Badge variant={getStatusBadgeVariant(p.status)}>
-                            {getStatusLabel(p.status)}
-                          </Badge>
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                {sortedProjects.map((p) => (
+                  <Card
+                    key={p.id}
+                    className="border border-border bg-card p-5 cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => handleProjectClick(p)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-2 flex-1">
+                        <p className="text-sm font-semibold text-foreground">{p.title}</p>
+                        {p.description && <p className="text-xs text-muted-foreground">{p.description}</p>}
+                        <div className="flex flex-wrap gap-2">
+                          {p.departmentIds.map((deptId) => (
+                            <Badge key={deptId} variant="outline">
+                              {departmentsById[deptId]?.title || deptId}
+                            </Badge>
+                          ))}
+                          {p.departmentIds.length > 1 && (
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/30">
+                              Cross-department
+                            </Badge>
+                          )}
                         </div>
-                        <div className="mt-4 grid grid-cols-3 gap-4 text-xs">
-                          <div>
-                            <p className="text-muted-foreground">Owner</p>
-                            <p className="text-foreground">{p.owner || "—"}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Due</p>
-                            <p className="text-foreground">{p.due_date || "—"}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Progress</p>
-                            <p className="text-foreground">{p.progress}%</p>
-                          </div>
-                        </div>
-                        <div className="mt-2">
-                          <Progress value={p.progress} />
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                      </div>
+                      <Badge variant={getStatusBadgeVariant(p.status)}>{getStatusLabel(p.status)}</Badge>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-4 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Owner</p>
+                        <p className="text-foreground">{p.owner || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Due</p>
+                        <p className="text-foreground">{p.due_date || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Progress</p>
+                        <p className="text-foreground">{p.progress}%</p>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <Progress value={p.progress} />
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </>
           )}
         </div>

@@ -7,9 +7,10 @@ type KnowledgeBaseItem = Database["public"]["Tables"]["knowledge_base_items"]["R
 
 interface FloatingAskAIProps {
   preselectedItems?: KnowledgeBaseItem[];
+  clientId?: string;
 }
 
-export function FloatingAskAI({ preselectedItems = [] }: FloatingAskAIProps) {
+export function FloatingAskAI({ preselectedItems = [], clientId }: FloatingAskAIProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: window.innerWidth - 100, y: window.innerHeight - 100 });
   const [isDragging, setIsDragging] = useState(false);
@@ -101,6 +102,7 @@ export function FloatingAskAI({ preselectedItems = [] }: FloatingAskAIProps) {
         open={isOpen}
         onOpenChange={setIsOpen}
         preselectedItems={preselectedItems}
+        clientId={clientId}
       />
     </>
   );

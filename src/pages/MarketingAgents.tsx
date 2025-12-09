@@ -119,7 +119,16 @@ export default function MarketingAgents() {
   async function refreshDynamicAgents() {
     try {
       const cfgs = await listAgentConfigs({ area: "marketing", clientId: clientId, includePredefined: true });
-      const mapped: ExtendedMarketingAgentRow[] = (cfgs || []).map((cfg) => ({
+      
+      // Deduplicate by agent_key (prefer client-specific over predefined)
+      const seenKeys = new Set<string>();
+      const uniqueCfgs = (cfgs || []).filter((cfg) => {
+        if (seenKeys.has(cfg.agent_key)) return false;
+        seenKeys.add(cfg.agent_key);
+        return true;
+      });
+      
+      const mapped: ExtendedMarketingAgentRow[] = uniqueCfgs.map((cfg) => ({
         id: `ai-${cfg.agent_key}`,
         name: cfg.display_name || cfg.agent_key,
         role: cfg.display_role || "AI Agent",
@@ -365,6 +374,7 @@ export default function MarketingAgents() {
               onEdit={handleEdit}
               onView={handleView}
               onMessage={handleMessage}
+              onRowClick={handleRun}
             />
           </section>
         </div>

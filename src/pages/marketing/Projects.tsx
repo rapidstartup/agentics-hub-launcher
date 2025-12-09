@@ -39,6 +39,21 @@ import { MarketingSidebar } from "@/components/MarketingSidebar";
 
 const PROTECTED_GROUPS = ["top5", "active"];
 
+const isUuid = (value?: string) => !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+async function resolveClientId(rawClientId?: string) {
+  if (!rawClientId) return null;
+  if (isUuid(rawClientId)) return rawClientId;
+
+  const { data } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("slug", rawClientId)
+    .maybeSingle();
+
+  return data?.id ?? null;
+}
+
 export default function MarketingProjects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -70,6 +85,8 @@ export default function MarketingProjects() {
   const { data: boards } = useQuery({
     queryKey: ["agent-boards", clientId],
     queryFn: async () => {
+      const resolvedClientId = await resolveClientId(clientId);
+
       const baseQuery = () =>
         supabase
           .from("agent_boards")
@@ -78,8 +95,8 @@ export default function MarketingProjects() {
 
       const runQuery = async (withClientFilter: boolean) => {
         let query = baseQuery();
-        if (withClientFilter && clientId) {
-          query = query.eq("client_id", clientId);
+        if (withClientFilter && resolvedClientId) {
+          query = query.eq("client_id", resolvedClientId);
         }
         const { data, error } = await query;
         if (error) throw error;

@@ -20,6 +20,7 @@ import AdSpy from "./pages/AdSpy";
 import AdSpyNew from "./pages/AdSpyNew";
 import AgentProjects from "./pages/AgentProjects";
 import CentralBrain from "./pages/CentralBrain";
+import CampaignManager from "./pages/advertising/CampaignManager";
 import AdCreatorDashboard from "./pages/advertising/AdCreatorDashboard";
 import Auth from "./pages/Auth";
 import AuthInvite from "./pages/AuthInvite";
@@ -81,6 +82,7 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminClients from "./pages/AdminClients";
 import AdminFeatureToggles from "./pages/AdminFeatureToggles";
+import AdminAgentRuns from "./pages/AdminAgentRuns";
 import Calendar from "./pages/Calendar";
 import Launch from "./pages/Launch";
 
@@ -89,6 +91,7 @@ import BoardChat from "./pages/board/Chat";
 import BoardCanvas from "./pages/board/Canvas";
 import BoardKanban from "./pages/board/Kanban";
 import BoardSettings from "./pages/board/Settings";
+import AdvertisingBoardPage from "./pages/AdvertisingBoardPage";
 
 const queryClient = new QueryClient();
 
@@ -125,8 +128,16 @@ const App = () => (
           <Route path="/client/:clientId/advertising/ad-optimizer/run/:runId" element={<ProtectedRoute><AdOptimizerRunDetails /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/ad-spy" element={<ProtectedRoute><AdSpyNew /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/ad-creator" element={<ProtectedRoute><AdCreatorDashboard /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/campaign-manager" element={<ProtectedRoute><CampaignManager /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/projects/:boardId" element={<ProtectedRoute><AdvertisingBoardPage /></ProtectedRoute>}>
+            <Route index element={<Navigate to="chat" replace />} />
+            <Route path="chat" element={<BoardChat />} />
+            <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="kanban" element={<BoardKanban />} />
+            <Route path="settings" element={<BoardSettings />} />
+          </Route>
           {/* Strategy dedicated area */}
           <Route path="/client/:clientId/strategy" element={<ProtectedRoute><StrategyComingSoon /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/agents" element={<ProtectedRoute><StrategyAgents /></ProtectedRoute>} />
@@ -217,6 +228,7 @@ const App = () => (
               <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
               <Route path="/admin/calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+              <Route path="/admin/agent-runs" element={<AdminRoute><AdminAgentRuns /></AdminRoute>} />
               <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

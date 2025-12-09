@@ -58,6 +58,7 @@ export default function Canvas() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [addBlockDialogOpen, setAddBlockDialogOpen] = useState(false);
   const [newBlockType, setNewBlockType] = useState("text");
   const [newBlockTitle, setNewBlockTitle] = useState("");
@@ -67,8 +68,8 @@ export default function Canvas() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
-  // Keep zoom fixed at 1 to avoid fractional coordinates breaking integer DB columns.
-  const [zoom, setZoom] = useState(1);
+  // viewScale renders the canvas; coordinates stored in DB stay unscaled integers.
+  const [viewScale, setViewScale] = useState(1);
   const [brainDialogOpen, setBrainDialogOpen] = useState(false);
   const [brainSearch, setBrainSearch] = useState("");
 
@@ -151,22 +152,23 @@ export default function Canvas() {
   const handleMouseDown = (e: React.MouseEvent, blockId: string, block: CanvasBlock) => {
     if ((e.target as HTMLElement).closest(".drag-handle")) {
       e.preventDefault();
-      const rect = canvasRef.current?.getBoundingClientRect();
+      const rect = contentRef.current?.getBoundingClientRect();
       if (rect) {
         setDraggingBlock(blockId);
         setDragOffset({
-          x: e.clientX - rect.left - block.position_x,
-          y: e.clientY - rect.top - block.position_y,
+          x: (e.clientX - rect.left) / viewScale - block.position_x,
+          y: (e.clientY - rect.top) / viewScale - block.position_y,
         });
       }
     }
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    // start panning when clicking empty space
+    // start panning when clicking empty space or holding spacebar + click
     const target = e.target as HTMLElement;
     const isOnBlock = target.closest(".canvas-block");
-    if (!isOnBlock && canvasRef.current) {
+    const isSpacePan = e.button === 0 && e.getModifierState("Space");
+    if ((!isOnBlock || isSpacePan) && canvasRef.current) {
       setIsPanning(true);
       setPanStart({
         x: e.clientX,
@@ -174,6 +176,8 @@ export default function Canvas() {
         scrollLeft: canvasRef.current.scrollLeft,
         scrollTop: canvasRef.current.scrollTop,
       });
+      // prevent text selection
+      e.preventDefault();
     }
   };
 
@@ -187,11 +191,11 @@ export default function Canvas() {
     }
 
     if (draggingBlock) {
-      const rect = canvasRef.current?.getBoundingClientRect();
+      const rect = contentRef.current?.getBoundingClientRect();
       if (!rect) return;
 
-      const newX = Math.round(e.clientX - rect.left - dragOffset.x);
-      const newY = Math.round(e.clientY - rect.top - dragOffset.y);
+      const newX = Math.round((e.clientX - rect.left) / viewScale - dragOffset.x);
+      const newY = Math.round((e.clientY - rect.top) / viewScale - dragOffset.y);
       
       queryClient.setQueryData(["canvas-blocks", boardId], (old: CanvasBlock[] | undefined) =>
         old?.map(block => 
@@ -338,9 +342,10 @@ const CanvasToolPalette = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onMouseDown={handleCanvasMouseDown}
+        style={{ cursor: isPanning ? "grabbing" : "grab" }}
       >
         {/* Canvas tool palette */}
-        <div className="fixed top-24 left-72 z-30 w-52 pointer-events-auto">
+        <div className="absolute top-4 left-4 z-30 w-52 pointer-events-auto">
           <CanvasToolPalette
             onSelect={(type) => {
               if (type === "brain") {
@@ -350,12 +355,12 @@ const CanvasToolPalette = ({
               setNewBlockType(type);
               setAddBlockDialogOpen(true);
             }}
-            onZoomIn={() => setZoom(1)}
-            onZoomOut={() => setZoom(1)}
+            onZoomIn={() => setViewScale((s) => Math.min(2, +(s * 1.1).toFixed(2)))}
+            onZoomOut={() => setViewScale((s) => Math.max(0.5, +(s / 1.1).toFixed(2)))}
             onCenter={() => {
-              setZoom(1);
-              if (blocks.length === 0) {
-                canvasRef.current?.scrollTo({ top: 500, left: 500, behavior: "smooth" });
+              setViewScale(1);
+              if (!canvasRef.current || blocks.length === 0) {
+                canvasRef.current?.scrollTo({ top: 1000, left: 1000, behavior: "smooth" });
                 return;
               }
               const bounds = blocks.reduce(
@@ -367,20 +372,25 @@ const CanvasToolPalette = ({
                 }),
                 { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
               );
-              const viewportW = canvasRef.current?.clientWidth || 0;
-              const viewportH = canvasRef.current?.clientHeight || 0;
-              const targetX = Math.max(0, bounds.minX + (bounds.maxX - bounds.minX) / 2 - viewportW / 2);
-              const targetY = Math.max(0, bounds.minY + (bounds.maxY - bounds.minY) / 2 - viewportH / 2);
-              canvasRef.current?.scrollTo({ top: targetY, left: targetX, behavior: "smooth" });
+              const viewportW = canvasRef.current.clientWidth || 0;
+              const viewportH = canvasRef.current.clientHeight || 0;
+              const centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2;
+              const centerY = bounds.minY + (bounds.maxY - bounds.minY) / 2;
+              const targetX = Math.max(0, centerX - viewportW / 2);
+              const targetY = Math.max(0, centerY - viewportH / 2);
+              canvasRef.current.scrollTo({ top: targetY, left: targetX, behavior: "smooth" });
             }}
           />
         </div>
 
         <div
+          ref={contentRef}
           className="min-h-full min-w-full relative"
           style={{
-            minHeight: "2000px",
-            minWidth: "2000px",
+            minHeight: "4000px",
+            minWidth: "4000px",
+            transform: `scale(${viewScale})`,
+            transformOrigin: "top left",
           }}
         >
           {/* Grid background */}

@@ -48,6 +48,7 @@ const navigationItems = [
   { id: "department-health", title: "Department Health", icon: Activity, path: "/admin/departments" },
   { id: "team-management", title: "Team Management", icon: UserCog, path: "/admin/team" },
   { id: "resource-allocation", title: "Resource Allocation", icon: Layers, path: "/admin/resources" },
+  { id: "agent-runs", title: "Agent Runs", icon: Brain, path: "/admin/agent-runs" },
 ];
 
 const quickAccessItems = [

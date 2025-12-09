@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,15 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  AgentConfig,
+  getAgentInputFields,
+  executeAgentWebhook,
+} from "@/integrations/n8n/agents";
+import { runN8nWorkflow } from "@/integrations/n8n/api";
+import { RunAgentDynamicModal } from "@/components/agents/RunAgentDynamicModal";
+import { recordAgentExchange } from "@/lib/agentMessaging";
+import { getResultText } from "@/lib/resultText";
 
 type KnowledgeBaseItem = Database["public"]["Tables"]["knowledge_base_items"]["Row"];
 
@@ -45,15 +54,21 @@ interface AskAIWidgetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedItems?: KnowledgeBaseItem[];
+  clientId?: string;
+  initialAgent?: AgentConfig | null;
 }
 
-export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAIWidgetProps) {
+export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientId, initialAgent = null }: AskAIWidgetProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<KnowledgeBaseItem[]>(preselectedItems);
   const [showItemSelector, setShowItemSelector] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
+  const [agentPickerOpen, setAgentPickerOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
+  const [agentRunnerOpen, setAgentRunnerOpen] = useState(false);
+  const [agentRunning, setAgentRunning] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch all knowledge base items for selection
@@ -77,6 +92,31 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
     enabled: open,
   });
 
+  // Fetch available agents (predefined + client overrides)
+  const { data: availableAgents = [] } = useQuery({
+    queryKey: ["askai-agents", clientId, open],
+    enabled: open,
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      let query = supabase
+        .from("agent_configs")
+        .select("*")
+        .eq("is_predefined", true);
+
+      if (clientId) {
+        query = query.or(`scope.eq.agency,client_id.eq.${clientId}`);
+      } else {
+        query = query.eq("scope", "agency");
+      }
+
+      const { data, error } = await query.order("display_name", { ascending: true });
+      if (error) throw error;
+      return (data || []) as AgentConfig[];
+    },
+  });
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -88,6 +128,14 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
       setSelectedItems(preselectedItems);
     }
   }, [preselectedItems]);
+
+  // Auto-select agent if provided
+  useEffect(() => {
+    if (open && initialAgent) {
+      setSelectedAgent(initialAgent);
+      setAgentRunnerOpen(true);
+    }
+  }, [open, initialAgent]);
 
   const toggleItemSelection = (item: KnowledgeBaseItem) => {
     setSelectedItems(prev =>
@@ -182,6 +230,113 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
     setSelectedItems([]);
   };
 
+  const runSelectedAgent = async (values: Record<string, any>) => {
+    if (!selectedAgent) return null;
+    const requestId = crypto.randomUUID?.() || `req-${Date.now()}`;
+    const start = performance?.now ? performance.now() : Date.now();
+    setAgentRunning(true);
+    try {
+      let response: any;
+      let status: number | null = null;
+      let statusText: string | null = null;
+
+      if (selectedAgent.is_predefined && selectedAgent.webhook_url) {
+        const result = await executeAgentWebhook({
+          webhookUrl: selectedAgent.webhook_url,
+          payload: values,
+        });
+        response = result.result;
+        status = result.success ? 200 : 400;
+        statusText = result.success ? "OK" : "Webhook Error";
+        if (!result.success) {
+          throw new Error(result.error || "Webhook execution failed");
+        }
+      } else {
+        const result = await runN8nWorkflow({
+          connectionId: selectedAgent.connection_id,
+          workflowId: selectedAgent.workflow_id,
+          webhookUrl: selectedAgent.webhook_url || undefined,
+          payload: values,
+          waitTillFinished: true,
+        });
+        response = result.result;
+        status = result?.success === false ? 400 : 200;
+        statusText = result?.success === false ? "n8n-run error" : "OK";
+      }
+
+      const end = performance?.now ? performance.now() : Date.now();
+      const durationMs = Math.round(end - start);
+      const responseText = `${getResultText(response)}\n\n(Completed in ${durationMs}ms.)`;
+      const trace = {
+        requestId,
+        durationMs,
+        startTs: new Date(Date.now() - durationMs).toISOString(),
+        endTs: new Date().toISOString(),
+        success: true,
+        status,
+        statusText,
+        contentLength: responseText.length,
+        headers: undefined,
+        error: null,
+      };
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: responseText,
+          timestamp: new Date(),
+        },
+      ]);
+
+      await recordAgentExchange({
+        agent: selectedAgent,
+        clientId,
+        userText: JSON.stringify(values, null, 2),
+        agentText: responseText,
+        trace,
+      });
+
+      return response;
+    } catch (error: any) {
+      const end = performance?.now ? performance.now() : Date.now();
+      const durationMs = Math.round(end - start);
+      const errText = error?.message || "Failed to run agent";
+
+      await recordAgentExchange({
+        agent: selectedAgent,
+        clientId,
+        userText: JSON.stringify(values, null, 2),
+        agentText: `Error: ${errText}`,
+        trace: {
+          requestId,
+          durationMs,
+          startTs: new Date(Date.now() - durationMs).toISOString(),
+          endTs: new Date().toISOString(),
+          success: false,
+          status: null,
+          statusText: null,
+          contentLength: null,
+          headers: undefined,
+          error: errText,
+        },
+      });
+
+      setMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${errText}`,
+          timestamp: new Date(),
+        },
+      ]);
+      throw error;
+    } finally {
+      setAgentRunning(false);
+      setAgentRunnerOpen(false);
+    }
+  };
+
   // Filter items based on search
   const filteredItems = allItems.filter(item => {
     const searchLower = itemSearch.toLowerCase();
@@ -191,6 +346,11 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
       (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchLower)))
     );
   });
+
+  const agentFields = useMemo(() => {
+    if (!selectedAgent) return [];
+    return getAgentInputFields(selectedAgent);
+  }, [selectedAgent]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -208,16 +368,21 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
                 </DialogDescription>
               </div>
             </div>
-            {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearChat}
-                className="text-slate-400 hover:text-white"
-              >
-                Clear Chat
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setAgentPickerOpen(true)}>
+                Add agent to chat
               </Button>
-            )}
+              {messages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearChat}
+                  className="text-slate-400 hover:text-white"
+                >
+                  Clear Chat
+                </Button>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
@@ -461,6 +626,57 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [] }: AskAI
           </Button>
         </div>
       </DialogContent>
+
+      {/* Agent Runner Modal */}
+      {selectedAgent && (
+        <RunAgentDynamicModal
+          open={agentRunnerOpen}
+          onOpenChange={setAgentRunnerOpen}
+          title={selectedAgent.display_name || selectedAgent.agent_key}
+          description={selectedAgent.description || undefined}
+          fields={agentFields}
+          onRun={runSelectedAgent}
+          running={agentRunning}
+          outputBehavior={selectedAgent.output_behavior || "modal_display"}
+          progressNote={agentRunning ? "Running agent..." : undefined}
+        />
+      )}
+
+      {/* Agent Picker */}
+      <Dialog open={agentPickerOpen} onOpenChange={setAgentPickerOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Select an agent</DialogTitle>
+            <DialogDescription>Attach a predefined n8n agent to this chat.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[320px] overflow-auto">
+            {availableAgents.length === 0 && (
+              <p className="text-sm text-muted-foreground">No agents available.</p>
+            )}
+            {availableAgents.map((agent) => (
+              <Card
+                key={agent.id}
+                className="p-3 border border-border hover:border-emerald-500 cursor-pointer"
+                onClick={() => {
+                  setSelectedAgent(agent);
+                  setAgentRunnerOpen(true);
+                  setAgentPickerOpen(false);
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {agent.display_name || agent.agent_key}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{agent.description}</p>
+                  </div>
+                  <Badge variant="outline">{agent.area || "agent"}</Badge>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
