@@ -184,6 +184,40 @@ export default function Canvas() {
     }
   };
 
+const toolItems = [
+  { type: "image", label: "Image", icon: <Image className="w-4 h-4" />, hint: "References, inspo" },
+  { type: "text", label: "Text", icon: <FileText className="w-4 h-4" />, hint: "Notes, concepts" },
+  { type: "url", label: "URL", icon: <Link className="w-4 h-4" />, hint: "Competitive links" },
+  { type: "chat", label: "Chat", icon: <MessageSquare className="w-4 h-4" />, hint: "Prompt threads" },
+];
+
+const CanvasToolPalette = ({
+  onSelect,
+}: {
+  onSelect: (type: string) => void;
+}) => (
+  <Card className="p-3 shadow-lg border-border/70 bg-card/95 backdrop-blur">
+    <div className="text-xs font-semibold text-muted-foreground mb-2">Canvas tools</div>
+    <div className="flex flex-col gap-2">
+      {toolItems.map((tool) => (
+        <Button
+          key={tool.type}
+          variant="ghost"
+          size="sm"
+          className="justify-start gap-2"
+          onClick={() => onSelect(tool.type)}
+        >
+          {tool.icon}
+          <div className="flex flex-col items-start leading-tight">
+            <span className="text-sm text-foreground">{tool.label}</span>
+            <span className="text-[11px] text-muted-foreground">{tool.hint}</span>
+          </div>
+        </Button>
+      ))}
+    </div>
+  </Card>
+);
+
   if (!boardId) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -221,6 +255,16 @@ export default function Canvas() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
+        {/* Canvas tool palette */}
+        <div className="absolute top-4 left-4 z-20 w-52">
+          <CanvasToolPalette
+            onSelect={(type) => {
+              setNewBlockType(type);
+              setAddBlockDialogOpen(true);
+            }}
+          />
+        </div>
+
         <div className="min-h-full min-w-full relative" style={{ minHeight: "2000px", minWidth: "2000px" }}>
           {/* Grid background */}
           <div 
