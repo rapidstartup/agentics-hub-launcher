@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { NodeProps } from '@xyflow/react';
-import { FileText, Upload, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { FileText, Upload, Loader2, CheckCircle, XCircle, RefreshCw, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { CanvasNodeData, ParsingStatus } from '@/types/canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,10 +27,16 @@ const DocumentNode: React.FC<NodeProps> = ({ data, selected }) => {
   const [parsingStatus, setParsingStatus] = useState<ParsingStatus>(nodeData.parsingStatus || 'none');
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState(nodeData.filePath || '');
+  const [instructionPrompt, setInstructionPrompt] = useState(nodeData.instructionPrompt || '');
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalTitle(e.target.value);
     nodeData.onTitleChange?.(e.target.value);
+  }, [nodeData]);
+
+  const handleInstructionChange = useCallback((value: string) => {
+    setInstructionPrompt(value);
+    nodeData.onInstructionChange?.(value);
   }, [nodeData]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -125,6 +133,31 @@ const DocumentNode: React.FC<NodeProps> = ({ data, selected }) => {
             className="h-5 text-xs border-0 bg-transparent p-0 focus-visible:ring-0 font-medium truncate"
             placeholder="Document title..."
           />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-5 w-5 flex-shrink-0 ${instructionPrompt ? 'text-amber-500' : 'text-muted-foreground'}`}
+              >
+                <MessageSquare className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72" align="start">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">AI Instructions</label>
+                <Textarea
+                  value={instructionPrompt}
+                  onChange={(e) => handleInstructionChange(e.target.value)}
+                  placeholder="e.g., Extract key points, summarize main arguments..."
+                  className="text-xs min-h-[80px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tell the AI how to use this document content.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
           {parsingStatus !== 'none' && (
             <Badge variant={status.color as any} className="text-[10px] h-4 px-1 gap-0.5">
               {status.icon}

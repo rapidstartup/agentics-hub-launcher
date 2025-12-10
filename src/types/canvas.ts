@@ -66,6 +66,7 @@ export interface CanvasNodeData {
   // Callbacks
   onContentChange?: (content: string) => void;
   onTitleChange?: (title: string) => void;
+  onInstructionChange?: (instruction: string) => void;
   onDelete?: () => void;
   onResize?: (width: number, height: number) => void;
   onPushToCreative?: (content: string, contentType: string) => void;
