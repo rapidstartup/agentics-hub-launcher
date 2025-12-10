@@ -134,9 +134,14 @@ const App = () => (
           <Route path="/client/:clientId/advertising/campaign-manager" element={<ProtectedRoute><CampaignManager /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
-          <Route path="/client/:clientId/advertising/canvas-2" element={<ProtectedRoute><AdvertisingProjectDetail /></ProtectedRoute>} />
-          <Route path="/client/:clientId/advertising/canvas-2/:boardId" element={<ProtectedRoute><AdvertisingProjectDetail /></ProtectedRoute>} />
-          <Route path="/client/:clientId/advertising/projects/:boardId" element={<ProtectedRoute><AdvertisingProjectDetail /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/projects/:boardId" element={<ProtectedRoute><AdvertisingBoardPage /></ProtectedRoute>}>
+            <Route index element={<Navigate to="chat" replace />} />
+            <Route path="chat" element={<BoardChat />} />
+            <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="canvas2" element={<BoardCanvas2 />} />
+            <Route path="kanban" element={<BoardKanban />} />
+            <Route path="settings" element={<BoardSettings />} />
+          </Route>
           {/* Strategy dedicated area */}
           <Route path="/client/:clientId/strategy" element={<ProtectedRoute><StrategyComingSoon /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/agents" element={<ProtectedRoute><StrategyAgents /></ProtectedRoute>} />
