@@ -68,6 +68,7 @@ export interface CanvasNodeData {
   onTitleChange?: (title: string) => void;
   onDelete?: () => void;
   onResize?: (width: number, height: number) => void;
+  onPushToCreative?: (content: string, contentType: string) => void;
 }
 
 // Input types for mutations
