@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Dashboard, DashboardComponent } from "@/types/dataBinding";
 import { Sheet } from "@/utils/dataExtractor";
 import { useUser } from "@/contexts/UserContext";

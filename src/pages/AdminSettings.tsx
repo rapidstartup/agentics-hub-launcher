@@ -12,7 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Monitor, Moon, Sun, Building2, Users, AlertTriangle, Brush, Shield, Bell, Plug } from "lucide-react";
+import { Monitor, Moon, Sun, Building2, Users, AlertTriangle, Brush, Shield, Bell, Plug, Bot } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 
@@ -42,7 +42,7 @@ const AdminSettings = () => {
         </div>
 
         <Tabs defaultValue="security" className="space-y-6">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Security
@@ -58,6 +58,10 @@ const AdminSettings = () => {
             <TabsTrigger value="integrations" className="flex items-center gap-2">
               <Plug className="h-4 w-4" />
               Integrations
+            </TabsTrigger>
+            <TabsTrigger value="agents" className="flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              Agent Controller
             </TabsTrigger>
           </TabsList>
 
@@ -221,6 +225,20 @@ const AdminSettings = () => {
           {/* Integrations Tab */}
           <TabsContent value="integrations" className="space-y-6">
             <N8nConnectForm scope="agency" />
+          </TabsContent>
+
+          {/* Agent Controller Tab */}
+          <TabsContent value="agents" className="space-y-6">
+            <Card className="border border-border bg-card p-6">
+              <h3 className="mb-4 text-base font-semibold text-foreground">Agent Controller</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Manage and run AI agents across your agency. Configure agent settings, view run history, and monitor performance.
+              </p>
+              <Button onClick={() => navigate('/admin/agent-controller')} className="gap-2">
+                <Bot className="h-4 w-4" />
+                Open Agent Controller
+              </Button>
+            </Card>
           </TabsContent>
         </Tabs>
 
