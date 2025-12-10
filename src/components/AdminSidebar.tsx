@@ -39,6 +39,7 @@ import { useUser } from "@/contexts/UserContext";
 // Main Dashboard section
 const mainDashboardItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
+  { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
   { id: "client-management", title: "Client Management", icon: Users, path: "/admin/clients" },
   { id: "feature-toggles", title: "Feature Toggles", icon: ToggleLeft, path: "/admin/feature-toggles" },
 ];
@@ -53,7 +54,6 @@ const agentHealthItems = [
 // Quick Access section
 const quickAccessItems = [
   { id: "central-brain", title: "Central Brain", icon: Brain, path: "/admin/central-brain" },
-  { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
   { id: "notifications", title: "Notifications", icon: Bell, path: "/admin/notifications" },
   { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },
   { id: "client-view", title: "Switch to Client View", icon: ArrowLeftRight, path: "/" },

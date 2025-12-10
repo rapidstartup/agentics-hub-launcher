@@ -45,14 +45,10 @@ const AdminSettings = () => {
         </div>
 
         <Tabs defaultValue="security" className="space-y-6">
-          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+          <TabsList className="grid w-full max-w-4xl grid-cols-5">
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Security
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Notifications
             </TabsTrigger>
             <TabsTrigger value="theme" className="flex items-center gap-2">
               <Brush className="h-4 w-4" />
@@ -93,26 +89,6 @@ const AdminSettings = () => {
             </Card>
           </TabsContent>
 
-          {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <Card className="border border-border bg-card p-6">
-              <h3 className="mb-4 text-base font-semibold text-foreground">Notification Preferences</h3>
-              <div className="flex items-center justify-between rounded-md border border-border p-4">
-                <div>
-                  <Label htmlFor="digest">Weekly performance digest</Label>
-                  <p className="text-xs text-muted-foreground">Summarized metrics and alerts.</p>
-                </div>
-                <Switch id="digest" defaultChecked />
-              </div>
-              <div className="mt-3 flex items-center justify-between rounded-md border border-border p-4">
-                <div>
-                  <Label htmlFor="incident">Critical incident alerts</Label>
-                  <p className="text-xs text-muted-foreground">Immediate notifications for outages.</p>
-                </div>
-                <Switch id="incident" defaultChecked />
-              </div>
-            </Card>
-          </TabsContent>
 
           {/* Theme Builder Tab */}
           <TabsContent value="theme" className="space-y-6">

@@ -153,8 +153,13 @@ export default function ClientCentralBrain() {
   const { data: assets = [], refetch: refetchAssets } = useQuery({
     queryKey: ["assets", clientId],
     queryFn: async () => {
-      const { data } = await supabase.from("assets").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
-      return data || [];
+      // Get client-specific items
+      const { data: clientItems } = await supabase.from("assets").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
+      // Get agency-level items with client visibility
+      const { data: agencyItems } = await supabase.from("assets").select("*").eq("scope", "agency").in("visibility", ["client_ready", "published"]).order("created_at", { ascending: false });
+      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
+      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
+      return [...clientList, ...agencyList];
     },
     enabled: !!clientId,
   });
@@ -170,8 +175,13 @@ export default function ClientCentralBrain() {
   const { data: swipeFiles = [], refetch: refetchSwipeFiles } = useQuery({
     queryKey: ["swipe-files", clientId],
     queryFn: async () => {
-      const { data } = await supabase.from("swipe_files").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
-      return data || [];
+      // Get client-specific items
+      const { data: clientItems } = await supabase.from("swipe_files").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
+      // Get agency-level items with client visibility
+      const { data: agencyItems } = await supabase.from("swipe_files").select("*").eq("scope", "agency").in("visibility", ["client_ready", "published"]).order("created_at", { ascending: false });
+      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
+      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
+      return [...clientList, ...agencyList];
     },
     enabled: !!clientId,
   });
@@ -203,8 +213,13 @@ export default function ClientCentralBrain() {
   const { data: offers = [] } = useQuery({
     queryKey: ["offers", clientId],
     queryFn: async () => {
-      const { data } = await supabase.from("offers").select(`*, offer_assets (*)`).is("project_id", null).eq("client_id", clientId).order("created_at", { ascending: false });
-      return data || [];
+      // Get client-specific items
+      const { data: clientItems } = await supabase.from("offers").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
+      // Get agency-level items with client visibility
+      const { data: agencyItems } = await supabase.from("offers").select("*").eq("scope", "agency").in("visibility", ["client_ready", "published"]).order("created_at", { ascending: false });
+      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
+      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
+      return [...clientList, ...agencyList];
     },
     enabled: !!clientId,
   });
