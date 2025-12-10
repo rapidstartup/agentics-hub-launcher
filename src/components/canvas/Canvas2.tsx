@@ -75,6 +75,50 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     }
   }, [deleteBlock]);
 
+  // Create creative node with pre-filled content from ChatNode
+  const handlePushToCreative = useCallback(async (
+    sourceNodeId: string,
+    content: string,
+    contentType: string
+  ) => {
+    // Find source node position to place creative node nearby
+    const sourceBlock = blocks.find(b => b.id === sourceNodeId);
+    const position = {
+      x: (sourceBlock?.position_x || 200) + 400,
+      y: (sourceBlock?.position_y || 200),
+    };
+
+    // Parse content type to determine where to put the content
+    const lowerType = contentType.toLowerCase();
+    const metadata: Record<string, any> = { status: 'draft' };
+    
+    if (lowerType.includes('headline') || lowerType.includes('hook')) {
+      metadata.headline = content;
+    } else if (lowerType.includes('cta') || lowerType.includes('call to action')) {
+      metadata.cta = content;
+    } else if (lowerType.includes('copy') || lowerType.includes('text') || lowerType.includes('body')) {
+      metadata.primaryText = content;
+    } else {
+      // Default: put in primary text
+      metadata.primaryText = content;
+    }
+
+    try {
+      await createBlock.mutateAsync({
+        agent_board_id: projectId,
+        type: 'creative' as CanvasBlockType,
+        position_x: position.x,
+        position_y: position.y,
+        title: `Creative - ${contentType}`,
+        metadata,
+      });
+      
+      toast.success(`Created creative from ${contentType}`);
+    } catch (err) {
+      toast.error('Failed to create creative');
+    }
+  }, [blocks, createBlock, projectId]);
+
   // Convert DB data to ReactFlow format
   const initialNodes = useMemo((): CanvasNode[] => {
     return blocks.map(block => {
@@ -88,10 +132,13 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
           onTitleChange: (title: string) => updateBlock.mutate({ id: block.id, title }),
           onDelete: () => handleDeleteNode(block.id),
           onResize: (width: number, height: number) => updateBlock.mutate({ id: block.id, width, height }),
+          onPushToCreative: block.type === 'chat' 
+            ? (content: string, contentType: string) => handlePushToCreative(block.id, content, contentType)
+            : undefined,
         },
       };
     });
-  }, [blocks, dbEdges, getConnectedBlocks, updateBlock, handleDeleteNode]);
+  }, [blocks, dbEdges, getConnectedBlocks, updateBlock, handleDeleteNode, handlePushToCreative]);
 
   const initialEdges = useMemo(() => {
     return dbEdges.map(edgeToReactFlowEdge);

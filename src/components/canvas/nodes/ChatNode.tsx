@@ -364,12 +364,12 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
   }, []);
 
   const pushToCreative = useCallback((content: string, sectionType: string) => {
-    // This would typically trigger creation of a CreativeNode
-    // For now, we'll just show a toast - the actual implementation
-    // would use a callback from the parent canvas component
-    toast.success(`Ready to push ${sectionType} to Creative node`);
-    console.log('Push to creative:', { content, sectionType });
-  }, []);
+    if (nodeData.onPushToCreative) {
+      nodeData.onPushToCreative(content, sectionType);
+    } else {
+      toast.info('Push to Creative not available');
+    }
+  }, [nodeData]);
 
   return (
     <BaseNode

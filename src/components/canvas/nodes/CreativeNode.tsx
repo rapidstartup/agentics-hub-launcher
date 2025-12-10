@@ -22,11 +22,14 @@ const statusConfig: Record<CreativeStatus, { label: string; color: string }> = {
 const CreativeNode: React.FC<NodeProps> = ({ data, selected }) => {
   const nodeData = data as unknown as CanvasNodeData;
   const [localTitle, setLocalTitle] = useState(nodeData.title || 'Ad Creative');
-  const [headline, setHeadline] = useState(nodeData.metadata?.headline || '');
-  const [primaryText, setPrimaryText] = useState(nodeData.metadata?.primaryText || '');
-  const [cta, setCta] = useState(nodeData.metadata?.cta || 'Shop Now');
-  const [imageUrl, setImageUrl] = useState(nodeData.fileUrl || '');
-  const [status, setStatus] = useState<CreativeStatus>(nodeData.metadata?.status || 'draft');
+  
+  // Initialize from metadata (supports push from ChatNode)
+  const initialMetadata = nodeData.metadata || {};
+  const [headline, setHeadline] = useState(initialMetadata.headline || '');
+  const [primaryText, setPrimaryText] = useState(initialMetadata.primaryText || '');
+  const [cta, setCta] = useState(initialMetadata.cta || 'Shop Now');
+  const [imageUrl, setImageUrl] = useState(nodeData.fileUrl || initialMetadata.imageUrl || '');
+  const [status, setStatus] = useState<CreativeStatus>(initialMetadata.status || 'draft');
   const [isEditing, setIsEditing] = useState(false);
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
