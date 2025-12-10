@@ -128,6 +128,11 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
         data: {
           ...node.data,
           connectedBlocks: getConnectedBlocks(block.id),
+          // Pass boardId for ChatNode persistence
+          metadata: {
+            ...(node.data.metadata || {}),
+            boardId: projectId,
+          },
           onContentChange: (content: string) => updateBlock.mutate({ id: block.id, content }),
           onTitleChange: (title: string) => updateBlock.mutate({ id: block.id, title }),
           onDelete: () => handleDeleteNode(block.id),
@@ -138,7 +143,7 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
         },
       };
     });
-  }, [blocks, dbEdges, getConnectedBlocks, updateBlock, handleDeleteNode, handlePushToCreative]);
+  }, [blocks, dbEdges, getConnectedBlocks, updateBlock, handleDeleteNode, handlePushToCreative, projectId]);
 
   const initialEdges = useMemo(() => {
     return dbEdges.map(edgeToReactFlowEdge);

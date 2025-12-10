@@ -396,6 +396,145 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_boards: {
+        Row: {
+          budget_cap_note: string | null
+          client_id: string | null
+          created_at: string
+          creative_style_notes: string | null
+          default_platform: string | null
+          description: string | null
+          goal: string | null
+          group_id: string | null
+          id: string
+          name: string
+          position: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_cap_note?: string | null
+          client_id?: string | null
+          created_at?: string
+          creative_style_notes?: string | null
+          default_platform?: string | null
+          description?: string | null
+          goal?: string | null
+          group_id?: string | null
+          id?: string
+          name: string
+          position?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_cap_note?: string | null
+          client_id?: string | null
+          created_at?: string
+          creative_style_notes?: string | null
+          default_platform?: string | null
+          description?: string | null
+          goal?: string | null
+          group_id?: string | null
+          id?: string
+          name?: string
+          position?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_boards_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "project_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "agent_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_chat_sessions: {
+        Row: {
+          agent_board_id: string | null
+          canvas_block_id: string | null
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_board_id?: string | null
+          canvas_block_id?: string | null
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_board_id?: string | null
+          canvas_block_id?: string | null
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_chat_sessions_agent_board_id_fkey"
+            columns: ["agent_board_id"]
+            isOneToOne: false
+            referencedRelation: "agent_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_chat_sessions_canvas_block_id_fkey"
+            columns: ["canvas_block_id"]
+            isOneToOne: false
+            referencedRelation: "canvas_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_configs: {
         Row: {
           agent_key: string
@@ -1730,6 +1869,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      project_groups: {
+        Row: {
+          client_id: string | null
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          position: number | null
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          position?: number | null
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          position?: number | null
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       project_tasks: {
         Row: {
