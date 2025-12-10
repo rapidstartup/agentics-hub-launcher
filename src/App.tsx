@@ -83,6 +83,7 @@ import AdminNotifications from "./pages/AdminNotifications";
 import AdminClients from "./pages/AdminClients";
 import AdminFeatureToggles from "./pages/AdminFeatureToggles";
 import AdminAgentRuns from "./pages/AdminAgentRuns";
+import AdminAgentController from "./pages/AdminAgentController";
 import Calendar from "./pages/Calendar";
 import Launch from "./pages/Launch";
 
@@ -229,6 +230,7 @@ const App = () => (
               <Route path="/admin/calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/admin/agent-runs" element={<AdminRoute><AdminAgentRuns /></AdminRoute>} />
+              <Route path="/admin/agent-controller" element={<AdminRoute><AdminAgentController /></AdminRoute>} />
               <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

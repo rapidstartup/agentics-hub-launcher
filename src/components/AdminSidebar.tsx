@@ -4,10 +4,7 @@ import {
   Gauge,
   Users,
   CheckSquare,
-  DollarSign,
   Activity,
-  UserCog,
-  Layers,
   FileText,
   Settings,
   Bell,
@@ -39,22 +36,26 @@ import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 import { listClients, type Client } from "@/integrations/clients/api";
 import { useUser } from "@/contexts/UserContext";
 
-const navigationItems = [
+// Main Dashboard section
+const mainDashboardItems = [
   { id: "agency-pulse", title: "Agency Pulse", icon: Gauge, path: "/admin" },
   { id: "client-management", title: "Client Management", icon: Users, path: "/admin/clients" },
   { id: "feature-toggles", title: "Feature Toggles", icon: ToggleLeft, path: "/admin/feature-toggles" },
-  { id: "task-orchestration", title: "Task Orchestration", icon: CheckSquare, path: "/admin/tasks" },
-  { id: "revenue-analytics", title: "Revenue Analytics", icon: DollarSign, path: "/admin/revenue" },
+];
+
+// Agent Health section
+const agentHealthItems = [
   { id: "department-health", title: "Department Health", icon: Activity, path: "/admin/departments" },
-  { id: "team-management", title: "Team Management", icon: UserCog, path: "/admin/team" },
-  { id: "resource-allocation", title: "Resource Allocation", icon: Layers, path: "/admin/resources" },
+  { id: "task-orchestration", title: "Task Orchestration", icon: CheckSquare, path: "/admin/tasks" },
   { id: "agent-runs", title: "Agent Runs", icon: Brain, path: "/admin/agent-runs" },
 ];
 
+// Quick Access section
 const quickAccessItems = [
   { id: "central-brain", title: "Central Brain", icon: Brain, path: "/admin/central-brain" },
   { id: "reports", title: "Reports", icon: FileText, path: "/admin/reports" },
   { id: "notifications", title: "Notifications", icon: Bell, path: "/admin/notifications" },
+  { id: "settings", title: "Settings", icon: Settings, path: "/admin/settings" },
   { id: "client-view", title: "Switch to Client View", icon: ArrowLeftRight, path: "/" },
 ];
 
@@ -102,6 +103,33 @@ export const AdminSidebar = () => {
       navigate(`/client/${clientId}`);
     }
   };
+
+  const renderNavItem = (item: typeof mainDashboardItems[0]) => (
+    <NavLink
+      key={item.id}
+      to={item.path}
+      end={item.path === "/admin"}
+      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors"
+      style={({ isActive }) => ({
+        background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+        color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+      })}
+      onMouseEnter={(e) => {
+        if (!e.currentTarget.classList.contains('active')) {
+          e.currentTarget.style.background = 'var(--sidebar-hover-bg)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
+        if (!isActive) {
+          e.currentTarget.style.background = 'transparent';
+        }
+      }}
+    >
+      <item.icon className="h-4 w-4" />
+      <span>{item.title}</span>
+    </NavLink>
+  );
 
   return (
     <aside 
@@ -176,34 +204,31 @@ export const AdminSidebar = () => {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
-        <nav className="space-y-1">
-          {navigationItems.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              end={item.path === "/admin"}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors"
-              style={({ isActive }) => ({
-                background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
-                color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
-              })}
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.classList.contains('active')) {
-                  e.currentTarget.style.background = 'var(--sidebar-hover-bg)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
-                if (!isActive) {
-                  e.currentTarget.style.background = 'transparent';
-                }
-              }}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.title}</span>
-            </NavLink>
-          ))}
-        </nav>
+        {/* Main Dashboard Section */}
+        <div className="mb-4">
+          <p 
+            className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}
+          >
+            Main Dashboard
+          </p>
+          <nav className="space-y-1">
+            {mainDashboardItems.map(renderNavItem)}
+          </nav>
+        </div>
+
+        {/* Agent Health Section */}
+        <div className="mb-4">
+          <p 
+            className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}
+          >
+            Agent Health
+          </p>
+          <nav className="space-y-1">
+            {agentHealthItems.map(renderNavItem)}
+          </nav>
+        </div>
 
         {/* Quick Access Section */}
         <div className="mt-6">
@@ -214,32 +239,7 @@ export const AdminSidebar = () => {
             Quick Access
           </p>
           <nav className="space-y-1">
-            {quickAccessItems.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                end={item.path === "/"}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors"
-                style={({ isActive }) => ({
-                  background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
-                  color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
-                })}
-                onMouseEnter={(e) => {
-                  if (!e.currentTarget.classList.contains('active')) {
-                    e.currentTarget.style.background = 'var(--sidebar-hover-bg)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  const isActive = e.currentTarget.getAttribute('aria-current') === 'page';
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </NavLink>
-            ))}
+            {quickAccessItems.map(renderNavItem)}
           </nav>
         </div>
       </ScrollArea>
