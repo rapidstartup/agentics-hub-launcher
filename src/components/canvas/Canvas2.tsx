@@ -26,6 +26,7 @@ import { useCanvasBlocks } from '@/hooks/useCanvasBlocks';
 import { useCanvasEdges } from '@/hooks/useCanvasEdges';
 import { useCanvasHistory } from '@/hooks/useCanvasHistory';
 import { CanvasBlock, CanvasBlockType, blockToNode, edgeToReactFlowEdge } from '@/types/canvas';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Canvas2Props {
@@ -135,6 +136,7 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
           },
           onContentChange: (content: string) => updateBlock.mutate({ id: block.id, content }),
           onTitleChange: (title: string) => updateBlock.mutate({ id: block.id, title }),
+          onInstructionChange: (instruction: string) => updateBlock.mutate({ id: block.id, instruction_prompt: instruction }),
           onDelete: () => handleDeleteNode(block.id),
           onResize: (width: number, height: number) => updateBlock.mutate({ id: block.id, width, height }),
           onPushToCreative: block.type === 'chat' 
@@ -385,7 +387,109 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     selected.forEach(n => handleDeleteNode(n.id));
   }, [nodes, handleDeleteNode]);
 
-  // Keyboard shortcuts
+  // Clipboard paste handler - create blocks from pasted content
+  const handlePaste = useCallback(async (e: ClipboardEvent) => {
+    // Skip if user is typing in an input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+    const clipboardData = e.clipboardData;
+    if (!clipboardData) return;
+
+    // Get viewport center for positioning new blocks
+    const viewport = reactFlowInstance.getViewport();
+    const centerX = (window.innerWidth / 2 - viewport.x) / viewport.zoom;
+    const centerY = (window.innerHeight / 2 - viewport.y) / viewport.zoom;
+
+    // Check for images first
+    const items = clipboardData.items;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        try {
+          // Upload the image to storage
+          const fileExt = file.type.split('/')[1] || 'png';
+          const fileName = `paste-${Date.now()}.${fileExt}`;
+          const filePath = `canvas-images/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('canvas-files')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            toast.error('Failed to upload image');
+            return;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('canvas-files')
+            .getPublicUrl(filePath);
+
+          await createBlock.mutateAsync({
+            agent_board_id: projectId,
+            type: 'image',
+            position_x: centerX,
+            position_y: centerY,
+            title: 'Pasted Image',
+            file_url: urlData.publicUrl,
+          });
+
+          toast.success('Image pasted to canvas');
+        } catch (err) {
+          console.error('Paste image error:', err);
+          toast.error('Failed to paste image');
+        }
+        return;
+      }
+    }
+
+    // Check for text content
+    const text = clipboardData.getData('text/plain');
+    if (!text) return;
+
+    e.preventDefault();
+    
+    // Detect if it's a URL
+    const urlPattern = /^https?:\/\/[^\s]+$/;
+    if (urlPattern.test(text.trim())) {
+      try {
+        await createBlock.mutateAsync({
+          agent_board_id: projectId,
+          type: 'url',
+          position_x: centerX,
+          position_y: centerY,
+          title: 'Pasted URL',
+          url: text.trim(),
+        });
+        toast.success('URL pasted to canvas');
+      } catch (err) {
+        console.error('Paste URL error:', err);
+        toast.error('Failed to paste URL');
+      }
+      return;
+    }
+
+    // Otherwise create a text block
+    try {
+      await createBlock.mutateAsync({
+        agent_board_id: projectId,
+        type: 'text',
+        position_x: centerX,
+        position_y: centerY,
+        title: 'Pasted Text',
+        content: text,
+      });
+      toast.success('Text pasted to canvas');
+    } catch (err) {
+      console.error('Paste text error:', err);
+      toast.error('Failed to paste text');
+    }
+  }, [reactFlowInstance, createBlock, projectId]);
+
+  // Keyboard shortcuts and paste handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -412,8 +516,12 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo, reactFlowInstance, handleDeleteSelected]);
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [handleUndo, handleRedo, reactFlowInstance, handleDeleteSelected, handlePaste]);
 
   // Handle Brain panel drag start
   const handleBrainDragStart = useCallback((type: string, item: any) => {

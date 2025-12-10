@@ -1,9 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { NodeProps } from '@xyflow/react';
-import { Link, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Link, Loader2, RefreshCw, ExternalLink, MessageSquare } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { CanvasNodeData } from '@/types/canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,6 +17,7 @@ const UrlNode: React.FC<NodeProps> = ({ data, selected }) => {
   const [url, setUrl] = useState(nodeData.url || '');
   const [content, setContent] = useState(nodeData.content || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [instructionPrompt, setInstructionPrompt] = useState(nodeData.instructionPrompt || '');
 
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalTitle(e.target.value);
@@ -24,6 +27,11 @@ const UrlNode: React.FC<NodeProps> = ({ data, selected }) => {
   const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
   }, []);
+
+  const handleInstructionChange = useCallback((value: string) => {
+    setInstructionPrompt(value);
+    nodeData.onInstructionChange?.(value);
+  }, [nodeData]);
 
   const scrapeUrl = useCallback(async () => {
     if (!url) {
@@ -71,6 +79,31 @@ const UrlNode: React.FC<NodeProps> = ({ data, selected }) => {
             className="h-5 text-xs border-0 bg-transparent p-0 focus-visible:ring-0 font-medium truncate"
             placeholder="Page title..."
           />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-5 w-5 flex-shrink-0 ${instructionPrompt ? 'text-amber-500' : 'text-muted-foreground'}`}
+              >
+                <MessageSquare className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72" align="start">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">AI Instructions</label>
+                <Textarea
+                  value={instructionPrompt}
+                  onChange={(e) => handleInstructionChange(e.target.value)}
+                  placeholder="e.g., Extract key messaging points, analyze competitor positioning..."
+                  className="text-xs min-h-[80px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tell the AI how to use this scraped content.
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       }
     >
