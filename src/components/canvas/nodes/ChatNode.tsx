@@ -7,11 +7,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CanvasNodeData, CanvasBlock, ConnectedContext } from '@/types/canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import BaseNode from './BaseNode';
-
+import { useChatNodePersistence } from '@/hooks/useChatNodePersistence';
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -143,18 +144,30 @@ function parseResponseSections(content: string): ParsedSection[] {
   return sections;
 }
 
-const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
+const ChatNode: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as CanvasNodeData;
   const [localTitle, setLocalTitle] = useState(nodeData.title || 'AI Chat');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [selectedModel, setSelectedModel] = useState('smart-auto');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Get board ID from nodeData metadata or context
+  const boardId = (nodeData.metadata?.boardId as string) || '';
+
+  // Use persistence hook for message management
+  const {
+    messages,
+    isLoadingHistory,
+    addMessage,
+    clearMessages,
+    setMessages,
+  } = useChatNodePersistence({ blockId: id, boardId });
+
   const connectedBlocks = (nodeData.connectedBlocks || []) as CanvasBlock[];
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -176,7 +189,8 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Add user message via persistence hook
+    addMessage(userMessage);
     setInputValue('');
     setIsLoading(true);
     setStreamingContent('');
@@ -317,23 +331,23 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
         sections: sections.length > 1 ? sections : undefined,
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      addMessage(assistantMessage);
       setStreamingContent('');
     } catch (err) {
       console.error('Chat error:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to get AI response');
       
-      setMessages(prev => [...prev, {
+      addMessage({
         id: crypto.randomUUID(),
         role: 'assistant',
         content: 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date(),
-      }]);
+      });
       setStreamingContent('');
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, messages, connectedBlocks, selectedModel]);
+  }, [inputValue, isLoading, messages, connectedBlocks, selectedModel, addMessage]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -351,17 +365,16 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
     // Find the user message before this assistant message
     if (messageIndex > 0 && messages[messageIndex - 1]?.role === 'user') {
       const userContent = messages[messageIndex - 1].content;
-      // Remove messages from this point
-      setMessages(prev => prev.slice(0, messageIndex - 1));
+      // Remove messages from this point (regenerate requires truncating history)
+      setMessages(messages.slice(0, messageIndex - 1));
       setInputValue(userContent);
     }
-  }, [messages]);
+  }, [messages, setMessages]);
 
-  const clearChat = useCallback(() => {
-    setMessages([]);
+  const handleClearChat = useCallback(() => {
+    clearMessages();
     setStreamingContent('');
-    toast.success('Chat cleared');
-  }, []);
+  }, [clearMessages]);
 
   const pushToCreative = useCallback((content: string, sectionType: string) => {
     if (nodeData.onPushToCreative) {
@@ -423,7 +436,7 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
                   variant="outline" 
                   size="sm" 
                   className="w-full text-xs"
-                  onClick={clearChat}
+                  onClick={handleClearChat}
                 >
                   <Trash2 className="h-3 w-3 mr-1.5" />
                   Clear Chat
@@ -446,7 +459,19 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
         {/* Messages area */}
         <ScrollArea className="h-[220px] pr-2" ref={scrollRef}>
           <div className="space-y-3">
-            {messages.length === 0 && !streamingContent ? (
+            {isLoadingHistory ? (
+              <div className="space-y-3 p-2">
+                <div className="flex justify-end">
+                  <Skeleton className="h-8 w-32 rounded-lg" />
+                </div>
+                <div className="flex justify-start">
+                  <Skeleton className="h-16 w-48 rounded-lg" />
+                </div>
+                <div className="flex justify-end">
+                  <Skeleton className="h-8 w-28 rounded-lg" />
+                </div>
+              </div>
+            ) : messages.length === 0 && !streamingContent ? (
               <div className="h-[200px] flex items-center justify-center text-center">
                 <div>
                   <MessageCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
