@@ -90,6 +90,7 @@ import Launch from "./pages/Launch";
 import BoardLayout from "./pages/board/BoardLayout";
 import BoardChat from "./pages/board/Chat";
 import BoardCanvas from "./pages/board/Canvas";
+import BoardCanvas2 from "./pages/board/Canvas2Page";
 import BoardKanban from "./pages/board/Kanban";
 import BoardSettings from "./pages/board/Settings";
 import AdvertisingBoardPage from "./pages/AdvertisingBoardPage";
@@ -183,6 +184,7 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="canvas2" element={<BoardCanvas2 />} />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>
@@ -208,6 +210,7 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="canvas2" element={<BoardCanvas2 />} />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>
@@ -216,6 +219,7 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
+            <Route path="canvas2" element={<BoardCanvas2 />} />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>

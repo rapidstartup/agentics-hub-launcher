@@ -68,6 +68,7 @@ import { UniversalAgentRunner } from "@/components/agents/UniversalAgentRunner";
 import { AgentChatWindow } from "@/components/agents/AgentChatWindow";
 import { ProjectCanvas } from "@/components/projects/ProjectCanvas";
 import BoardCanvas from "@/pages/board/Canvas";
+import { Canvas2 } from "@/components/canvas";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -940,16 +941,10 @@ export default function AdvertisingProjectDetail() {
               </div>
             )}
 
-            {/* Canvas 2 Tab (ProjectCanvas with agents) */}
-            {activeTab === "canvas2" && (
+            {/* Canvas 2 Tab (ReactFlow-based node canvas) */}
+            {activeTab === "canvas2" && projectId && (
               <div className="h-full">
-                <ProjectCanvas
-                  projectId={projectId || ""}
-                  clientId={clientId || ""}
-                  agents={availableAgents}
-                  assets={project.assets || []}
-                  onAssetCreated={handleAssetCreated}
-                />
+                <Canvas2 projectId={projectId} />
               </div>
             )}
 
