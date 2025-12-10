@@ -570,6 +570,66 @@ export type Database = {
           },
         ]
       }
+      assets: {
+        Row: {
+          asset_type: string
+          client_id: string | null
+          created_at: string
+          description: string | null
+          file_path: string | null
+          file_url: string | null
+          id: string
+          is_archived: boolean | null
+          is_pinned: boolean | null
+          metadata: Json | null
+          scope: Database["public"]["Enums"]["kb_scope"]
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Insert: {
+          asset_type: string
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          file_url?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_pinned?: boolean | null
+          metadata?: Json | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Update: {
+          asset_type?: string
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          file_path?: string | null
+          file_url?: string | null
+          id?: string
+          is_archived?: boolean | null
+          is_pinned?: boolean | null
+          metadata?: Json | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           created_at: string
@@ -708,6 +768,51 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      content_groups: {
+        Row: {
+          client_id: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          scope: Database["public"]["Enums"]["kb_scope"]
+          sort_order: number | null
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Insert: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          sort_order?: number | null
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Update: {
+          client_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          sort_order?: number | null
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
         }
         Relationships: []
       }
@@ -870,6 +975,57 @@ export type Database = {
           spreadsheet_name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      integrations: {
+        Row: {
+          client_id: string | null
+          config: Json | null
+          created_at: string
+          credentials_encrypted: string | null
+          description: string | null
+          id: string
+          integration_type: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          name: string
+          scope: Database["public"]["Enums"]["kb_scope"]
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Insert: {
+          client_id?: string | null
+          config?: Json | null
+          created_at?: string
+          credentials_encrypted?: string | null
+          description?: string | null
+          id?: string
+          integration_type: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          name: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Update: {
+          client_id?: string | null
+          config?: Json | null
+          created_at?: string
+          credentials_encrypted?: string | null
+          description?: string | null
+          id?: string
+          integration_type?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          name?: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
         }
         Relationships: []
       }
@@ -1134,6 +1290,69 @@ export type Database = {
           scope?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      offers: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          description: string | null
+          discount: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          offer_type: string | null
+          price: string | null
+          scope: Database["public"]["Enums"]["kb_scope"]
+          tags: string[] | null
+          terms: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+          visibility: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          offer_type?: string | null
+          price?: string | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          tags?: string[] | null
+          terms?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          discount?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          offer_type?: string | null
+          price?: string | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          tags?: string[] | null
+          terms?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
         }
         Relationships: []
       }
@@ -1496,6 +1715,120 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_templates: {
+        Row: {
+          category: string | null
+          client_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_pinned: boolean | null
+          metadata: Json | null
+          prompt_text: string
+          scope: Database["public"]["Enums"]["kb_scope"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          variables: Json | null
+          visibility: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Insert: {
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          metadata?: Json | null
+          prompt_text: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          variables?: Json | null
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Update: {
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          metadata?: Json | null
+          prompt_text?: string
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          variables?: Json | null
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Relationships: []
+      }
+      swipe_files: {
+        Row: {
+          category: string | null
+          client_id: string | null
+          content: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_archived: boolean | null
+          is_pinned: boolean | null
+          metadata: Json | null
+          scope: Database["public"]["Enums"]["kb_scope"]
+          source_url: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Insert: {
+          category?: string | null
+          client_id?: string | null
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_archived?: boolean | null
+          is_pinned?: boolean | null
+          metadata?: Json | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          source_url?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Update: {
+          category?: string | null
+          client_id?: string | null
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_archived?: boolean | null
+          is_pinned?: boolean | null
+          metadata?: Json | null
+          scope?: Database["public"]["Enums"]["kb_scope"]
+          source_url?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["asset_visibility"]
+        }
+        Relationships: []
+      }
       theme_templates: {
         Row: {
           created_at: string | null
@@ -1573,6 +1906,7 @@ export type Database = {
     }
     Enums: {
       app_role: "agency_admin" | "client_user"
+      asset_visibility: "internal_only" | "client_ready" | "published"
       execution_mode: "n8n" | "internal"
       kb_category:
         | "document"
@@ -1719,6 +2053,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["agency_admin", "client_user"],
+      asset_visibility: ["internal_only", "client_ready", "published"],
       execution_mode: ["n8n", "internal"],
       kb_category: [
         "document",
