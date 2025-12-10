@@ -93,6 +93,7 @@ import BoardCanvas from "./pages/board/Canvas";
 import BoardKanban from "./pages/board/Kanban";
 import BoardSettings from "./pages/board/Settings";
 import AdvertisingBoardPage from "./pages/AdvertisingBoardPage";
+import AdvertisingProjectDetail from "./pages/advertising/AdvertisingProjectDetail";
 
 const queryClient = new QueryClient();
 
@@ -132,13 +133,7 @@ const App = () => (
           <Route path="/client/:clientId/advertising/campaign-manager" element={<ProtectedRoute><CampaignManager /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
-          <Route path="/client/:clientId/advertising/projects/:boardId" element={<ProtectedRoute><AdvertisingBoardPage /></ProtectedRoute>}>
-            <Route index element={<Navigate to="chat" replace />} />
-            <Route path="chat" element={<BoardChat />} />
-            <Route path="canvas" element={<BoardCanvas />} />
-            <Route path="kanban" element={<BoardKanban />} />
-            <Route path="settings" element={<BoardSettings />} />
-          </Route>
+          <Route path="/client/:clientId/advertising/projects/:boardId" element={<ProtectedRoute><AdvertisingProjectDetail /></ProtectedRoute>} />
           {/* Strategy dedicated area */}
           <Route path="/client/:clientId/strategy" element={<ProtectedRoute><StrategyComingSoon /></ProtectedRoute>} />
           <Route path="/client/:clientId/strategy/agents" element={<ProtectedRoute><StrategyAgents /></ProtectedRoute>} />
