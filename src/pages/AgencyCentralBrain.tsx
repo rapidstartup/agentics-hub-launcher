@@ -89,6 +89,7 @@ import AddAssetDialog from "@/components/AddAssetDialog";
 import AddTemplateDialog from "@/components/AddTemplateDialog";
 import { AddOfferDialog } from "@/components/AddOfferDialog";
 import { OfferCard } from "@/components/OfferCard";
+import { PushToClientModal } from "@/components/central-brain/PushToClientModal";
 import type { Database as DB } from "@/integrations/supabase/types";
 import {
   Select,
@@ -205,6 +206,10 @@ export default function AgencyCentralBrain() {
   const [editOffer, setEditOffer] = useState<any>(null);
   const [deleteOfferId, setDeleteOfferId] = useState<string | null>(null);
   const [selectedOfferGroupId, setSelectedOfferGroupId] = useState<string | null>(null);
+
+  // Push to client states
+  const [pushModalOpen, setPushModalOpen] = useState(false);
+  const [pushItem, setPushItem] = useState<{ id: string; title: string; type: "knowledge_base" | "template" | "offer" | "swipe" } | null>(null);
 
   // ====================
   // QUERIES
@@ -823,6 +828,10 @@ export default function AgencyCentralBrain() {
                   <KnowledgeBaseTable
                     scope={selectedClient === "agency" ? "agency" : selectedClient === "all" ? undefined : "client"}
                     clientId={selectedClient !== "agency" && selectedClient !== "all" ? selectedClient : undefined}
+                    onPushToClients={(item) => {
+                      setPushItem({ id: item.id, title: item.title, type: "knowledge_base" });
+                      setPushModalOpen(true);
+                    }}
                   />
                 </CardContent>
               </Card>
@@ -1474,6 +1483,17 @@ export default function AgencyCentralBrain() {
 
       {/* Floating Ask AI */}
       <FloatingAskAI />
+
+      {/* Push to Client Modal */}
+      {pushItem && (
+        <PushToClientModal
+          open={pushModalOpen}
+          onOpenChange={setPushModalOpen}
+          assetId={pushItem.id}
+          assetType={pushItem.type}
+          assetTitle={pushItem.title}
+        />
+      )}
     </div>
   );
 }
