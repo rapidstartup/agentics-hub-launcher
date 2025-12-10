@@ -669,6 +669,145 @@ export type Database = {
         }
         Relationships: []
       }
+      canvas_blocks: {
+        Row: {
+          agent_board_id: string
+          color: string | null
+          content: string | null
+          created_at: string | null
+          file_path: string | null
+          file_url: string | null
+          group_id: string | null
+          height: number | null
+          id: string
+          instruction_prompt: string | null
+          metadata: Json | null
+          parsing_status: string | null
+          position_x: number | null
+          position_y: number | null
+          title: string | null
+          type: string
+          updated_at: string | null
+          url: string | null
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          agent_board_id: string
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          file_path?: string | null
+          file_url?: string | null
+          group_id?: string | null
+          height?: number | null
+          id?: string
+          instruction_prompt?: string | null
+          metadata?: Json | null
+          parsing_status?: string | null
+          position_x?: number | null
+          position_y?: number | null
+          title?: string | null
+          type?: string
+          updated_at?: string | null
+          url?: string | null
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          agent_board_id?: string
+          color?: string | null
+          content?: string | null
+          created_at?: string | null
+          file_path?: string | null
+          file_url?: string | null
+          group_id?: string | null
+          height?: number | null
+          id?: string
+          instruction_prompt?: string | null
+          metadata?: Json | null
+          parsing_status?: string | null
+          position_x?: number | null
+          position_y?: number | null
+          title?: string | null
+          type?: string
+          updated_at?: string | null
+          url?: string | null
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canvas_blocks_agent_board_id_fkey"
+            columns: ["agent_board_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canvas_blocks_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "canvas_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      canvas_edges: {
+        Row: {
+          agent_board_id: string
+          color: string | null
+          created_at: string | null
+          edge_type: string | null
+          id: string
+          source_block_id: string
+          target_block_id: string
+          user_id: string
+        }
+        Insert: {
+          agent_board_id: string
+          color?: string | null
+          created_at?: string | null
+          edge_type?: string | null
+          id?: string
+          source_block_id: string
+          target_block_id: string
+          user_id: string
+        }
+        Update: {
+          agent_board_id?: string
+          color?: string | null
+          created_at?: string | null
+          edge_type?: string | null
+          id?: string
+          source_block_id?: string
+          target_block_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canvas_edges_agent_board_id_fkey"
+            columns: ["agent_board_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canvas_edges_source_block_id_fkey"
+            columns: ["source_block_id"]
+            isOneToOne: false
+            referencedRelation: "canvas_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canvas_edges_target_block_id_fkey"
+            columns: ["target_block_id"]
+            isOneToOne: false
+            referencedRelation: "canvas_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_theme_settings: {
         Row: {
           client_id: string
