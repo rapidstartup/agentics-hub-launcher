@@ -64,8 +64,46 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     const incomingEdgeIds = dbEdges
       .filter(e => e.target_block_id === targetId)
       .map(e => e.source_block_id);
-    return blocks.filter(b => incomingEdgeIds.includes(b.id));
+    
+    const connectedBlocks = blocks.filter(b => incomingEdgeIds.includes(b.id));
+    
+    // Expand group nodes to include their connected children
+    const expandedBlocks: CanvasBlock[] = [];
+    for (const block of connectedBlocks) {
+      if (block.type === 'group') {
+        // Get blocks connected TO this group
+        const groupChildIds = dbEdges
+          .filter(e => e.target_block_id === block.id)
+          .map(e => e.source_block_id);
+        const groupChildren = blocks.filter(b => groupChildIds.includes(b.id));
+        expandedBlocks.push(...groupChildren);
+      }
+      expandedBlocks.push(block);
+    }
+    
+    return expandedBlocks;
   }, [blocks, dbEdges]);
+
+  // Get child blocks for a group node (blocks connected TO the group)
+  const getGroupChildren = useCallback((groupId: string): CanvasBlock[] => {
+    const childEdgeIds = dbEdges
+      .filter(e => e.target_block_id === groupId)
+      .map(e => e.source_block_id);
+    return blocks.filter(b => childEdgeIds.includes(b.id));
+  }, [blocks, dbEdges]);
+
+  // Remove a child from group (delete the edge)
+  const handleRemoveFromGroup = useCallback(async (childId: string, groupId: string) => {
+    const edge = dbEdges.find(e => e.source_block_id === childId && e.target_block_id === groupId);
+    if (edge) {
+      try {
+        await deleteEdge.mutateAsync(edge.id);
+        toast.success('Removed from group');
+      } catch (err) {
+        toast.error('Failed to remove from group');
+      }
+    }
+  }, [dbEdges, deleteEdge]);
 
   // Handle node deletion
   const handleDeleteNode = useCallback(async (nodeId: string) => {
@@ -124,6 +162,10 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
   const initialNodes = useMemo((): CanvasNode[] => {
     return blocks.map(block => {
       const node = blockToNode(block);
+      
+      // Get child blocks for group nodes
+      const childBlocks = block.type === 'group' ? getGroupChildren(block.id) : undefined;
+      
       return {
         ...node,
         data: {
@@ -134,6 +176,11 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
             ...(node.data.metadata || {}),
             boardId: projectId,
           },
+          // GroupNode specific props
+          childBlocks,
+          onRemoveChild: block.type === 'group' 
+            ? (childId: string) => handleRemoveFromGroup(childId, block.id)
+            : undefined,
           onContentChange: (content: string) => updateBlock.mutate({ id: block.id, content }),
           onTitleChange: (title: string) => updateBlock.mutate({ id: block.id, title }),
           onInstructionChange: (instruction: string) => updateBlock.mutate({ id: block.id, instruction_prompt: instruction }),
@@ -145,7 +192,7 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
         },
       };
     });
-  }, [blocks, dbEdges, getConnectedBlocks, updateBlock, handleDeleteNode, handlePushToCreative, projectId]);
+  }, [blocks, dbEdges, getConnectedBlocks, getGroupChildren, handleRemoveFromGroup, updateBlock, handleDeleteNode, handlePushToCreative, projectId]);
 
   const initialEdges = useMemo(() => {
     return dbEdges.map(edgeToReactFlowEdge);
