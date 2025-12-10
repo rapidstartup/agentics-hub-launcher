@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { NodeProps } from '@xyflow/react';
-import { MessageCircle, Send, Loader2, Settings2, Sparkles, Copy, RotateCcw, ArrowRight, Save, Trash2 } from 'lucide-react';
+import { MessageCircle, Send, Loader2, Settings2, Sparkles, Copy, RotateCcw, ArrowRight, Save, Trash2, Images, Wand2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
 import { CanvasNodeData, CanvasBlock, ConnectedContext } from '@/types/canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -34,6 +37,8 @@ const AVAILABLE_MODELS = [
   { value: 'google/gemini-2.5-pro', label: 'Gemini Pro', description: 'Most capable' },
   { value: 'openai/gpt-5', label: 'GPT-5', description: 'OpenAI flagship' },
   { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini', description: 'Fast & affordable' },
+  { value: 'openrouter/anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', description: 'Anthropic flagship' },
+  { value: 'openrouter/anthropic/claude-3.5-haiku', label: 'Claude Haiku', description: 'Fast & efficient' },
 ];
 
 /**
@@ -384,6 +389,58 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [nodeData]);
 
+  // Quick Batch Generator state
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [batchPrompt, setBatchPrompt] = useState('');
+  const [batchCount, setBatchCount] = useState(3);
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+  const [batchImages, setBatchImages] = useState<string[]>([]);
+
+  const generateBatchImages = useCallback(async () => {
+    if (!batchPrompt.trim() || isBatchGenerating) return;
+
+    setIsBatchGenerating(true);
+    setBatchImages([]);
+
+    try {
+      // Get reference images from connected blocks
+      const context = buildContextFromBlocks(connectedBlocks);
+      
+      toast.info(`Generating ${batchCount} image variations...`);
+
+      const response = await supabase.functions.invoke('batch-generate-images', {
+        body: {
+          prompt: batchPrompt,
+          referenceImageUrls: context.imageUrls,
+          count: batchCount,
+          maxReferencesPerImage: 10,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { images, errors } = response.data;
+      
+      if (images && images.length > 0) {
+        setBatchImages(images);
+        toast.success(`Generated ${images.length} images`);
+        
+        if (errors && errors.length > 0) {
+          toast.warning(`${errors.length} image(s) failed to generate`);
+        }
+      } else {
+        throw new Error('No images were generated');
+      }
+    } catch (err) {
+      console.error('Batch generation error:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to generate images');
+    } finally {
+      setIsBatchGenerating(false);
+    }
+  }, [batchPrompt, batchCount, connectedBlocks, isBatchGenerating]);
+
   return (
     <BaseNode
       selected={selected}
@@ -603,6 +660,113 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected, id }) => {
             className="text-xs h-8 flex-1"
             disabled={isLoading}
           />
+          <Dialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2"
+                title="Quick Batch Generator"
+              >
+                <Images className="h-3.5 w-3.5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5 text-primary" />
+                  Quick Batch Generator
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Image Prompt</label>
+                  <Textarea
+                    value={batchPrompt}
+                    onChange={(e) => setBatchPrompt(e.target.value)}
+                    placeholder="Describe the images you want to generate..."
+                    className="min-h-[100px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Number of Images</label>
+                    <span className="text-sm text-muted-foreground">{batchCount}</span>
+                  </div>
+                  <Slider
+                    value={[batchCount]}
+                    onValueChange={([val]) => setBatchCount(val)}
+                    min={1}
+                    max={10}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+                {connectedBlocks.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded px-3 py-2">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                    <span>
+                      Using {connectedBlocks.filter(b => b.type === 'image').length} reference images from connected blocks
+                    </span>
+                  </div>
+                )}
+                <Button
+                  onClick={generateBatchImages}
+                  disabled={!batchPrompt.trim() || isBatchGenerating}
+                  className="w-full"
+                >
+                  {isBatchGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Generate {batchCount} Variations
+                    </>
+                  )}
+                </Button>
+                {batchImages.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Generated Images</label>
+                    <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                      {batchImages.map((imgUrl, idx) => (
+                        <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden bg-muted">
+                          <img
+                            src={imgUrl}
+                            alt={`Generated ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-white"
+                              onClick={() => {
+                                navigator.clipboard.writeText(imgUrl);
+                                toast.success('Image URL copied');
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-white"
+                              onClick={() => pushToCreative(imgUrl, 'Generated Image')}
+                            >
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button
             size="sm"
             onClick={sendMessage}

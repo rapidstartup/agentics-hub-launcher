@@ -83,3 +83,9 @@ verify_jwt = false
 
 [functions.export-central-brain-data]
 verify_jwt = false
+
+[functions.batch-generate-images]
+verify_jwt = false
+
+[functions.chat]
+verify_jwt = false
