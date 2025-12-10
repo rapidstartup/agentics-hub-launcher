@@ -526,6 +526,50 @@ export type Database = {
           },
         ]
       }
+      asset_client_assignments: {
+        Row: {
+          asset_id: string
+          asset_type: string
+          client_id: string
+          created_at: string
+          id: string
+          is_copy: boolean
+          notes: string | null
+          pushed_at: string
+          pushed_by: string
+        }
+        Insert: {
+          asset_id: string
+          asset_type: string
+          client_id: string
+          created_at?: string
+          id?: string
+          is_copy?: boolean
+          notes?: string | null
+          pushed_at?: string
+          pushed_by: string
+        }
+        Update: {
+          asset_id?: string
+          asset_type?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          is_copy?: boolean
+          notes?: string | null
+          pushed_at?: string
+          pushed_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_client_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string
@@ -935,6 +979,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           category?: Database["public"]["Enums"]["kb_category"]
@@ -966,6 +1011,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           category?: Database["public"]["Enums"]["kb_category"]
@@ -997,6 +1043,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: []
       }

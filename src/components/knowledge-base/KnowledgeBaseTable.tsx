@@ -69,6 +69,7 @@ interface KnowledgeBaseTableProps {
   showUpload?: boolean;
   onUploadClick?: () => void;
   onEdit?: (item: KBItem) => void;
+  onPushToClients?: (item: KBItem) => void;
 }
 
 const categoryOptions = [
@@ -123,6 +124,7 @@ export function KnowledgeBaseTable({
   showUpload = true,
   onUploadClick,
   onEdit,
+  onPushToClients,
 }: KnowledgeBaseTableProps) {
   const [items, setItems] = useState<KBItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -379,6 +381,7 @@ export function KnowledgeBaseTable({
               onTogglePin={handleTogglePin}
               onArchive={handleArchive}
               onDelete={handleDelete}
+              onPushToClients={onPushToClients}
               onSelect={selectable ? handleSelectItem : undefined}
               isSelected={selectedItems.has(item.id)}
               selectable={selectable}

@@ -29,6 +29,7 @@ import {
   Target,
   HelpCircle,
   Gift,
+  Send,
 } from "lucide-react";
 import { getKnowledgeBaseFileUrl } from "@/lib/knowledge-base-utils";
 
@@ -62,6 +63,7 @@ interface KnowledgeBaseCardProps {
   onDelete?: (item: KBItem) => void;
   onTogglePin?: (item: KBItem) => void;
   onArchive?: (item: KBItem) => void;
+  onPushToClients?: (item: KBItem) => void;
   onSelect?: (item: KBItem, selected: boolean) => void;
   onUpdate?: () => void;
   isSelected?: boolean;
@@ -218,6 +220,7 @@ export function KnowledgeBaseCard({
   onDelete,
   onTogglePin,
   onArchive,
+  onPushToClients,
   onSelect,
   isSelected,
   selectable,
@@ -321,6 +324,12 @@ export function KnowledgeBaseCard({
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
+              {onPushToClients && item.scope === "agency" && (
+                <DropdownMenuItem onClick={() => onPushToClients(item)}>
+                  <Send className="mr-2 h-4 w-4" />
+                  Push to Clients
+                </DropdownMenuItem>
+              )}
               {onTogglePin && (
                 <DropdownMenuItem onClick={() => onTogglePin(item)}>
                   <Pin className="mr-2 h-4 w-4" />

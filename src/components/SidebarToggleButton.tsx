@@ -15,11 +15,11 @@ export const SidebarToggleButton: React.FC<SidebarToggleButtonProps> = ({ classN
     <Button
       variant="ghost"
       size="icon"
-      className={className ?? "h-9 w-9"}
+      className={className ?? "h-6 w-6 opacity-60 hover:opacity-100 transition-opacity"}
       onClick={toggle}
       {...rest}
     >
-      <PanelLeft className="h-5 w-5" />
+      <PanelLeft className="h-3.5 w-3.5" />
     </Button>
   );
 };
