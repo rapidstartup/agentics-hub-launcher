@@ -12,7 +12,10 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useFeatureToggle } from "@/hooks/useFeatureToggle";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Monitor, Moon, Sun, Building2, Users, AlertTriangle, Brush, Shield, Bell, Plug, Bot } from "lucide-react";
+import { Monitor, Moon, Sun, Building2, Users, AlertTriangle, Brush, Shield, Bell, Plug, Bot, UserCog, Plus, Trash2, Mail } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 
@@ -42,7 +45,7 @@ const AdminSettings = () => {
         </div>
 
         <Tabs defaultValue="security" className="space-y-6">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
+          <TabsList className="grid w-full max-w-4xl grid-cols-6">
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
               Security
@@ -58,6 +61,10 @@ const AdminSettings = () => {
             <TabsTrigger value="integrations" className="flex items-center gap-2">
               <Plug className="h-4 w-4" />
               Integrations
+            </TabsTrigger>
+            <TabsTrigger value="team" className="flex items-center gap-2">
+              <UserCog className="h-4 w-4" />
+              Team
             </TabsTrigger>
             <TabsTrigger value="agents" className="flex items-center gap-2">
               <Bot className="h-4 w-4" />
@@ -225,6 +232,83 @@ const AdminSettings = () => {
           {/* Integrations Tab */}
           <TabsContent value="integrations" className="space-y-6">
             <N8nConnectForm scope="agency" />
+          </TabsContent>
+
+          {/* Team Management Tab */}
+          <TabsContent value="team" className="space-y-6">
+            <Card className="border border-border bg-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg">Team Members</CardTitle>
+                    <CardDescription>Manage your agency team and permissions</CardDescription>
+                  </div>
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Invite Member
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Team member list */}
+                <div className="space-y-3">
+                  {/* Example team member row */}
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback>AU</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground">Admin User</p>
+                        <p className="text-sm text-muted-foreground">admin@agency.com</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="default">Agency Admin</Badge>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pending invitations section */}
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-sm font-medium text-foreground mb-3">Pending Invitations</h4>
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-dashed border-border bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                        <Mail className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">No pending invitations</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Role permissions */}
+            <Card className="border border-border bg-card p-6">
+              <h3 className="mb-4 text-base font-semibold text-foreground">Role Permissions</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between rounded-md border border-border p-4">
+                  <div>
+                    <Label>Agency Admin</Label>
+                    <p className="text-xs text-muted-foreground">Full access to all features and settings</p>
+                  </div>
+                  <Badge variant="outline">All Permissions</Badge>
+                </div>
+                <div className="flex items-center justify-between rounded-md border border-border p-4">
+                  <div>
+                    <Label>Client User</Label>
+                    <p className="text-xs text-muted-foreground">Access to assigned client workspaces only</p>
+                  </div>
+                  <Badge variant="outline">Limited Access</Badge>
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           {/* Agent Controller Tab */}

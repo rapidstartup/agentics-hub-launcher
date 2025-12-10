@@ -121,8 +121,31 @@ export default function ClientCentralBrain() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !clientId) return [];
-      const { data } = await supabase.from("knowledge_base_items").select("*").eq("user_id", user.id).eq("client_id", clientId).eq("is_archived", false).order("created_at", { ascending: false });
-      return (data || []) as KnowledgeBaseItem[];
+      
+      // Get client-specific items
+      const { data: clientItems } = await supabase
+        .from("knowledge_base_items")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("client_id", clientId)
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false });
+      
+      // Get agency-level items with client visibility (client_ready or published)
+      const { data: agencyItems } = await supabase
+        .from("knowledge_base_items")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("scope", "agency")
+        .in("visibility", ["client_ready", "published"])
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false });
+      
+      // Merge client and agency items, marking agency items
+      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
+      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
+      
+      return [...clientList, ...agencyList] as KnowledgeBaseItem[];
     },
     enabled: !!clientId,
   });
