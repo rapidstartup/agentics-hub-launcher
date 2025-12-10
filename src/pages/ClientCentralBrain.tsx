@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
@@ -79,6 +79,8 @@ const INTERNAL_TOOLS = [
 export default function ClientCentralBrain() {
   const { clientId } = useParams<{ clientId: string }>();
   const queryClient = useQueryClient();
+  const [resolvedClientId, setResolvedClientId] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -106,28 +108,40 @@ export default function ClientCentralBrain() {
   const [deleteOfferId, setDeleteOfferId] = useState<string | null>(null);
   const [selectedOfferGroupId, setSelectedOfferGroupId] = useState<string | null>(null);
 
-  const { data: client } = useQuery({
-    queryKey: ["client", clientId],
-    queryFn: async () => {
-      if (!clientId) return null;
-      const { data } = await supabase.from("clients").select("*").eq("id", clientId).single();
-      return data;
-    },
-    enabled: !!clientId,
-  });
+  useEffect(() => {
+    const resolve = async () => {
+      if (!clientId) return;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(clientId)) {
+        setResolvedClientId(clientId);
+        const { data } = await supabase.from("clients").select("name").eq("id", clientId).single();
+        if (data?.name) setClientName(data.name);
+        return;
+      }
+      const { data } = await supabase.from("clients").select("id,name").eq("slug", clientId).single();
+      if (data?.id) {
+        setResolvedClientId(data.id);
+        if (data.name) setClientName(data.name);
+      }
+    };
+    resolve();
+  }, [clientId]);
+
+  const effectiveClientId = resolvedClientId || null;
 
   const { data: kbItems = [], refetch: refetchKb } = useQuery({
-    queryKey: ["client-kb-items", clientId],
+    queryKey: ["client-kb-items", effectiveClientId],
     queryFn: async () => {
+      if (!effectiveClientId) return [];
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !clientId) return [];
+      if (!user) return [];
       
       // Get client-specific items
       const { data: clientItems } = await supabase
         .from("knowledge_base_items")
         .select("*")
         .eq("user_id", user.id)
-        .eq("client_id", clientId)
+        .eq("client_id", effectiveClientId)
         .eq("is_archived", false)
         .order("created_at", { ascending: false });
       
@@ -147,21 +161,17 @@ export default function ClientCentralBrain() {
       
       return [...clientList, ...agencyList] as KnowledgeBaseItem[];
     },
-    enabled: !!clientId,
+    enabled: !!effectiveClientId,
   });
 
   const { data: assets = [], refetch: refetchAssets } = useQuery({
-    queryKey: ["assets", clientId],
+    queryKey: ["assets", effectiveClientId],
     queryFn: async () => {
-      // Get client-specific items
-      const { data: clientItems } = await supabase.from("assets").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
-      // Get agency-level items with client visibility
-      const { data: agencyItems } = await supabase.from("assets").select("*").eq("scope", "agency").in("visibility", ["client_ready", "published"]).order("created_at", { ascending: false });
-      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
-      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
-      return [...clientList, ...agencyList];
+      if (!effectiveClientId) return [];
+      const { data } = await supabase.from("assets").select("*").eq("client_id", effectiveClientId).order("created_at", { ascending: false });
+      return data || [];
     },
-    enabled: !!clientId,
+    enabled: !!effectiveClientId,
   });
 
   const { data: assetGroups = [] } = useQuery({
@@ -173,17 +183,13 @@ export default function ClientCentralBrain() {
   });
 
   const { data: swipeFiles = [], refetch: refetchSwipeFiles } = useQuery({
-    queryKey: ["swipe-files", clientId],
+    queryKey: ["swipe-files", effectiveClientId],
     queryFn: async () => {
-      // Get client-specific items
-      const { data: clientItems } = await supabase.from("swipe_files").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
-      // Get agency-level items with client visibility
-      const { data: agencyItems } = await supabase.from("swipe_files").select("*").eq("scope", "agency").in("visibility", ["client_ready", "published"]).order("created_at", { ascending: false });
-      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
-      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
-      return [...clientList, ...agencyList];
+      if (!effectiveClientId) return [];
+      const { data } = await supabase.from("swipe_files").select("*").eq("client_id", effectiveClientId).order("created_at", { ascending: false });
+      return data || [];
     },
-    enabled: !!clientId,
+    enabled: !!effectiveClientId,
   });
 
   const { data: swipeGroups = [] } = useQuery({
@@ -211,17 +217,13 @@ export default function ClientCentralBrain() {
   });
 
   const { data: offers = [] } = useQuery({
-    queryKey: ["offers", clientId],
+    queryKey: ["offers", effectiveClientId],
     queryFn: async () => {
-      // Get client-specific items
-      const { data: clientItems } = await supabase.from("offers").select("*").eq("client_id", clientId).order("created_at", { ascending: false });
-      // Get agency-level items with client visibility
-      const { data: agencyItems } = await supabase.from("offers").select("*").eq("scope", "agency").in("visibility", ["client_ready", "published"]).order("created_at", { ascending: false });
-      const clientList = (clientItems || []).map((item: any) => ({ ...item, isAgencyItem: false }));
-      const agencyList = (agencyItems || []).map((item: any) => ({ ...item, isAgencyItem: true }));
-      return [...clientList, ...agencyList];
+      if (!effectiveClientId) return [];
+      const { data } = await supabase.from("offers").select(`*, offer_assets (*)`).is("project_id", null).eq("client_id", effectiveClientId).order("created_at", { ascending: false });
+      return data || [];
     },
-    enabled: !!clientId,
+    enabled: !!effectiveClientId,
   });
 
   const { data: offerGroups = [] } = useQuery({
@@ -233,11 +235,13 @@ export default function ClientCentralBrain() {
   });
 
   const { data: integrations = [] } = useQuery({
-    queryKey: ["integrations", clientId],
+    queryKey: ["integrations", effectiveClientId],
     queryFn: async () => {
-      const { data } = await supabase.from("integrations").select("*").order("created_at", { ascending: false });
+      if (!effectiveClientId) return [];
+      const { data } = await supabase.from("integrations").select("*").eq("client_id", effectiveClientId).order("created_at", { ascending: false });
       return data || [];
     },
+    enabled: !!effectiveClientId,
   });
 
   const deleteAssetMutation = useMutation({
@@ -272,7 +276,7 @@ export default function ClientCentralBrain() {
   const filteredOffers = offers?.filter((o: any) => !selectedOfferGroupId || selectedOfferGroupId === "ungrouped" ? !o.group_id : o.group_id === selectedOfferGroupId) || [];
   const connectedIntegrationsCount = integrations.filter((i: any) => i.is_connected).length;
 
-  const handleReindexAll = async () => { toast.info("Reindexing..."); await supabase.functions.invoke("google-search-indexing", { body: { action: "reindex", scope: "client", clientId } }); setTimeout(() => { refetchKb(); toast.success("Done"); }, 2000); };
+  const handleReindexAll = async () => { if (!effectiveClientId) return; toast.info("Reindexing..."); await supabase.functions.invoke("google-search-indexing", { body: { action: "reindex", scope: "client", clientId: effectiveClientId } }); setTimeout(() => { refetchKb(); toast.success("Done"); }, 2000); };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -281,7 +285,7 @@ export default function ClientCentralBrain() {
         <div className="border-b border-border bg-background p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20"><Brain className="h-5 w-5 text-primary" /></div>
-            <div><h1 className="text-2xl font-bold text-foreground">Central Brain</h1><p className="text-sm text-muted-foreground">{client?.name ? `${client.name}'s knowledge and resources` : "Client knowledge and resources"}</p></div>
+            <div><h1 className="text-2xl font-bold text-foreground">Central Brain</h1><p className="text-sm text-muted-foreground">{clientName ? `${clientName}'s knowledge and resources` : "Client knowledge and resources"}</p></div>
           </div>
         </div>
         <div className="p-6">
@@ -371,7 +375,7 @@ export default function ClientCentralBrain() {
       <AlertDialog open={!!deleteSwipeFileId} onOpenChange={() => setDeleteSwipeFileId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Swipe File</AlertDialogTitle><AlertDialogDescription>Are you sure?</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteSwipeFileId && deleteSwipeFileMutation.mutate(deleteSwipeFileId)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={!!deleteTemplateId} onOpenChange={() => setDeleteTemplateId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Template</AlertDialogTitle><AlertDialogDescription>Are you sure?</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteTemplateId && deleteTemplateMutation.mutate(deleteTemplateId)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={!!deleteOfferId} onOpenChange={() => setDeleteOfferId(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete Offer</AlertDialogTitle><AlertDialogDescription>Are you sure?</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => deleteOfferId && deleteOfferMutation.mutate(deleteOfferId)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-      <FloatingAskAI clientId={clientId} />
+      <FloatingAskAI clientId={effectiveClientId || undefined} />
     </div>
   );
 }

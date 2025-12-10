@@ -46,6 +46,7 @@ const categoryStats = [
 
 const ClientKnowledge = () => {
   const { clientId } = useParams();
+  const [resolvedClientId, setResolvedClientId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [pinnedItems, setPinnedItems] = useState<KBItem[]>([]);
@@ -56,13 +57,28 @@ const ClientKnowledge = () => {
   const [indexedCount, setIndexedCount] = useState(0);
   const [processingCount, setProcessingCount] = useState(0);
 
+  useEffect(() => {
+    const resolve = async () => {
+      if (!clientId) return;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(clientId)) {
+        setResolvedClientId(clientId);
+        return;
+      }
+      const { data } = await supabase.from("clients").select("id").eq("slug", clientId).single();
+      if (data?.id) setResolvedClientId(data.id);
+    };
+    resolve();
+  }, [clientId]);
+
   async function fetchStats() {
     try {
+      if (!resolvedClientId) return;
       // Fetch category counts
       const { data: items } = await supabase
         .from("knowledge_base_items")
         .select("category, is_pinned, indexing_status")
-        .or(`client_id.eq.${clientId},scope.eq.agency`)
+        .or(`client_id.eq.${resolvedClientId},scope.eq.agency`)
         .eq("is_archived", false);
 
       if (items) {
@@ -86,7 +102,7 @@ const ClientKnowledge = () => {
       const { data: pinned } = await supabase
         .from("knowledge_base_items")
         .select("*")
-        .or(`client_id.eq.${clientId},scope.eq.agency`)
+        .or(`client_id.eq.${resolvedClientId},scope.eq.agency`)
         .eq("is_archived", false)
         .eq("is_pinned", true)
         .order("created_at", { ascending: false })
@@ -102,7 +118,7 @@ const ClientKnowledge = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [clientId, refreshKey]);
+  }, [resolvedClientId, refreshKey]);
 
   const handleRefresh = () => {
     setRefreshKey((k) => k + 1);
@@ -118,7 +134,7 @@ const ClientKnowledge = () => {
         body: {
           action: "reindex",
           scope: "client",
-          clientId
+          clientId: resolvedClientId
         },
       });
 
@@ -127,7 +143,7 @@ const ClientKnowledge = () => {
         body: {
           action: "reindex",
           scope: "client",
-          clientId
+          clientId: resolvedClientId
         },
       });
 
@@ -395,7 +411,7 @@ const ClientKnowledge = () => {
       />
 
       {/* Floating Ask AI */}
-      <FloatingAskAI clientId={clientId} />
+      <FloatingAskAI clientId={resolvedClientId || undefined} />
     </div>
   );
 };
