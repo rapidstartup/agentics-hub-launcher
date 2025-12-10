@@ -28,6 +28,7 @@ interface ParsedSection {
 }
 
 const AVAILABLE_MODELS = [
+  { value: 'smart-auto', label: 'Smart Auto', description: 'AI picks best model' },
   { value: 'google/gemini-2.5-flash', label: 'Gemini Flash', description: 'Fast & balanced' },
   { value: 'google/gemini-2.5-pro', label: 'Gemini Pro', description: 'Most capable' },
   { value: 'openai/gpt-5', label: 'GPT-5', description: 'OpenAI flagship' },
@@ -149,7 +150,7 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
-  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].value);
+  const [selectedModel, setSelectedModel] = useState('smart-auto');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const connectedBlocks = (nodeData.connectedBlocks || []) as CanvasBlock[];
@@ -185,16 +186,31 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
       const context = buildContextFromBlocks(connectedBlocks);
       
       // Build system prompt with context
-      let systemPrompt = 'You are a helpful AI assistant for creative advertising and marketing work.';
+      let systemPrompt = 'You are a helpful AI assistant for creative advertising and marketing work. When generating ad copy, organize your response with clear sections using markdown headers like ## Headlines, ## Primary Text, ## CTA.';
       if (context.textContext) {
         systemPrompt += `\n\n=== CONNECTED CONTEXT ===\nThe following content is connected to this chat and should inform your responses:\n\n${context.textContext}\n\n=== END CONTEXT ===`;
+      }
+
+      // Build messages array with potential image support
+      const userContent: any = userMessage.content;
+      
+      // If we have images in context, include them in the user message for multimodal models
+      let messageContent: any = userContent;
+      if (context.imageUrls.length > 0) {
+        messageContent = [
+          { type: 'text', text: userContent },
+          ...context.imageUrls.slice(0, 3).map(url => ({
+            type: 'image_url',
+            image_url: { url }
+          }))
+        ];
       }
 
       // Prepare messages for AI
       const aiMessages = [
         { role: 'system' as const, content: systemPrompt },
         ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        { role: 'user' as const, content: userMessage.content }
+        { role: 'user' as const, content: messageContent }
       ];
 
       // Stream the response
@@ -207,12 +223,25 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
         body: JSON.stringify({
           messages: aiMessages,
           model: selectedModel,
-          stream: true,
         }),
       });
 
+      // Handle rate limiting and payment errors
+      if (response.status === 429) {
+        toast.error('Rate limit exceeded. Please wait a moment and try again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (response.status === 402) {
+        toast.error('AI credits exhausted. Please add funds to continue.');
+        setIsLoading(false);
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       // Handle streaming response
@@ -229,10 +258,12 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
           buffer += decoder.decode(value, { stream: true });
           
           // Process SSE lines
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
+          let newlineIndex: number;
+          while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+            let line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+            
+            if (line.endsWith('\r')) line = line.slice(0, -1);
             if (line.startsWith(':') || line.trim() === '') continue;
             if (!line.startsWith('data: ')) continue;
 
@@ -247,8 +278,30 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
                 setStreamingContent(fullContent);
               }
             } catch {
-              // Incomplete JSON, will be handled in next iteration
+              // Incomplete JSON, put it back and wait for more data
+              buffer = line + '\n' + buffer;
+              break;
             }
+          }
+        }
+        
+        // Final flush
+        if (buffer.trim()) {
+          for (let raw of buffer.split('\n')) {
+            if (!raw) continue;
+            if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+            if (raw.startsWith(':') || raw.trim() === '') continue;
+            if (!raw.startsWith('data: ')) continue;
+            const jsonStr = raw.slice(6).trim();
+            if (jsonStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) {
+                fullContent += delta;
+                setStreamingContent(fullContent);
+              }
+            } catch { /* ignore partial */ }
           }
         }
       }
@@ -268,7 +321,7 @@ const ChatNode: React.FC<NodeProps> = ({ data, selected }) => {
       setStreamingContent('');
     } catch (err) {
       console.error('Chat error:', err);
-      toast.error('Failed to get AI response');
+      toast.error(err instanceof Error ? err.message : 'Failed to get AI response');
       
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
