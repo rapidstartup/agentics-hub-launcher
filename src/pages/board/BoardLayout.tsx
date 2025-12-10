@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, PenTool, Columns3, Settings, Maximize2, Minimize2, Loader2 } from "lucide-react";
+import { MessageSquare, PenTool, Columns3, Settings, Maximize2, Minimize2, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/contexts/ProjectContext";
 import { ProjectTitleSelector } from "@/components/ProjectTitleSelector";
@@ -90,6 +90,10 @@ export default function BoardLayout() {
             <TabsTrigger value="canvas" className="gap-2">
               <PenTool className="w-4 h-4" />
               Canvas
+            </TabsTrigger>
+            <TabsTrigger value="canvas2" className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              Canvas 2
             </TabsTrigger>
             <TabsTrigger value="kanban" className="gap-2">
               <Columns3 className="w-4 h-4" />
