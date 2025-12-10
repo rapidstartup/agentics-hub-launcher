@@ -133,6 +133,7 @@ const App = () => (
           <Route path="/client/:clientId/advertising/campaign-manager" element={<ProtectedRoute><CampaignManager /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/agents" element={<ProtectedRoute><AdvertisingAgents /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/projects" element={<ProtectedRoute><AgentProjects /></ProtectedRoute>} />
+          <Route path="/client/:clientId/advertising/canvas-2" element={<ProtectedRoute><AdvertisingProjectDetail /></ProtectedRoute>} />
           <Route path="/client/:clientId/advertising/projects/:boardId" element={<ProtectedRoute><AdvertisingProjectDetail /></ProtectedRoute>} />
           {/* Strategy dedicated area */}
           <Route path="/client/:clientId/strategy" element={<ProtectedRoute><StrategyComingSoon /></ProtectedRoute>} />

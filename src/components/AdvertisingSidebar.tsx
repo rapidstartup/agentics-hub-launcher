@@ -12,6 +12,7 @@ import {
   BarChart3,
   ArrowLeft,
   Megaphone,
+  Layers,
 } from "lucide-react";
 import { useSidebarToggle } from "@/hooks/use-sidebar-toggle";
 import { SidebarUserPanel } from "@/components/SidebarUserPanel";
@@ -33,6 +34,7 @@ export const AdvertisingSidebar = () => {
       label: "STUDIO",
       items: [
         { title: "Projects", path: `/client/${clientId}/advertising/projects`, icon: FolderKanban },
+        { title: "Canvas 2", path: `/client/${clientId}/advertising/canvas-2`, icon: Layers },
         { title: "Ad Agents", path: `/client/${clientId}/advertising/agents`, icon: Wand2 },
       ],
     },
