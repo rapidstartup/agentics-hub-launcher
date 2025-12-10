@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
@@ -72,6 +72,27 @@ export default function Canvas() {
   const [viewScale, setViewScale] = useState(1);
   const [brainDialogOpen, setBrainDialogOpen] = useState(false);
   const [brainSearch, setBrainSearch] = useState("");
+  const [spacePressed, setSpacePressed] = useState(false);
+
+  // Track spacebar for pan mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !spacePressed) {
+        setSpacePressed(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        setSpacePressed(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [spacePressed]);
 
   const { data: blocks = [], isLoading } = useQuery({
     queryKey: ["canvas-blocks", boardId],
@@ -167,7 +188,7 @@ export default function Canvas() {
     // start panning when clicking empty space or holding spacebar + click
     const target = e.target as HTMLElement;
     const isOnBlock = target.closest(".canvas-block");
-    const isSpacePan = e.button === 0 && e.getModifierState("Space");
+    const isSpacePan = e.button === 0 && spacePressed;
     if ((!isOnBlock || isSpacePan) && canvasRef.current) {
       setIsPanning(true);
       setPanStart({

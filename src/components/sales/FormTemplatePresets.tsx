@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -128,7 +128,7 @@ export function FormTemplatePresets({ clientId, nicheId }: FormTemplatePresetsPr
   );
 
   const getIcon = (iconName: string) => {
-    const Icon = (Icons as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
+    const Icon = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
     return Icon ? <Icon className="h-4 w-4" /> : <FileText className="h-4 w-4" />;
   };
 

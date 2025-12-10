@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Settings, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { untypedSupabase as supabase } from "@/integrations/supabase/untyped-client";
 import { toast } from "sonner";
 import GlossaryCustomization from "@/components/sales/GlossaryCustomization";
 import FormTemplatePresets from "@/components/sales/FormTemplatePresets";
