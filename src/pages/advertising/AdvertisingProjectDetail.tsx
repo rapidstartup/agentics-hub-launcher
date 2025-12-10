@@ -54,6 +54,7 @@ import {
   approveAsset,
 } from "@/integrations/projects/api";
 import type {
+  Project,
   ProjectWithDetails,
   ProjectAsset,
   ProjectAssetStatus,
@@ -159,7 +160,9 @@ export default function AdvertisingProjectDetail() {
   const [project, setProject] = useState<ProjectWithDetails | null>(null);
   const [statuses, setStatuses] = useState<ProjectAssetStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("canvas");
+  const [activeTab, setActiveTab] = useState("canvas2");
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Agent runner state
   const [availableAgents, setAvailableAgents] = useState<AgentConfig[]>([]);
@@ -182,10 +185,21 @@ export default function AdvertisingProjectDetail() {
   const [activeAsset, setActiveAsset] = useState<ProjectAsset | null>(null);
   const [assetActionId, setAssetActionId] = useState<string | null>(null);
 
+  // Load available projects when no projectId is provided
+  useEffect(() => {
+    if (!projectId && clientId) {
+      loadAvailableProjects();
+    }
+  }, [projectId, clientId]);
+
   // Load project data
   useEffect(() => {
-    loadProject();
-    loadStatuses();
+    if (projectId) {
+      loadProject();
+      loadStatuses();
+    } else {
+      setLoading(false);
+    }
   }, [projectId, clientId]);
 
   // Load agents separately when clientId is available
@@ -194,6 +208,25 @@ export default function AdvertisingProjectDetail() {
       loadAgents();
     }
   }, [clientId]);
+
+  async function loadAvailableProjects() {
+    if (!clientId) return;
+    setProjectsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setAvailableProjects((data || []) as Project[]);
+    } catch (e) {
+      console.error("Failed to load projects:", e);
+    } finally {
+      setProjectsLoading(false);
+    }
+  }
 
   async function loadProject() {
     if (!projectId) return;
@@ -434,12 +467,85 @@ export default function AdvertisingProjectDetail() {
     loadProject();
   }
 
-  if (loading) {
+  if (loading && projectId) {
     return (
       <div className="flex h-screen w-full bg-background">
         <AdvertisingSidebar />
         <main className="flex-1 flex items-center justify-center">
-          <div className="text-muted-foreground">Loading project...</div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading project...
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Project selector when no projectId provided
+  if (!projectId) {
+    return (
+      <div className="flex h-screen w-full bg-background">
+        <AdvertisingSidebar />
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b border-border bg-background p-6">
+            <h1 className="text-2xl font-bold text-foreground">Canvas Studio</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Select a project to open the advanced canvas workspace
+            </p>
+          </div>
+          
+          <ScrollArea className="flex-1 p-6">
+            {projectsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : availableProjects.length === 0 ? (
+              <div className="text-center py-12">
+                <Layers className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No projects yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create a project first to use Canvas Studio
+                </p>
+                <Button onClick={() => navigate(`/client/${clientId}/advertising/projects`)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Go to Projects
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableProjects.map((proj) => (
+                  <Card
+                    key={proj.id}
+                    className="p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => navigate(`/client/${clientId}/advertising/canvas-2/${proj.id}`)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-foreground truncate">{proj.title}</h3>
+                        {proj.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                            {proj.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline" className={getStatusColor(proj.status)}>
+                            {getStatusLabel(proj.status)}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(proj.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </main>
       </div>
     );
@@ -452,8 +558,8 @@ export default function AdvertisingProjectDetail() {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-foreground mb-2">Project not found</h2>
-            <Button variant="outline" onClick={() => navigate(`/client/${clientId}/advertising/projects`)}>
-              Back to Projects
+            <Button variant="outline" onClick={() => navigate(`/client/${clientId}/advertising/canvas-2`)}>
+              Back to Canvas Studio
             </Button>
           </div>
         </main>
