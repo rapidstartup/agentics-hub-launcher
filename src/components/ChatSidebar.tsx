@@ -85,15 +85,25 @@ export const ChatSidebar = () => {
     : user?.email?.slice(0, 2).toUpperCase() || "U";
 
   return (
-    <aside className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col border-r border-border bg-sidebar`}>
+    <aside 
+      className={`${isOpen ? "flex" : "hidden"} h-screen w-64 flex-col shrink-0`}
+      style={{
+        background: 'var(--sidebar-bg)',
+        borderRight: '1px solid var(--divider-color)',
+        color: 'var(--sidebar-text)',
+      }}
+    >
       {/* Brand Header */}
-      <div className="border-b border-border p-6">
+      <div 
+        className="p-6"
+        style={{ borderBottom: '1px solid var(--divider-color)' }}
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70">
             <Hexagon className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-foreground">Agentix</h2>
+            <h2 className="text-base font-bold" style={{ color: 'var(--sidebar-text)' }}>Agentix</h2>
           </div>
         </div>
       </div>
@@ -109,8 +119,12 @@ export const ChatSidebar = () => {
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                   isActive
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                    : "hover:bg-white/5"
                 }`}
+                style={{
+                  color: isActive ? undefined : 'var(--sidebar-text)',
+                  opacity: isActive ? 1 : 0.7,
+                }}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>
@@ -147,7 +161,7 @@ export const ChatSidebar = () => {
 
         {/* Quick Access Section */}
         <div className="mt-6">
-          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--sidebar-text)', opacity: 0.5 }}>
             Quick Access
           </p>
           <nav className="space-y-1">
@@ -159,9 +173,13 @@ export const ChatSidebar = () => {
                   `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                      : "hover:bg-white/5"
                   }`
                 }
+                style={({ isActive }) => ({
+                  color: isActive ? undefined : 'var(--sidebar-text)',
+                  opacity: isActive ? 1 : 0.7,
+                })}
               >
                 <item.icon className="h-4 w-4" />
                 <span>{item.title}</span>
@@ -170,10 +188,9 @@ export const ChatSidebar = () => {
           </nav>
         </div>
 
-        {/* Admin Section - Only show for agency admins */}
         {canAccessAdminPanel && (
           <div className="mt-6">
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--sidebar-text)', opacity: 0.5 }}>
               Administration
             </p>
             <nav className="space-y-1">
@@ -185,9 +202,13 @@ export const ChatSidebar = () => {
                     `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs transition-colors ${
                       isActive
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                        : "hover:bg-white/5"
                     }`
                   }
+                  style={({ isActive }) => ({
+                    color: isActive ? undefined : 'var(--sidebar-text)',
+                    opacity: isActive ? 1 : 0.7,
+                  })}
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
@@ -199,22 +220,25 @@ export const ChatSidebar = () => {
       </ScrollArea>
 
       {/* User Profile */}
-      <div className="border-t border-border p-4">
+      <div className="p-4" style={{ borderTop: '1px solid var(--divider-color)' }}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
+            <button 
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
+              style={{ color: 'var(--sidebar-text)' }}
+            >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
                 <span className="text-xs font-semibold text-primary">{userInitials}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--sidebar-text)' }}>
                   {profile?.display_name || user?.email || "User"}
                 </p>
-                <p className="text-xs text-muted-foreground capitalize">
+                <p className="text-xs capitalize" style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}>
                   {isAgencyAdmin ? "Agency Admin" : "Client User"}
                 </p>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <ChevronDown className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--sidebar-text)', opacity: 0.6 }} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
