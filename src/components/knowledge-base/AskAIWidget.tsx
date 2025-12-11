@@ -354,16 +354,25 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col bg-slate-900 border-slate-700">
+      <DialogContent 
+        className="max-w-4xl h-[80vh] flex flex-col"
+        style={{
+          background: 'var(--page-bg)',
+          borderColor: 'var(--divider-color)',
+        }}
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/10 rounded-lg">
-                <Sparkles className="w-5 h-5 text-emerald-400" />
+              <div 
+                className="p-2 rounded-lg"
+                style={{ background: 'color-mix(in srgb, var(--button-bg) 20%, transparent)' }}
+              >
+                <Sparkles className="w-5 h-5" style={{ color: 'var(--button-bg)' }} />
               </div>
               <div>
-                <DialogTitle className="text-white">Ask AI</DialogTitle>
-                <DialogDescription>
+                <DialogTitle style={{ color: 'var(--foreground)' }}>Ask AI</DialogTitle>
+                <DialogDescription style={{ color: 'var(--muted-foreground)' }}>
                   Query your knowledge base with agentic RAG
                 </DialogDescription>
               </div>
@@ -377,7 +386,7 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
                   variant="ghost"
                   size="sm"
                   onClick={clearChat}
-                  className="text-slate-400 hover:text-white"
+                  style={{ color: 'var(--muted-foreground)' }}
                 >
                   Clear Chat
                 </Button>
@@ -388,10 +397,13 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
 
         {/* Selected Items */}
         {selectedItems.length > 0 && (
-          <div className="flex-shrink-0 border-b border-slate-700 pb-3">
+          <div 
+            className="flex-shrink-0 pb-3"
+            style={{ borderBottom: '1px solid var(--divider-color)' }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <FileText className="w-4 h-4 text-slate-400" />
-              <span className="text-sm text-slate-400">
+              <FileText className="w-4 h-4" style={{ color: 'var(--muted-foreground)' }} />
+              <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
                 Querying {selectedItems.length} document{selectedItems.length !== 1 ? "s" : ""}:
               </span>
             </div>
@@ -400,12 +412,16 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
                 <Badge
                   key={item.id}
                   variant="secondary"
-                  className="bg-slate-800 text-slate-300 border-slate-600"
+                  style={{
+                    background: 'var(--card-bg)',
+                    color: 'var(--foreground)',
+                    borderColor: 'var(--divider-color)',
+                  }}
                 >
                   {item.title}
                   <button
                     onClick={() => toggleItemSelection(item)}
-                    className="ml-2 hover:text-white"
+                    className="ml-2 hover:opacity-80"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -421,7 +437,11 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
             variant="outline"
             size="sm"
             onClick={() => setShowItemSelector(!showItemSelector)}
-            className="w-full border-slate-700 text-slate-300 hover:bg-slate-800"
+            className="w-full"
+            style={{
+              borderColor: 'var(--divider-color)',
+              color: 'var(--foreground)',
+            }}
           >
             {showItemSelector ? (
               <>
@@ -439,14 +459,25 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
 
         {/* Item Selector */}
         {showItemSelector && (
-          <Card className="flex-shrink-0 bg-slate-800 border-slate-700 p-4 max-h-64 flex flex-col">
+          <Card 
+            className="flex-shrink-0 p-4 max-h-64 flex flex-col"
+            style={{
+              background: 'var(--card-bg)',
+              borderColor: 'var(--divider-color)',
+            }}
+          >
              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" style={{ color: 'var(--muted-foreground)' }} />
                 <Input
                   value={itemSearch}
                   onChange={(e) => setItemSearch(e.target.value)}
                   placeholder="Search documents..."
-                  className="pl-9 bg-slate-900 border-slate-700 text-white h-9"
+                  className="pl-9 h-9"
+                  style={{
+                    background: 'var(--page-bg)',
+                    borderColor: 'var(--divider-color)',
+                    color: 'var(--foreground)',
+                  }}
                 />
               </div>
             <div className="overflow-y-auto space-y-2 pr-2">
@@ -456,22 +487,27 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
                   <div
                     key={item.id}
                     onClick={() => toggleItemSelection(item)}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors hover:opacity-80"
+                    style={{ background: 'color-mix(in srgb, var(--card-bg) 50%, transparent)' }}
                   >
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                      isSelected ? "bg-emerald-600 border-emerald-600" : "border-slate-600"
-                    }`}>
-                      {isSelected && <Check className="w-3 h-3 text-white" />}
+                    <div 
+                      className="w-5 h-5 rounded border-2 flex items-center justify-center"
+                      style={{
+                        background: isSelected ? 'var(--button-bg)' : 'transparent',
+                        borderColor: isSelected ? 'var(--button-bg)' : 'var(--divider-color)',
+                      }}
+                    >
+                      {isSelected && <Check className="w-3 h-3" style={{ color: 'var(--button-text)' }} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{item.title}</p>
-                      <p className="text-xs text-slate-400 truncate">{item.category}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{item.title}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{item.category}</p>
                     </div>
                   </div>
                 );
               })}
               {filteredItems.length === 0 && (
-                <p className="text-sm text-slate-400 text-center py-4">
+                <p className="text-sm text-center py-4" style={{ color: 'var(--muted-foreground)' }}>
                   {itemSearch ? "No documents match your search" : "No indexed documents available"}
                 </p>
               )}
@@ -483,34 +519,56 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
         <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.length === 0 && (
-              <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-                <Sparkles className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">Ask me anything</h3>
-                <p className="text-sm text-slate-400 mb-4">
+              <Card 
+                className="p-8 text-center"
+                style={{
+                  background: 'color-mix(in srgb, var(--card-bg) 50%, transparent)',
+                  borderColor: 'var(--divider-color)',
+                }}
+              >
+                <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--button-bg)' }} />
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>Ask me anything</h3>
+                <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
                   I can help you find information, summarize documents, and answer questions about your knowledge base.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-left">
                   <button
                     onClick={() => setInput("What are the key points in these documents?")}
-                    className="p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors text-sm text-slate-300"
+                    className="p-3 rounded-lg transition-colors text-sm hover:opacity-80"
+                    style={{
+                      background: 'color-mix(in srgb, var(--card-bg) 70%, transparent)',
+                      color: 'var(--foreground)',
+                    }}
                   >
                     Summarize selected documents
                   </button>
                   <button
                     onClick={() => setInput("What is our brand voice?")}
-                    className="p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors text-sm text-slate-300"
+                    className="p-3 rounded-lg transition-colors text-sm hover:opacity-80"
+                    style={{
+                      background: 'color-mix(in srgb, var(--card-bg) 70%, transparent)',
+                      color: 'var(--foreground)',
+                    }}
                   >
                     Ask about brand voice
                   </button>
                   <button
                     onClick={() => setInput("Find all mentions of our target audience")}
-                    className="p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors text-sm text-slate-300"
+                    className="p-3 rounded-lg transition-colors text-sm hover:opacity-80"
+                    style={{
+                      background: 'color-mix(in srgb, var(--card-bg) 70%, transparent)',
+                      color: 'var(--foreground)',
+                    }}
                   >
                     Search for specific information
                   </button>
                   <button
                     onClick={() => setInput("Compare these documents and highlight differences")}
-                    className="p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-colors text-sm text-slate-300"
+                    className="p-3 rounded-lg transition-colors text-sm hover:opacity-80"
+                    style={{
+                      background: 'color-mix(in srgb, var(--card-bg) 70%, transparent)',
+                      color: 'var(--foreground)',
+                    }}
                   >
                     Compare documents
                   </button>
@@ -524,28 +582,36 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
                 className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.role === "assistant" && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <div 
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'color-mix(in srgb, var(--button-bg) 20%, transparent)' }}
+                  >
+                    <Sparkles className="w-4 h-4" style={{ color: 'var(--button-bg)' }} />
                   </div>
                 )}
                 <div className={`flex-1 max-w-[80%] ${message.role === "user" ? "flex justify-end" : ""}`}>
-                  <Card className={`p-4 ${
-                    message.role === "user"
-                      ? "bg-emerald-600 border-emerald-500"
-                      : "bg-slate-800 border-slate-700"
-                  }`}>
+                  <Card 
+                    className="p-4"
+                    style={{
+                      background: message.role === "user" ? 'var(--button-bg)' : 'var(--card-bg)',
+                      borderColor: message.role === "user" ? 'var(--button-bg)' : 'var(--divider-color)',
+                    }}
+                  >
                     <div className="prose prose-invert prose-sm max-w-none">
                       {message.role === "assistant" ? (
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       ) : (
-                        <p className="text-white">{message.content}</p>
+                        <p style={{ color: 'var(--button-text)' }}>{message.content}</p>
                       )}
                     </div>
 
                     {/* Sources */}
                     {message.sources && message.sources.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-slate-700">
-                        <p className="text-xs text-slate-400 mb-2 flex items-center gap-2">
+                      <div 
+                        className="mt-4 pt-4"
+                        style={{ borderTop: '1px solid var(--divider-color)' }}
+                      >
+                        <p className="text-xs mb-2 flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
                           <FileText className="w-3 h-3" />
                           Sources used:
                         </p>
@@ -553,12 +619,13 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
                           {message.sources.map((source) => (
                             <div
                               key={source.id}
-                              className="flex items-start gap-2 p-2 bg-slate-900/50 rounded text-xs"
+                              className="flex items-start gap-2 p-2 rounded text-xs"
+                              style={{ background: 'color-mix(in srgb, var(--page-bg) 50%, transparent)' }}
                             >
-                              <ExternalLink className="w-3 h-3 text-slate-500 flex-shrink-0 mt-0.5" />
+                              <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: 'var(--muted-foreground)' }} />
                               <div className="flex-1 min-w-0">
-                                <p className="text-slate-300 font-medium truncate">{source.title}</p>
-                                <div className="flex items-center gap-2 mt-1 text-slate-500">
+                                <p className="font-medium truncate" style={{ color: 'var(--foreground)' }}>{source.title}</p>
+                                <div className="flex items-center gap-2 mt-1" style={{ color: 'var(--muted-foreground)' }}>
                                   <Calendar className="w-3 h-3" />
                                   <span>{format(new Date(source.created_at), "MMM d, yyyy")}</span>
                                   <Tag className="w-3 h-3 ml-2" />
@@ -571,14 +638,17 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
                       </div>
                     )}
 
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
                       {format(message.timestamp, "h:mm a")}
                     </p>
                   </Card>
                 </div>
                 {message.role === "user" && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-slate-300" />
+                  <div 
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--card-bg)' }}
+                  >
+                    <MessageSquare className="w-4 h-4" style={{ color: 'var(--foreground)' }} />
                   </div>
                 )}
               </div>
@@ -586,11 +656,20 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
 
             {isLoading && (
               <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                <div 
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: 'color-mix(in srgb, var(--button-bg) 20%, transparent)' }}
+                >
+                  <Sparkles className="w-4 h-4" style={{ color: 'var(--button-bg)' }} />
                 </div>
-                <Card className="p-4 bg-slate-800 border-slate-700">
-                  <div className="flex items-center gap-2 text-slate-400">
+                <Card 
+                  className="p-4"
+                  style={{
+                    background: 'var(--card-bg)',
+                    borderColor: 'var(--divider-color)',
+                  }}
+                >
+                  <div className="flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Thinking...</span>
                   </div>
@@ -601,7 +680,10 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
         </ScrollArea>
 
         {/* Input */}
-        <div className="flex-shrink-0 flex gap-2 pt-4 border-t border-slate-700">
+        <div 
+          className="flex-shrink-0 flex gap-2 pt-4"
+          style={{ borderTop: '1px solid var(--divider-color)' }}
+        >
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -611,12 +693,19 @@ export function AskAIWidget({ open, onOpenChange, preselectedItems = [], clientI
               : "Ask anything about your knowledge base..."
             }
             disabled={isLoading}
-            className="bg-slate-800 border-slate-700 text-white"
+            style={{
+              background: 'var(--card-bg)',
+              borderColor: 'var(--divider-color)',
+              color: 'var(--foreground)',
+            }}
           />
           <Button
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            style={{
+              background: 'var(--button-bg)',
+              color: 'var(--button-text)',
+            }}
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
