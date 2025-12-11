@@ -52,6 +52,17 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     updatePositions,
   } = useCanvasBlocks(projectId);
 
+  // Use refs for callbacks to avoid infinite loop in useMemo
+  const updateBlockRef = useRef(updateBlock);
+  const deleteBlockRef = useRef(deleteBlock);
+  const createBlockRef = useRef(createBlock);
+  
+  useEffect(() => {
+    updateBlockRef.current = updateBlock;
+    deleteBlockRef.current = deleteBlock;
+    createBlockRef.current = createBlock;
+  }, [updateBlock, deleteBlock, createBlock]);
+
   const {
     edges: dbEdges,
     isLoading: edgesLoading,
@@ -105,23 +116,29 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     }
   }, [dbEdges, deleteEdge]);
 
-  // Handle node deletion
+  // Handle node deletion - use ref to avoid dependency changes
   const handleDeleteNode = useCallback(async (nodeId: string) => {
     try {
-      await deleteBlock.mutateAsync(nodeId);
+      await deleteBlockRef.current.mutateAsync(nodeId);
     } catch (err) {
       toast.error('Failed to delete node');
     }
-  }, [deleteBlock]);
+  }, []);
 
-  // Create creative node with pre-filled content from ChatNode
+  // Store blocks in ref for stable callback access
+  const blocksRef = useRef(blocks);
+  useEffect(() => {
+    blocksRef.current = blocks;
+  }, [blocks]);
+
+  // Create creative node with pre-filled content from ChatNode - use refs to avoid dependency changes
   const handlePushToCreative = useCallback(async (
     sourceNodeId: string,
     content: string,
     contentType: string
   ) => {
     // Find source node position to place creative node nearby
-    const sourceBlock = blocks.find(b => b.id === sourceNodeId);
+    const sourceBlock = blocksRef.current.find(b => b.id === sourceNodeId);
     const position = {
       x: (sourceBlock?.position_x || 200) + 400,
       y: (sourceBlock?.position_y || 200),
@@ -143,7 +160,7 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     }
 
     try {
-      await createBlock.mutateAsync({
+      await createBlockRef.current.mutateAsync({
         agent_board_id: projectId,
         type: 'creative' as CanvasBlockType,
         position_x: position.x,
@@ -156,9 +173,9 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
     } catch (err) {
       toast.error('Failed to create creative');
     }
-  }, [blocks, createBlock, projectId]);
+  }, [projectId]);
 
-  // Convert DB data to ReactFlow format
+  // Convert DB data to ReactFlow format - use refs for callbacks to prevent infinite loop
   const initialNodes = useMemo((): CanvasNode[] => {
     return blocks.map(block => {
       const node = blockToNode(block);
@@ -181,18 +198,18 @@ const Canvas2Inner: React.FC<Canvas2Props> = ({ projectId }) => {
           onRemoveChild: block.type === 'group' 
             ? (childId: string) => handleRemoveFromGroup(childId, block.id)
             : undefined,
-          onContentChange: (content: string) => updateBlock.mutate({ id: block.id, content }),
-          onTitleChange: (title: string) => updateBlock.mutate({ id: block.id, title }),
-          onInstructionChange: (instruction: string) => updateBlock.mutate({ id: block.id, instruction_prompt: instruction }),
+          onContentChange: (content: string) => updateBlockRef.current.mutate({ id: block.id, content }),
+          onTitleChange: (title: string) => updateBlockRef.current.mutate({ id: block.id, title }),
+          onInstructionChange: (instruction: string) => updateBlockRef.current.mutate({ id: block.id, instruction_prompt: instruction }),
           onDelete: () => handleDeleteNode(block.id),
-          onResize: (width: number, height: number) => updateBlock.mutate({ id: block.id, width, height }),
+          onResize: (width: number, height: number) => updateBlockRef.current.mutate({ id: block.id, width, height }),
           onPushToCreative: block.type === 'chat' 
             ? (content: string, contentType: string) => handlePushToCreative(block.id, content, contentType)
             : undefined,
         },
       };
     });
-  }, [blocks, dbEdges, getConnectedBlocks, getGroupChildren, handleRemoveFromGroup, updateBlock, handleDeleteNode, handlePushToCreative, projectId]);
+  }, [blocks, dbEdges, getConnectedBlocks, getGroupChildren, handleRemoveFromGroup, handleDeleteNode, handlePushToCreative, projectId]);
 
   const initialEdges = useMemo(() => {
     return dbEdges.map(edgeToReactFlowEdge);
