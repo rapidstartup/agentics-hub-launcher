@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -77,7 +78,6 @@ import ClientCentralBrain from "./pages/ClientCentralBrain";
 import ClientAnalytics from "./pages/ClientAnalytics";
 import SystemControl from "./pages/SystemControl";
 import AdminReports from "./pages/AdminReports";
-import AdminCalendar from "./pages/AdminCalendar";
 import AdminSettings from "./pages/AdminSettings";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminClients from "./pages/AdminClients";
@@ -97,6 +97,7 @@ import AdvertisingBoardPage from "./pages/AdvertisingBoardPage";
 import AdvertisingProjectDetail from "./pages/advertising/AdvertisingProjectDetail";
 
 const queryClient = new QueryClient();
+const AdminCalendar = lazy(() => import("./pages/AdminCalendar"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -233,7 +234,16 @@ const App = () => (
               <Route path="/admin/feature-toggles" element={<AdminRoute><AdminFeatureToggles /></AdminRoute>} />
               <Route path="/admin/central-brain" element={<AdminRoute><AgencyCentralBrain /></AdminRoute>} />
               <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
-              <Route path="/admin/calendar" element={<AdminRoute><AdminCalendar /></AdminRoute>} />
+              <Route
+                path="/admin/calendar"
+                element={
+                  <AdminRoute>
+                    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading calendar...</div>}>
+                      <AdminCalendar />
+                    </Suspense>
+                  </AdminRoute>
+                }
+              />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/admin/agent-runs" element={<AdminRoute><AdminAgentRuns /></AdminRoute>} />
               <Route path="/admin/agent-controller" element={<AdminRoute><AdminAgentController /></AdminRoute>} />
