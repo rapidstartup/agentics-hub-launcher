@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { MetricCard } from "@/components/advertising/MetricCard";
-import { PerformanceChart } from "@/components/advertising/PerformanceChart";
 import { CampaignsTable } from "@/components/advertising/CampaignsTable";
 import { ProjectCard } from "@/components/advertising/ProjectCard";
 import { UsageIndicator } from "@/components/advertising/UsageIndicator";
@@ -24,6 +23,12 @@ import {
   Eye,
   Play,
 } from "lucide-react";
+
+const PerformanceChart = lazy(() =>
+  import("@/components/advertising/PerformanceChart").then((module) => ({
+    default: module.PerformanceChart,
+  })),
+);
 
 const CampaignManager = () => {
   const navigate = useNavigate();
@@ -158,7 +163,9 @@ const CampaignManager = () => {
         {/* Performance & Outputs */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
           <div className="lg:col-span-2">
-            <PerformanceChart />
+            <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Loading performance...</div>}>
+              <PerformanceChart />
+            </Suspense>
           </div>
           <div>
             <div

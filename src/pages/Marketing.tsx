@@ -1,11 +1,17 @@
+import { lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { BarChart3, ArrowLeft } from "lucide-react";
 import { MarketingSidebar } from "@/components/MarketingSidebar";
 import { Button } from "@/components/ui/button";
 import { MetricsGrid } from "@/components/analytics/MetricsGrid";
 import { PlatformBreakdown } from "@/components/analytics/PlatformBreakdown";
-import { EngagementChart } from "@/components/analytics/EngagementChart";
 import { SentimentAnalyzer } from "@/components/analytics/SentimentAnalyzer";
+
+const EngagementChart = lazy(() =>
+  import("@/components/analytics/EngagementChart").then((module) => ({
+    default: module.EngagementChart,
+  })),
+);
 
 const Marketing = () => {
   const navigate = useNavigate();
@@ -38,7 +44,9 @@ const Marketing = () => {
         <MetricsGrid />
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <EngagementChart />
+          <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Loading engagement...</div>}>
+            <EngagementChart />
+          </Suspense>
           <PlatformBreakdown />
         </div>
 

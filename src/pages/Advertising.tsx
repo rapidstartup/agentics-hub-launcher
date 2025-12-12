@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AdvertisingSidebar } from "@/components/AdvertisingSidebar";
 import { MetricCard } from "@/components/advertising/MetricCard";
 import { ProjectCard } from "@/components/advertising/ProjectCard";
-import { PerformanceChart } from "@/components/advertising/PerformanceChart";
 import { TopAdItem } from "@/components/advertising/TopAdItem";
 import { CampaignsTable } from "@/components/advertising/CampaignsTable";
 import { UsageIndicator } from "@/components/advertising/UsageIndicator";
@@ -31,6 +30,12 @@ import {
   Layout,
   ArrowLeft,
 } from "lucide-react";
+
+const PerformanceChart = lazy(() =>
+  import("@/components/advertising/PerformanceChart").then((module) => ({
+    default: module.PerformanceChart,
+  })),
+);
 
 const Advertising = () => {
   const navigate = useNavigate();
@@ -218,7 +223,9 @@ const Advertising = () => {
         {/* Performance Trends & Top Ads */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
           <div className="lg:col-span-2">
-            <PerformanceChart />
+            <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Loading performance...</div>}>
+              <PerformanceChart />
+            </Suspense>
           </div>
           <div>
             <div className="rounded-lg p-6" style={{ background: 'var(--card-bg)', border: 'var(--card-border-width) solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>

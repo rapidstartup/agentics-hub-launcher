@@ -12,7 +12,6 @@ import { ProjectProvider } from "@/contexts/ProjectContext";
 import { DocumentParsingProvider } from "@/contexts/DocumentParsingContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
-import AdminDashboard from "./pages/AdminDashboard";
 import Advertising from "./pages/Advertising";
 import MarketResearch from "./pages/MarketResearch";
 import AdOptimizer from "./pages/AdOptimizer";
@@ -61,7 +60,6 @@ import SalesProjects from "./pages/SalesProjects";
 import SalesPipeline from "./pages/SalesPipeline";
 import SalesCallScripts from "./pages/SalesCallScripts";
 import SalesCrmIntegration from "./pages/SalesCrmIntegration";
-import SalesDashboard from "./pages/SalesDashboard";
 import SalesSettings from "./pages/SalesSettings";
 import StrategyComingSoon from "./pages/StrategyComingSoon";
 import StrategyAgents from "./pages/StrategyAgents";
@@ -75,9 +73,7 @@ import ClientAgentController from "./pages/ClientAgentController";
 import ClientProjects from "./pages/ClientProjects";
 import ClientKnowledge from "./pages/ClientKnowledge";
 import ClientCentralBrain from "./pages/ClientCentralBrain";
-import ClientAnalytics from "./pages/ClientAnalytics";
 import SystemControl from "./pages/SystemControl";
-import AdminReports from "./pages/AdminReports";
 import AdminSettings from "./pages/AdminSettings";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminClients from "./pages/AdminClients";
@@ -90,13 +86,16 @@ import Launch from "./pages/Launch";
 import BoardLayout from "./pages/board/BoardLayout";
 import BoardChat from "./pages/board/Chat";
 import BoardCanvas from "./pages/board/Canvas";
-import BoardCanvas2 from "./pages/board/Canvas2Page";
 import BoardKanban from "./pages/board/Kanban";
 import BoardSettings from "./pages/board/Settings";
 import AdvertisingBoardPage from "./pages/AdvertisingBoardPage";
 import AdvertisingProjectDetail from "./pages/advertising/AdvertisingProjectDetail";
 
 const queryClient = new QueryClient();
+const ClientAnalytics = lazy(() => import("./pages/ClientAnalytics"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminReports = lazy(() => import("./pages/AdminReports"));
+const BoardCanvas2 = lazy(() => import("./pages/board/Canvas2Page"));
 const AdminCalendar = lazy(() => import("./pages/AdminCalendar"));
 
 const App = () => (
@@ -122,7 +121,16 @@ const App = () => (
           <Route path="/client/:clientId/projects" element={<ProtectedRoute><ClientProjects /></ProtectedRoute>} />
           <Route path="/client/:clientId/knowledge" element={<ProtectedRoute><ClientKnowledge /></ProtectedRoute>} />
           <Route path="/client/:clientId/central-brain" element={<ProtectedRoute><ClientCentralBrain /></ProtectedRoute>} />
-          <Route path="/client/:clientId/analytics" element={<ProtectedRoute><ClientAnalytics /></ProtectedRoute>} />
+          <Route
+            path="/client/:clientId/analytics"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<div className="p-6 text-muted-foreground">Loading analytics...</div>}>
+                  <ClientAnalytics />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/client/:clientId/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
           <Route path="/client/:clientId/launch" element={<ProtectedRoute><Launch /></ProtectedRoute>} />
           <Route path="/client/:clientId/system" element={<ProtectedRoute><SystemControl /></ProtectedRoute>} />
@@ -139,7 +147,14 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
-            <Route path="canvas2" element={<BoardCanvas2 />} />
+            <Route
+              path="canvas2"
+              element={
+                <Suspense fallback={<div className="p-4 text-muted-foreground">Loading canvas...</div>}>
+                  <BoardCanvas2 />
+                </Suspense>
+              }
+            />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>
@@ -190,7 +205,14 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
-            <Route path="canvas2" element={<BoardCanvas2 />} />
+            <Route
+              path="canvas2"
+              element={
+                <Suspense fallback={<div className="p-4 text-muted-foreground">Loading canvas...</div>}>
+                  <BoardCanvas2 />
+                </Suspense>
+              }
+            />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>
@@ -216,7 +238,14 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
-            <Route path="canvas2" element={<BoardCanvas2 />} />
+            <Route
+              path="canvas2"
+              element={
+                <Suspense fallback={<div className="p-4 text-muted-foreground">Loading canvas...</div>}>
+                  <BoardCanvas2 />
+                </Suspense>
+              }
+            />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>
@@ -225,15 +254,40 @@ const App = () => (
             <Route index element={<Navigate to="chat" replace />} />
             <Route path="chat" element={<BoardChat />} />
             <Route path="canvas" element={<BoardCanvas />} />
-            <Route path="canvas2" element={<BoardCanvas2 />} />
+            <Route
+              path="canvas2"
+              element={
+                <Suspense fallback={<div className="p-4 text-muted-foreground">Loading canvas...</div>}>
+                  <BoardCanvas2 />
+                </Suspense>
+              }
+            />
             <Route path="kanban" element={<BoardKanban />} />
             <Route path="settings" element={<BoardSettings />} />
           </Route>
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <Suspense fallback={<div className="p-6 text-muted-foreground">Loading admin dashboard...</div>}>
+                  <AdminDashboard />
+                </Suspense>
+              </AdminRoute>
+            }
+          />
               <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
               <Route path="/admin/feature-toggles" element={<AdminRoute><AdminFeatureToggles /></AdminRoute>} />
               <Route path="/admin/central-brain" element={<AdminRoute><AgencyCentralBrain /></AdminRoute>} />
-              <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
+              <Route
+                path="/admin/reports"
+                element={
+                  <AdminRoute>
+                    <Suspense fallback={<div className="p-6 text-muted-foreground">Loading admin reports...</div>}>
+                      <AdminReports />
+                    </Suspense>
+                  </AdminRoute>
+                }
+              />
               <Route
                 path="/admin/calendar"
                 element={

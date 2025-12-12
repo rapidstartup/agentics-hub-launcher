@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SalesSidebar } from "@/components/SalesSidebar";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Plus, Trash2, LayoutDashboard, Wand2, BarChart3, LineChart, PieChart, Grid3x3, ArrowLeft } from "lucide-react";
 import { useSalesDashboards } from "@/hooks/useSalesDashboards";
-import DashboardRenderer from "@/components/dashboard/DashboardRenderer";
 import type { DashboardComponent } from "@/types/dataBinding";
+
+const DashboardRenderer = lazy(() => import("@/components/dashboard/DashboardRenderer"));
 
 const Sales = () => {
   const { clientId } = useParams();
@@ -185,7 +186,9 @@ const Sales = () => {
           </CardHeader>
           <CardContent>
             {activeDashboard ? (
-              <DashboardRenderer components={activeDashboard.components} sheets={sheets} />
+              <Suspense fallback={<div className="flex h-64 items-center justify-center text-muted-foreground">Loading dashboard...</div>}>
+                <DashboardRenderer components={activeDashboard.components} sheets={sheets} />
+              </Suspense>
             ) : (
               <div className="text-center text-muted-foreground py-10">
                 Create your first dashboard to start visualizing sales data.
