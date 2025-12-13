@@ -64,6 +64,26 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/e28dd701-8d36-40f6-b3d1-84267b43b917) and click on Share -> Publish.
 
+## Stackblitz / BOLT bootstrap workflow
+
+Stackblitz WebContainers time out if they need to install the entire dependency graph up front. To get the project imported quickly, we ship a trimmed manifest at `package.bootstrap.json`. Use it only for the bootstrap step, then switch back to the full `package.json`.
+
+1. **Before importing**  
+   ```powershell
+   Copy-Item package.bootstrap.json package.json
+   npm install
+   ```
+   Push/zip the repo (without committing the temporary package change) or trigger the Stackblitz import directly.
+
+2. **Inside Stackblitz once the container is ready**  
+   ```bash
+   git checkout -- package.json   # restore the real manifest
+   npm install                    # install the full dependency set
+   npm run dev
+   ```
+
+3. **Important** – never commit the bootstrap copy of `package.json`. The full manifest in source control remains authoritative; the bootstrap file only exists to get Stackblitz past its 30‑second install window.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
