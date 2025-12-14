@@ -1,0 +1,66 @@
+[
+  {
+    "id": "0697e047-e8c0-4276-bda4-e3c322a25128",
+    "agent_config_id": "6531abf5-eb02-414a-bd0b-386622c28698",
+    "client_id": "techstart-solutions",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "role": "user",
+    "content": "• Topic/Task: blog post about ai coding agents\n• Rough Idea: 800 words with how ai coding agents are taking over jobs of junior devs",
+    "metadata": {
+      "area": "marketing",
+      "agent_key": "prompt-engineer"
+    },
+    "source": "user",
+    "mirrored_to_chat": false,
+    "mirrored_to_kb": false,
+    "created_at": "2025-11-26T18:37:45.029547+00:00"
+  },
+  {
+    "id": "b98090d7-0298-4bd2-9cfa-b8ccc4decd8d",
+    "agent_config_id": "6531abf5-eb02-414a-bd0b-386622c28698",
+    "client_id": "techstart-solutions",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "role": "assistant",
+    "content": "Error: Failed to fetch",
+    "metadata": {
+      "area": "marketing",
+      "agent_key": "prompt-engineer"
+    },
+    "source": "agent",
+    "mirrored_to_chat": false,
+    "mirrored_to_kb": false,
+    "created_at": "2025-11-26T18:37:45.029547+00:00"
+  },
+  {
+    "id": "44159f95-1f51-4e60-9378-89257f878f01",
+    "agent_config_id": "6531abf5-eb02-414a-bd0b-386622c28698",
+    "client_id": "techstart-solutions",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "role": "user",
+    "content": "• Topic/Task: ai taking jobs\n• Rough Idea: junior devs not able to get jobs with ai dev",
+    "metadata": {
+      "area": "marketing",
+      "agent_key": "prompt-engineer"
+    },
+    "source": "user",
+    "mirrored_to_chat": false,
+    "mirrored_to_kb": false,
+    "created_at": "2025-11-26T18:59:24.544933+00:00"
+  },
+  {
+    "id": "c53348de-bacc-434f-a479-89d493d4f945",
+    "agent_config_id": "6531abf5-eb02-414a-bd0b-386622c28698",
+    "client_id": "techstart-solutions",
+    "user_id": "3f56efc4-d548-4696-9a8a-aa636a60c5eb",
+    "role": "assistant",
+    "content": "Error: Edge Function returned a non-2xx status code",
+    "metadata": {
+      "area": "marketing",
+      "agent_key": "prompt-engineer"
+    },
+    "source": "agent",
+    "mirrored_to_chat": false,
+    "mirrored_to_kb": false,
+    "created_at": "2025-11-26T18:59:24.544933+00:00"
+  }
+]

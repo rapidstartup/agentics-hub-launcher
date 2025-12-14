@@ -1,0 +1,50 @@
+[
+  {
+    "id": "f9e9a96a-626f-4821-a261-36f6fe2af9ec",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "project_id": "e257ce3e-0168-4f93-995f-e15b73e6330e",
+    "agent_type": "automation",
+    "agent_name": "Copywriter",
+    "agent_role": "AI Copy Generator",
+    "agent_config_id": null,
+    "can_edit": true,
+    "can_approve": false,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  },
+  {
+    "id": "44f4e38c-d17d-4bb9-b81b-671346a78fb4",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "project_id": "90f9cddd-c0ee-40de-a78d-a7b4cbaea891",
+    "agent_type": "automation",
+    "agent_name": "Prompt Engineer",
+    "agent_role": "LLM Prompt Optimizer",
+    "agent_config_id": null,
+    "can_edit": true,
+    "can_approve": false,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  },
+  {
+    "id": "83fe6158-e6f5-4571-b7f0-e30c66a055c8",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "project_id": "32719a71-907b-4758-9c43-0a39ebb8d477",
+    "agent_type": "automation",
+    "agent_name": "Meeting Agent",
+    "agent_role": "Meeting Intelligence",
+    "agent_config_id": null,
+    "can_edit": true,
+    "can_approve": false,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  },
+  {
+    "id": "622c1e0b-020e-4df1-8413-3ff2e54509f8",
+    "user_id": "85e613a5-199b-4673-8e06-3b37193dc910",
+    "project_id": "32719a71-907b-4758-9c43-0a39ebb8d477",
+    "agent_type": "automation",
+    "agent_name": "Personal Assistant",
+    "agent_role": "Calendar & Email Concierge",
+    "agent_config_id": null,
+    "can_edit": true,
+    "can_approve": false,
+    "created_at": "2025-11-26T15:10:24.118197+00:00"
+  }
+]

@@ -26,8 +26,5 @@ package.json.bak
 *.sln
 *.sw?
 #.env
-#.gitignore
+.gitignore
 .env.bad
-migration-backup/*
-docs/*
-scripts/*
